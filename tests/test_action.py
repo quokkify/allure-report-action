@@ -17,6 +17,7 @@ class AllureReportActionTests(unittest.TestCase):
         self.assertRegex(text, r"github-token:\n\s+description:.*\n\s+required: true")
         self.assertRegex(text, re.compile(r"publish-pages:.*?default: \"false\"", re.DOTALL))
         self.assertRegex(text, re.compile(r"pyramid-enabled:.*?default: \"false\"", re.DOTALL))
+        self.assertRegex(text, re.compile(r"pyramid-policy-path:.*?default: \"\"", re.DOTALL))
         self.assertIn('default: "<!-- project-toolkit-allure-ci -->"', text)
         self.assertLess(
             text.index("name: Deploy Allure HTML to GitHub Pages"),
@@ -27,6 +28,7 @@ class AllureReportActionTests(unittest.TestCase):
         self.assertIn("repo: context.repo.repo", text)
         self.assertIn("github.paginate(github.rest.issues.listComments", text)
         self.assertIn("inputs.publish-pages == 'true' && inputs.fork-pr != 'true'", text)
+        self.assertIn('--policy-path "$PYRAMID_POLICY_PATH"', text)
         self.assertNotIn("c.user?.login === 'github-actions[bot]'", text)
         self.assertNotIn("api.github.com", text)
 

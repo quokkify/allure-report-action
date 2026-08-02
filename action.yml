@@ -79,6 +79,10 @@ inputs:
     description: Source head SHA embedded into the test-pyramid snapshot
     required: false
     default: ""
+  pyramid-policy-path:
+    description: Optional caller-repository policy path linked from the test-pyramid snapshot
+    required: false
+    default: ""
   pyramid-artifact-name:
     description: Uploaded test-pyramid artifact name
     required: false
@@ -134,6 +138,7 @@ runs:
         PYRAMID_GATES_JSON_FILE: ${{ inputs.pyramid-gates-json-file }}
         PYRAMID_SOURCE_RUN_ID: ${{ inputs.pyramid-source-run-id }}
         PYRAMID_HEAD_SHA: ${{ inputs.pyramid-head-sha }}
+        PYRAMID_POLICY_PATH: ${{ inputs.pyramid-policy-path }}
       run: |
         set -euo pipefail
         if [ -z "$COMMENT_MARKER" ]; then
@@ -157,7 +162,8 @@ runs:
           node "$GITHUB_ACTION_PATH/allure-ci.mjs" pyramid \
             --results "$RESULTS_DIRECTORY" \
             --output "$PYRAMID_MARKDOWN_FILE" \
-            --json "$PYRAMID_JSON_FILE"
+            --json "$PYRAMID_JSON_FILE" \
+            --policy-path "$PYRAMID_POLICY_PATH"
           node "$GITHUB_ACTION_PATH/allure-ci.mjs" pyramid-check \
             --results "$RESULTS_DIRECTORY" \
             --json "$PYRAMID_GATES_JSON_FILE"

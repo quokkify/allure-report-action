@@ -73,10 +73,12 @@ import sys
 
 root = pathlib.Path(sys.argv[1])
 body = (root / "comment.md").read_text()
+pyramid = (root / "pyramid.md").read_text()
 assert "**3** tests · **3** passed · 100% pass rate" in body
 assert "| E2E | 1 | 1 | 0 | 0 | 0 | 100% |" in body
 assert "| Other | 1 | 1 | 0 | 0 | 0 | 100% |" in body
 assert body.endswith("<!-- allure-report-action-smoke -->")
+assert "Canonical policy:" not in pyramid
 assert (root / "report/index.html").is_file()
 gates = json.loads((root / "pyramid-gates.json").read_text())
 assert gates["metrics"]["otherEpicTotal"] == 1

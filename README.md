@@ -18,7 +18,6 @@ steps:
       results-directory: artifacts/allure-results
       report-directory: allure-report
       config-file: scripts/allure/allurerc.mjs
-      categories-file: .github/allure/categories.json
       allure-version: "3.14.2"
       pr-number: ${{ github.event.pull_request.number }}
       comment-marker: "<!-- my-project-allure-ci -->"
@@ -45,6 +44,7 @@ Pages publishing delegates to the immutable `quokkify/gh-pages-subdir-action` re
       pyramid-enabled: "true"
       pyramid-source-run-id: ${{ github.run_id }}
       pyramid-head-sha: ${{ github.sha }}
+      pyramid-policy-path: docs/testing/test-pyramid.md
 ```
 
 This preserves the original CSP commands and output paths:
@@ -69,6 +69,7 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 | `pr-number` | no | empty | PR to comment on; empty skips the API mutation. |
 | `comment-marker` | no | `<!-- project-toolkit-allure-ci -->` | Hidden marker for idempotent comment updates. |
 | `pyramid-enabled` | no | `false` | Generate and upload the original epic-based pyramid outputs. |
+| `pyramid-policy-path` | no | empty | Optional caller-repository policy file linked from the pyramid snapshot. |
 | `publish-pages` | no | `false` | Publish HTML through the embedded Pages action. |
 
 See [`action.yml`](action.yml) for the complete versioned input contract.

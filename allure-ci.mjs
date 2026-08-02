@@ -5,12 +5,12 @@
  * README table markers: `<!-- CSP_PYRAMID_TABLE_START -->` … `<!-- CSP_PYRAMID_TABLE_END -->`.
  * Run from the repository root, for example:
  *
- *   node .github/scripts/allure-ci.mjs badges --results allure-results --out allure-report
- *   node .github/scripts/allure-ci.mjs pr-body --results allure-results --report allure-report \
+ *   node allure-ci.mjs badges --results allure-results --out allure-report
+ *   node allure-ci.mjs pr-body --results allure-results --report allure-report \
  *     --output allure-pr-comment.md --pages-url "https://..." --fork-pr false
- *   node .github/scripts/allure-ci.mjs pyramid --results allure-results \
+ *   node allure-ci.mjs pyramid --results allure-results \
  *     --output docs/testing/pyramid-snapshot.md --json docs/testing/pyramid-snapshot.json [--readme README.md]
- *   node .github/scripts/allure-ci.mjs pyramid-check --results allure-results [--json docs/testing/pyramid-quality-gates.json]
+ *   node allure-ci.mjs pyramid-check --results allure-results [--json docs/testing/pyramid-quality-gates.json]
  *     (GitHub ::warning:: + job summary; exit 0 always — non-blocking quality gate)
  */
 import fs from "node:fs";
@@ -567,8 +567,9 @@ function replaceReadmePyramidTable(readmePath, tableMd) {
  * @param {string} outputMd
  * @param {string} outputJson
  * @param {string} readmePath optional
+ * @param {string} policyPath optional caller-repository policy path
  */
-function cmdPyramid(resultsDir, outputMd, outputJson, readmePath) {
+function cmdPyramid(resultsDir, outputMd, outputJson, readmePath, policyPath) {
   const m = computePyramidMetrics(resultsDir);
   const { total, other, layers, pyramidTotal, unitShare, e2eShare } = m;
   const gates = evaluatePyramidQualityGates(m);
@@ -665,14 +666,13 @@ function cmdPyramid(resultsDir, outputMd, outputJson, readmePath) {
   md.push(...pyramidAdvisoryNotes(unitShare, e2eShare, pyramidTotal));
   md.push("");
   md.push(formatQualityGatesMarkdownSection(gates, m));
-  const policyHref = path
-    .relative(
-      path.resolve(path.dirname(outputMd)),
-      path.resolve("docs/testing/test-pyramid.md"),
-    )
-    .split(path.sep)
-    .join("/");
-  md.push(`Canonical policy: [\`docs/testing/test-pyramid.md\`](${policyHref}).`);
+  if (policyPath) {
+    const policyHref = path
+      .relative(path.resolve(path.dirname(outputMd)), path.resolve(policyPath))
+      .split(path.sep)
+      .join("/");
+    md.push(`Canonical policy: [\`${policyPath}\`](${policyHref}).`);
+  }
 
   fs.mkdirSync(path.dirname(outputMd), { recursive: true });
   fs.writeFileSync(outputMd, md.join("\n"), "utf8");
@@ -715,6 +715,7 @@ function parseArgs(argv) {
     commentMarker: get("--comment-marker") || "<!-- project-toolkit-allure-ci -->",
     json: get("--json") || "",
     readme: get("--readme") || "",
+    policyPath: get("--policy-path") || "",
   };
 }
 
@@ -730,6 +731,7 @@ const {
   commentMarker,
   json,
   readme,
+  policyPath,
 } = parseArgs(process.argv);
 
 if (cmd === "badges") {
@@ -737,16 +739,16 @@ if (cmd === "badges") {
 } else if (cmd === "pr-body") {
   cmdPrBody(results, report, output, pagesUrl, forkPr, sourceRunId, commentMarker);
 } else if (cmd === "pyramid") {
-  cmdPyramid(results, output, json, readme);
+  cmdPyramid(results, output, json, readme, policyPath);
 } else if (cmd === "pyramid-check") {
   const gateJson = json || "docs/testing/pyramid-quality-gates.json";
   cmdPyramidCheck(results, gateJson);
 } else {
   console.error(
-    "Usage: node .github/scripts/allure-ci.mjs badges --results <dir> --out <reportDir>\n" +
-      "       node .github/scripts/allure-ci.mjs pr-body --results <dir> --report <reportDir> --output <file> [--pages-url <url>] [--fork-pr true|false] [--source-run-id <id>]\n" +
-      "       node .github/scripts/allure-ci.mjs pyramid --results <dir> --output <file.md> [--json <file.json>] [--readme README.md]\n" +
-      "       node .github/scripts/allure-ci.mjs pyramid-check --results <dir> [--json <quality-gates.json>]",
+    "Usage: node allure-ci.mjs badges --results <dir> --out <reportDir>\n" +
+      "       node allure-ci.mjs pr-body --results <dir> --report <reportDir> --output <file> [--pages-url <url>] [--fork-pr true|false] [--source-run-id <id>]\n" +
+      "       node allure-ci.mjs pyramid --results <dir> --output <file.md> [--json <file.json>] [--readme README.md] [--policy-path <file.md>]\n" +
+      "       node allure-ci.mjs pyramid-check --results <dir> [--json <quality-gates.json>]",
   );
   process.exit(1);
 }
