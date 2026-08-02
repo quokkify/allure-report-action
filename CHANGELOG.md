@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/quokkify/allure-report-action/compare/v0.1.0...v0.1.1) (2026-08-02)
+
+
+### Bug Fixes
+
+* protect comment ownership during upsert ([#3](https://github.com/quokkify/allure-report-action/issues/3)) ([f40bf4e](https://github.com/quokkify/allure-report-action/commit/f40bf4e0302b711a965821e2b9a4ac5ca4e48776))
+
 ## 0.1.0 (2026-08-02)
 
 
