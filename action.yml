@@ -55,6 +55,10 @@ inputs:
     description: Hidden marker used to find and update this action's existing PR comment
     required: false
     default: "<!-- project-toolkit-allure-ci -->"
+  comment-author-login:
+    description: Expected author login for installation-token comments; user tokens are resolved automatically
+    required: false
+    default: "github-actions[bot]"
   pyramid-enabled:
     description: Generate the existing Allure epic test-pyramid snapshot and advisory gate files
     required: false
@@ -207,6 +211,7 @@ runs:
         PR_NUMBER_RESOLVED: ${{ inputs.pr-number }}
         COMMENT_FILE: ${{ inputs.comment-file }}
         COMMENT_MARKER: ${{ inputs.comment-marker }}
+        COMMENT_AUTHOR_LOGIN: ${{ inputs.comment-author-login }}
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
       with:
         github-token: ${{ inputs.github-token }}
@@ -229,18 +234,15 @@ runs:
             issue_number,
             per_page: 100
           });
-          let expectedAuthor;
+          let expectedAuthor = (process.env.COMMENT_AUTHOR_LOGIN || '').trim();
           try {
             const authenticated = await github.rest.users.getAuthenticated();
-            expectedAuthor = authenticated.data?.login;
+            expectedAuthor = authenticated.data?.login || expectedAuthor;
           } catch (error) {
             if (![403, 404].includes(error.status)) throw error;
-            const installation = await github.request('GET /installation');
-            const appSlug = installation.data?.app_slug;
-            expectedAuthor = appSlug ? `${appSlug}[bot]` : undefined;
           }
           if (!expectedAuthor) {
-            core.setFailed('Could not resolve the comment author for github-token');
+            core.setFailed('comment-author-login is required when github-token does not support GET /user');
             return;
           }
           const existing = comments.find(

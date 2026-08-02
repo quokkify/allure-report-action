@@ -28,7 +28,9 @@ class AllureReportActionTests(unittest.TestCase):
         self.assertIn("repo: context.repo.repo", text)
         self.assertIn("github.paginate(github.rest.issues.listComments", text)
         self.assertIn("github.rest.users.getAuthenticated()", text)
-        self.assertIn("github.request('GET /installation')", text)
+        self.assertIn('COMMENT_AUTHOR_LOGIN: ${{ inputs.comment-author-login }}', text)
+        self.assertIn('default: "github-actions[bot]"', text)
+        self.assertNotIn("github.request('GET /installation')", text)
         self.assertIn("c.user?.login === expectedAuthor", text)
         self.assertIn("inputs.publish-pages == 'true' && inputs.fork-pr != 'true'", text)
         self.assertIn('--policy-path "$PYRAMID_POLICY_PATH"', text)
@@ -53,18 +55,14 @@ class AllureReportActionTests(unittest.TestCase):
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 const marker = '<!-- secure-allure -->';
 
-async function runCase({ userLogin, userStatus, appSlug, comments }) {
-  const calls = { updated: null, created: null, failed: null, installation: false };
+async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bot]', comments }) {
+  const calls = { updated: null, created: null, failed: null };
   const github = {
     paginate: async (_method, args) => {
       calls.paginate = args;
       return comments;
     },
-    request: async (route) => {
-      if (route !== 'GET /installation') throw new Error(`unexpected route ${route}`);
-      calls.installation = true;
-      return { data: { app_slug: appSlug } };
-    },
+    request: async (route) => { throw new Error(`unexpected route ${route}`); },
     rest: {
       users: {
         getAuthenticated: async () => {
@@ -87,7 +85,8 @@ async function runCase({ userLogin, userStatus, appSlug, comments }) {
   const testProcess = { env: {
     PR_NUMBER_RESOLVED: '42',
     COMMENT_FILE: '/tmp/comment.md',
-    COMMENT_MARKER: marker
+    COMMENT_MARKER: marker,
+    COMMENT_AUTHOR_LOGIN: authorLogin
   } };
   const testRequire = (name) => name === 'fs'
     ? { readFileSync: () => `new report\n${marker}` }
@@ -107,21 +106,32 @@ async function runCase({ userLogin, userStatus, appSlug, comments }) {
   });
   if (pat.updated?.comment_id !== 2 || pat.created || pat.failed) throw new Error('PAT owner match failed');
 
-  const app = await runCase({
+  const actionsToken = await runCase({
     userStatus: 403,
-    appSlug: 'report-app',
     comments: [
       { id: 3, user: { login: 'attacker' }, body: marker },
-      { id: 4, user: { login: 'report-app[bot]' }, body: marker }
+      { id: 4, user: { login: 'github-actions[bot]' }, body: marker }
     ]
   });
-  if (app.updated?.comment_id !== 4 || !app.installation || app.created || app.failed) {
-    throw new Error('GitHub App owner match failed');
+  if (actionsToken.updated?.comment_id !== 4 || actionsToken.created || actionsToken.failed) {
+    throw new Error('GITHUB_TOKEN owner match failed');
+  }
+
+  const app = await runCase({
+    userStatus: 403,
+    authorLogin: 'report-app[bot]',
+    comments: [
+      { id: 5, user: { login: 'attacker' }, body: marker },
+      { id: 6, user: { login: 'report-app[bot]' }, body: marker }
+    ]
+  });
+  if (app.updated?.comment_id !== 6 || app.created || app.failed) {
+    throw new Error('explicit GitHub App owner match failed');
   }
 
   const unowned = await runCase({
     userLogin: 'report-owner',
-    comments: [{ id: 5, user: { login: 'attacker' }, body: marker }]
+    comments: [{ id: 7, user: { login: 'attacker' }, body: marker }]
   });
   if (unowned.updated || unowned.created?.issue_number !== 42 || unowned.failed) {
     throw new Error('unowned marker must create a new comment');

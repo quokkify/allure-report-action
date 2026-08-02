@@ -68,6 +68,7 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 | `allure-version` | no | `3.14.2` | Exact Allure CLI version. |
 | `pr-number` | no | empty | PR to comment on; empty skips the API mutation. |
 | `comment-marker` | no | `<!-- project-toolkit-allure-ci -->` | Hidden marker for idempotent updates. Existing comments are updated only when they were created by the identity behind `github-token`. |
+| `comment-author-login` | no | `github-actions[bot]` | Expected author for installation-token comments. PAT/user-token logins are resolved automatically; custom GitHub App installation tokens must pass `<app-slug>[bot]`. |
 | `pyramid-enabled` | no | `false` | Generate and upload the original epic-based pyramid outputs. |
 | `pyramid-policy-path` | no | empty | Optional caller-repository policy file linked from the pyramid snapshot. |
 | `publish-pages` | no | `false` | Publish HTML through the embedded Pages action. |
