@@ -25,9 +25,12 @@ class AllureReportActionTests(unittest.TestCase):
         self.assertIn("github-token: ${{ inputs.github-token }}", text)
         self.assertIn("owner: context.repo.owner", text)
         self.assertIn("repo: context.repo.repo", text)
+        self.assertIn("github.paginate(github.rest.issues.listComments", text)
+        self.assertIn("inputs.publish-pages == 'true' && inputs.fork-pr != 'true'", text)
+        self.assertNotIn("c.user?.login === 'github-actions[bot]'", text)
         self.assertNotIn("api.github.com", text)
 
-    def test_pr_summary_counts_result_without_epic_as_other(self) -> None:
+    def test_pr_summary_counts_results_without_epic_using_preserved_fallbacks(self) -> None:
         with tempfile.TemporaryDirectory(prefix="allure-report-action-") as tmp:
             root = Path(tmp)
             results = root / "results"
@@ -53,12 +56,22 @@ class AllureReportActionTests(unittest.TestCase):
                     }
                 )
             )
+            (results / "playwright-result.json").write_text(
+                json.dumps(
+                    {
+                        "uuid": "playwright",
+                        "name": "without epic but with framework",
+                        "status": "passed",
+                        "labels": [{"name": "framework", "value": "playwright"}],
+                    }
+                )
+            )
             (widgets / "summary.json").write_text(
                 json.dumps(
                     {
                         "statistic": {
-                            "total": 2,
-                            "passed": 2,
+                            "total": 3,
+                            "passed": 3,
                             "failed": 0,
                             "broken": 0,
                             "skipped": 0,
@@ -89,8 +102,9 @@ class AllureReportActionTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             body = comment.read_text()
-            self.assertIn("**2** tests · **2** passed · 100% pass rate", body)
+            self.assertIn("**3** tests · **3** passed · 100% pass rate", body)
             self.assertIn("| Unit | 1 | 1 | 0 | 0 | 0 | 100% |", body)
+            self.assertIn("| E2E | 1 | 1 | 0 | 0 | 0 | 100% |", body)
             self.assertIn("| Other | 1 | 1 | 0 | 0 | 0 | 100% |", body)
             self.assertTrue(body.endswith(marker))
 

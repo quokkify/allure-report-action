@@ -30,6 +30,15 @@ documents = [
         "start": 1,
         "stop": 2,
     },
+    {
+        "uuid": "playwright-1",
+        "name": "playwright without epic metadata",
+        "status": "passed",
+        "stage": "finished",
+        "start": 1,
+        "stop": 2,
+        "labels": [{"name": "framework", "value": "playwright"}],
+    },
 ]
 for document in documents:
     (root / f"{document['uuid']}-result.json").write_text(json.dumps(document))
@@ -64,11 +73,12 @@ import sys
 
 root = pathlib.Path(sys.argv[1])
 body = (root / "comment.md").read_text()
-assert "**2** tests · **2** passed · 100% pass rate" in body
+assert "**3** tests · **3** passed · 100% pass rate" in body
+assert "| E2E | 1 | 1 | 0 | 0 | 0 | 100% |" in body
 assert "| Other | 1 | 1 | 0 | 0 | 0 | 100% |" in body
 assert body.endswith("<!-- allure-report-action-smoke -->")
 assert (root / "report/index.html").is_file()
 gates = json.loads((root / "pyramid-gates.json").read_text())
 assert gates["metrics"]["otherEpicTotal"] == 1
-print("smoke: report, 2 passed, missing Epic -> Other, pyramid outputs OK")
+print("smoke: report, 3 passed, missing Epic fallbacks -> E2E/Other, pyramid outputs OK")
 PY

@@ -136,6 +136,10 @@ runs:
         PYRAMID_HEAD_SHA: ${{ inputs.pyramid-head-sha }}
       run: |
         set -euo pipefail
+        if [ -z "$COMMENT_MARKER" ]; then
+          echo "comment-marker must not be empty" >&2
+          exit 1
+        fi
         if [ -n "$CATEGORIES_FILE" ]; then
           cp -f "$CATEGORIES_FILE" "$RESULTS_DIRECTORY/categories.json"
         fi
@@ -170,8 +174,20 @@ runs:
           ${{ inputs.pyramid-gates-json-file }}
         retention-days: ${{ inputs.pyramid-retention-days }}
 
+    - name: Validate GitHub Pages destination
+      if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}
+      shell: bash
+      env:
+        PAGES_DESTINATION_DIRECTORY: ${{ inputs.pages-destination-directory }}
+      run: |
+        set -euo pipefail
+        if [ -z "$PAGES_DESTINATION_DIRECTORY" ]; then
+          echo "pages-destination-directory is required when publish-pages is true" >&2
+          exit 1
+        fi
+
     - name: Deploy Allure HTML to GitHub Pages
-      if: ${{ inputs.publish-pages == 'true' }}
+      if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}
       uses: quokkify/gh-pages-subdir-action@816d85aa756f480457befb42168633cb6ccf09c7 # v0.1.0
       with:
         token: ${{ inputs.github-token }}
@@ -196,18 +212,18 @@ runs:
             return;
           }
           const marker = process.env.COMMENT_MARKER;
+          if (!marker) {
+            core.setFailed('comment-marker must not be empty');
+            return;
+          }
           const body = fs.readFileSync(process.env.COMMENT_FILE, 'utf8');
-          const { data: comments } = await github.rest.issues.listComments({
+          const comments = await github.paginate(github.rest.issues.listComments, {
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number,
             per_page: 100
           });
-          const existing = comments.find(
-            (c) =>
-              c.user?.login === 'github-actions[bot]' &&
-              (c.body || '').includes(marker)
-          );
+          const existing = comments.find((c) => (c.body || '').includes(marker));
           if (existing) {
             await github.rest.issues.updateComment({
               owner: context.repo.owner,

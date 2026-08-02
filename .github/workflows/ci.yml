@@ -33,7 +33,11 @@ jobs:
           assert 'default: "<!-- project-toolkit-allure-ci -->"' in text
           PY
           node --check allure-ci.mjs
-          git diff --check "${{ github.event.pull_request.base.sha || github.event.before }}..${{ github.sha }}"
+          base_sha="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [[ ! "$base_sha" =~ ^[0-9a-f]{40}$ ]] || [[ "$base_sha" =~ ^0+$ ]]; then
+            base_sha="$(git hash-object -t tree /dev/null)"
+          fi
+          git diff --check "$base_sha..${{ github.sha }}"
       - name: Run unit tests
         run: python3 -m unittest discover -s tests -p 'test_*.py'
       - name: Run synthetic Allure 3 smoke test

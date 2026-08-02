@@ -2,7 +2,7 @@
 
 Build an Allure 3 HTML report from an already-merged results directory, generate the existing outcome badges and optional test-pyramid files, optionally publish the report to a GitHub Pages subdirectory, and finally create or update one pull-request comment with total and passed test counts.
 
-Tests do **not** need Allure `epic` metadata. Results without a recognized `epic` remain in the overall totals and appear under `Other` in the layer breakdown.
+Tests do **not** need Allure `epic` metadata. Results without a recognized `epic` remain in the overall totals. The preserved CSP fallback classifies Playwright results as `E2E`; other unclassified results appear under `Other`.
 
 ## Usage
 
@@ -54,7 +54,7 @@ This preserves the original CSP commands and output paths:
 - `docs/testing/pyramid-quality-gates.json`
 - uploaded artifact `pyramid-snapshot`
 
-Unknown or absent `epic` values emit an advisory warning only; they do not fail report generation or disappear from total/passed counts.
+Unknown or absent `epic` values emit an advisory warning only; they do not fail report generation or disappear from total/passed counts. Playwright results without Epic retain the existing `E2E` fallback.
 
 ## Main inputs
 
@@ -83,7 +83,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 bash tests/smoke.sh
 ```
 
-The smoke test generates a real Allure 3.14.2 HTML report from two synthetic passed results, including one result without `epic` metadata.
+The smoke test generates a real Allure 3.14.2 HTML report from three synthetic passed results, including Playwright and unlabeled results without `epic` metadata.
 
 ## License
 
