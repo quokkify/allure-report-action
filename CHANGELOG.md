@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/quokkify/allure-report-action/compare/v0.1.2...v0.1.3) (2026-08-03)
+
+
+### Bug Fixes
+
+* **ci:** align Copier template baseline ([#10](https://github.com/quokkify/allure-report-action/issues/10)) ([3f5aef9](https://github.com/quokkify/allure-report-action/commit/3f5aef999dac01c5bbd1cd664f01eb2117a8e4d4))
+* use Renovate-compatible Copier source URL ([#8](https://github.com/quokkify/allure-report-action/issues/8)) ([29d2818](https://github.com/quokkify/allure-report-action/commit/29d281868664ea299adba1ac6678fe5b7ffd519b))
+
 ## [0.1.2](https://github.com/quokkify/allure-report-action/compare/v0.1.1...v0.1.2) (2026-08-02)
 
 
