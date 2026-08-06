@@ -37,11 +37,13 @@ By default, each distinct Allure result label named `module` becomes its own rep
 {"name": "module", "value": "common-utils:awaitility"}
 ```
 
-When merged results do not contain that label, the action automatically recovers it from the already-downloaded source result directories. It scans `module-source-root` (the parent of `results-directory` by default), reads a colocated `ci-env-fragment.properties` entry named `Module` or `<prefix>.Module`, and applies that module to the corresponding copied result in the merged directory. Direct result labels remain authoritative. This keeps attribution in the reusable action: a consumer that already publishes module metadata fragments receives the behavior by updating the action or project-toolkit reference, without adding a result-rewriting script.
+When `source-artifacts-directory` is set, the action owns the merge as well as attribution. It recursively finds per-job `allure-results` directories, reads exactly one `Module` or `<prefix>.Module` value from each colocated `ci-env-fragment.properties`, replaces module labels with that authoritative provenance, and atomically rebuilds `results-directory`. Conflicting duplicate filenames, missing provenance, malformed results, symlinks, and oversized inputs fail closed. Byte-identical duplicates are deduplicated. This keeps reusable report preparation out of consumers: a repository that already publishes module metadata fragments receives the behavior by updating its project-toolkit reference, without adding a result-rewriting or merge implementation.
+
+Set `source-artifacts-directory: auto` in a reusable wrapper to inspect the parent of `results-directory`. Auto mode activates the strict merge only when attributed source directories are present, preserves legacy pre-merged results when none use the sidecar contract, and fails on partial provenance. This lets one toolkit version serve matrix-module producers and existing single-project templates without repository-specific scripts.
 
 The action keeps caller configuration global variables in the default environment. A variable whose key follows `<module>.<field>` moves to that module and is displayed as `<field>`; for example, `common-utils:awaitility.Runner` becomes `Runner` only in the `common-utils:awaitility` environment. Matching is case-insensitive, punctuation-insensitive, and ignores the generic token `utils`, so existing human-readable prefixes such as `Common awaitility.Runner` are also supported. Variables that match no module stay global. Once at least one result carries the configured module label, `<module>.Module` values also register zero-test modules so their metadata does not leak back into the global environment.
 
-Results without the configured label stay in Allure's `default` environment. If the merged result directory contains no such labels, the action preserves the caller's `environments` unchanged. Set `module-environment-label: ""` to disable normalization, or set it to another explicit label name when the producer already uses a different module contract.
+In legacy mode (`source-artifacts-directory` is empty), the action keeps the already-merged directory unchanged and uses direct result labels. Results without the configured label stay in Allure's `default` environment. If the directory contains no such labels, the action preserves the caller's `environments` unchanged. Set `module-environment-label: ""` to disable normalization, or set it to another explicit label name when the producer already uses a different module contract.
 
 ## Optional GitHub Pages preview
 
@@ -77,11 +79,11 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 | Input | Required | Default | Description |
 | --- | --- | --- | --- |
 | `github-token` | yes | — | Token used to create/update the PR comment and, optionally, publish Pages. |
-| `results-directory` | no | `artifacts/allure-results` | Already-merged Allure result files. |
+| `results-directory` | no | `artifacts/allure-results` | Prepared results destination, or already-merged results in legacy mode. |
 | `report-directory` | no | `allure-report` | Generated HTML report directory. |
 | `config-file` | yes | — | Caller-owned Allure 3 configuration file. |
 | `module-environment-label` | no | `module` | Result label used to create one environment per module; empty disables normalization. |
-| `module-source-root` | no | parent of `results-directory` | Root containing downloaded source result directories and their `ci-env-fragment.properties` provenance. |
+| `source-artifacts-directory` | no | empty | Source root, `auto` for compatible wrapper detection, or empty for legacy pre-merged results. |
 | `categories-file` | no | empty | Optional caller-owned `categories.json`. |
 | `allure-version` | no | `3.14.2` | Exact Allure CLI version. |
 | `pr-number` | no | empty | PR to comment on; empty skips the API mutation. |
@@ -103,7 +105,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 bash tests/smoke.sh
 ```
 
-The tests also verify automatic module-label recovery from downloaded result provenance. The smoke test generates a real Allure 3.14.2 HTML report from three synthetic passed results, verifies module-scoped environments and variables, and covers Playwright and unlabeled results without `epic` metadata.
+The tests cover atomic provenance-aware merging, strict failure boundaries, legacy merged mode, and module environment generation. The smoke test generates a real Allure 3.14.2 HTML report from per-module source directories, verifies module-scoped environments and variables, and covers Playwright and unlabeled results without `epic` metadata.
 
 ## License
 

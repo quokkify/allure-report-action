@@ -11,6 +11,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class AllureReportActionTests(unittest.TestCase):
+    def run_cli(self, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["node", str(ROOT / "allure-ci.mjs"), *args],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
     def test_metadata_keeps_pages_optional_and_comments_last(self) -> None:
         text = (ROOT / "action.yml").read_text()
         self.assertIn("runs:\n  using: composite", text)
@@ -30,10 +38,11 @@ class AllureReportActionTests(unittest.TestCase):
         )
         self.assertRegex(
             text,
-            re.compile(r"module-source-root:.*?default: \"\"", re.DOTALL),
+            re.compile(r"source-artifacts-directory:.*?default: \"\"", re.DOTALL),
         )
+        self.assertIn('allure-ci.mjs\" prepare-results', text)
         self.assertIn("allure-ci.mjs\" module-config", text)
-        self.assertIn('--source-root "$MODULE_SOURCE_ROOT"', text)
+        self.assertIn('--source-root "$SOURCE_ARTIFACTS_DIRECTORY"', text)
         self.assertIn("owner: context.repo.owner", text)
         self.assertIn("repo: context.repo.repo", text)
         self.assertIn("github.paginate(github.rest.issues.listComments", text)
@@ -254,7 +263,7 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 },
             )
 
-    def test_module_config_recovers_labels_from_existing_source_fragments(self) -> None:
+    def test_prepare_results_merges_sources_before_module_config(self) -> None:
         with tempfile.TemporaryDirectory(prefix="allure-report-action-provenance-") as tmp:
             root = Path(tmp)
             results = root / "artifacts" / "allure-results"
@@ -288,7 +297,35 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 }
                 encoded = json.dumps(document)
                 (source / f"{uuid}-result.json").write_text(encoded)
-                (results / f"{uuid}-result.json").write_text(encoded)
+
+            (results / "stale-result.json").write_text(json.dumps({"uuid": "stale"}))
+            (results / "environment.properties").write_text("GitHub.RunId=123\n")
+
+            merged = subprocess.run(
+                [
+                    "node",
+                    str(ROOT / "allure-ci.mjs"),
+                    "prepare-results",
+                    "--results",
+                    str(results),
+                    "--source-root",
+                    str(root / "artifacts"),
+                    "--module-label",
+                    "module",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(merged.returncode, 0, merged.stderr)
+            self.assertIn(
+                "Prepared 2 attributed result(s) from 2 source directories (2 files)",
+                merged.stdout,
+            )
+            self.assertFalse((results / "stale-result.json").exists())
+            self.assertEqual(
+                (results / "environment.properties").read_text(), "GitHub.RunId=123\n"
+            )
 
             effective = root / "effective.mjs"
             prepared = subprocess.run(
@@ -298,8 +335,6 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                     "module-config",
                     "--results",
                     str(results),
-                    "--source-root",
-                    str(root / "artifacts"),
                     "--config",
                     str(config),
                     "--output",
@@ -313,7 +348,6 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
             )
 
             self.assertEqual(prepared.returncode, 0, prepared.stderr)
-            self.assertIn("Recovered module labels for 2 result(s) from 2 source directories", prepared.stdout)
             for _, _, module, uuid in fixtures:
                 document = json.loads((results / f"{uuid}-result.json").read_text())
                 self.assertEqual(
@@ -353,8 +387,8 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 },
             )
 
-    def test_module_config_defaults_source_root_to_results_parent(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="allure-report-action-default-source-") as tmp:
+    def test_module_config_keeps_legacy_already_merged_mode(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-legacy-") as tmp:
             root = Path(tmp)
             results = root / "artifacts" / "allure-results"
             source = root / "artifacts" / "test-report" / "build" / "allure-results"
@@ -362,123 +396,220 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
             source.mkdir(parents=True)
             config = root / "allurerc.mjs"
             config.write_text("export default {};\n")
-            document = {"uuid": "default-source", "name": "case", "labels": []}
+            document = {"uuid": "legacy", "name": "case", "labels": []}
             encoded = json.dumps(document)
-            (results / "default-source-result.json").write_text(encoded)
-            (source / "default-source-result.json").write_text(encoded)
+            (results / "legacy-result.json").write_text(encoded)
+            (source / "legacy-result.json").write_text(encoded)
             (source / "ci-env-fragment.properties").write_text("Suite.Module=module-a\n")
 
-            prepared = subprocess.run(
-                [
-                    "node",
-                    str(ROOT / "allure-ci.mjs"),
-                    "module-config",
-                    "--results",
-                    str(results),
-                    "--config",
-                    str(config),
-                    "--output",
-                    str(root / "effective.mjs"),
-                    "--module-label",
-                    "module",
-                ],
-                text=True,
-                capture_output=True,
-                check=False,
+            prepared = self.run_cli(
+                "module-config",
+                "--results",
+                str(results),
+                "--config",
+                str(config),
+                "--output",
+                str(root / "effective.mjs"),
+                "--module-label",
+                "module",
             )
 
             self.assertEqual(prepared.returncode, 0, prepared.stderr)
-            self.assertIn("Recovered module labels for 1 result(s) from 1 source directories", prepared.stdout)
-            recovered = json.loads((results / "default-source-result.json").read_text())
-            self.assertEqual(recovered["labels"], [{"name": "module", "value": "module-a"}])
+            unchanged = json.loads((results / "legacy-result.json").read_text())
+            self.assertEqual(unchanged["labels"], [])
 
-    def test_module_config_keeps_direct_label_over_discovered_provenance(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="allure-report-action-direct-label-") as tmp:
+    def test_prepare_results_uses_sidecar_as_authoritative_module(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-authoritative-") as tmp:
             root = Path(tmp)
             results = root / "artifacts" / "allure-results"
             source = root / "artifacts" / "test-report" / "build" / "allure-results"
-            results.mkdir(parents=True)
             source.mkdir(parents=True)
-            config = root / "allurerc.mjs"
-            config.write_text("export default {};\n")
-            merged = {
+            source_document = {
                 "uuid": "direct",
                 "name": "case",
-                "labels": [{"name": "module", "value": "direct-module"}],
+                "labels": [
+                    {"name": "module", "value": "direct-module"},
+                    {"name": "module", "value": "duplicate-module"},
+                    {"name": "epic", "value": "unit"},
+                ],
             }
-            source_document = {"uuid": "direct", "name": "case", "labels": []}
-            (results / "direct-result.json").write_text(json.dumps(merged))
             (source / "direct-result.json").write_text(json.dumps(source_document))
             (source / "ci-env-fragment.properties").write_text("Suite.Module=source-module\n")
 
-            prepared = subprocess.run(
-                [
-                    "node",
-                    str(ROOT / "allure-ci.mjs"),
-                    "module-config",
-                    "--results",
-                    str(results),
-                    "--config",
-                    str(config),
-                    "--output",
-                    str(root / "effective.mjs"),
-                    "--module-label",
-                    "module",
-                ],
-                text=True,
-                capture_output=True,
-                check=False,
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(results),
+                "--source-root",
+                str(root / "artifacts"),
+                "--module-label",
+                "module",
             )
 
             self.assertEqual(prepared.returncode, 0, prepared.stderr)
-            self.assertIn("Recovered module labels for 0 result(s) from 1 source directories", prepared.stdout)
-            preserved = json.loads((results / "direct-result.json").read_text())
+            merged = json.loads((results / "direct-result.json").read_text())
             self.assertEqual(
-                preserved["labels"], [{"name": "module", "value": "direct-module"}]
+                merged["labels"],
+                [
+                    {"name": "epic", "value": "unit"},
+                    {"name": "module", "value": "source-module"},
+                ],
             )
 
-    def test_module_config_rejects_conflicting_result_provenance(self) -> None:
+    def test_prepare_results_rejects_conflicting_duplicate_name_atomically(self) -> None:
         with tempfile.TemporaryDirectory(prefix="allure-report-action-conflict-") as tmp:
             root = Path(tmp)
             results = root / "artifacts" / "allure-results"
             results.mkdir(parents=True)
-            config = root / "allurerc.mjs"
-            config.write_text("export default {};\n")
+            (results / "sentinel.txt").write_text("unchanged\n")
             document = {"uuid": "collision", "name": "case", "labels": []}
-            encoded = json.dumps(document)
-            (results / "collision-result.json").write_text(encoded)
             for artifact, module in (("source-a", "module-a"), ("source-b", "module-b")):
                 source = root / "artifacts" / artifact / "allure-results"
                 source.mkdir(parents=True)
-                (source / "collision-result.json").write_text(encoded)
+                (source / "collision-result.json").write_text(json.dumps(document))
                 (source / "ci-env-fragment.properties").write_text(
                     f"Suite.Module={module}\n"
                 )
 
-            prepared = subprocess.run(
-                [
-                    "node",
-                    str(ROOT / "allure-ci.mjs"),
-                    "module-config",
-                    "--results",
-                    str(results),
-                    "--config",
-                    str(config),
-                    "--output",
-                    str(root / "effective.mjs"),
-                    "--module-label",
-                    "module",
-                ],
-                text=True,
-                capture_output=True,
-                check=False,
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(results),
+                "--source-root",
+                str(root / "artifacts"),
+                "--module-label",
+                "module",
             )
 
             self.assertNotEqual(prepared.returncode, 0)
-            self.assertIn(
-                "Conflicting module provenance for collision-result.json: module-a and module-b",
-                prepared.stderr,
+            self.assertIn("Conflicting source files named collision-result.json", prepared.stderr)
+            self.assertEqual((results / "sentinel.txt").read_text(), "unchanged\n")
+
+    def test_prepare_results_deduplicates_identical_files(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-deduplicate-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            document = {"uuid": "same", "name": "case", "labels": []}
+            for artifact in ("source-a", "source-b"):
+                source = root / "artifacts" / artifact / "allure-results"
+                source.mkdir(parents=True)
+                (source / "same-result.json").write_text(json.dumps(document))
+                (source / "ci-env-fragment.properties").write_text("Suite.Module=module-a\n")
+
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(results),
+                "--source-root",
+                str(root / "artifacts"),
+                "--module-label",
+                "module",
             )
+
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            self.assertEqual(len(list(results.glob("*-result.json"))), 1)
+
+    def test_prepare_results_rejects_missing_module_and_malformed_json(self) -> None:
+        for fixture, fragment, content, expected in (
+            ("missing", "Suite.Runner=runner\n", "{}", "Expected exactly one module value"),
+            ("malformed", "Suite.Module=module-a\n", "{", "Malformed Allure result JSON"),
+        ):
+            with self.subTest(fixture=fixture):
+                with tempfile.TemporaryDirectory(prefix=f"allure-report-action-{fixture}-") as tmp:
+                    root = Path(tmp)
+                    source = root / "artifacts" / "test-report" / "allure-results"
+                    source.mkdir(parents=True)
+                    (source / "case-result.json").write_text(content)
+                    (source / "ci-env-fragment.properties").write_text(fragment)
+                    prepared = self.run_cli(
+                        "prepare-results",
+                        "--results",
+                        str(root / "artifacts" / "allure-results"),
+                        "--source-root",
+                        str(root / "artifacts"),
+                        "--module-label",
+                        "module",
+                    )
+                    self.assertNotEqual(prepared.returncode, 0)
+                    self.assertIn(expected, prepared.stderr)
+
+    def test_prepare_results_auto_preserves_legacy_results_without_provenance(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-auto-legacy-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            results.mkdir(parents=True)
+            document = {"uuid": "legacy", "labels": [{"name": "module", "value": "direct"}]}
+            (results / "legacy-result.json").write_text(json.dumps(document))
+
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(results),
+                "--source-root",
+                str(root / "artifacts"),
+                "--auto",
+                "true",
+                "--module-label",
+                "module",
+            )
+
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            self.assertIn("preserved legacy merged results", prepared.stdout)
+            self.assertEqual(json.loads((results / "legacy-result.json").read_text()), document)
+
+    def test_prepare_results_auto_rejects_partial_provenance(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-auto-partial-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            results.mkdir(parents=True)
+            (results / "sentinel.txt").write_text("unchanged\n")
+            for artifact in ("source-a", "source-b"):
+                source = root / "artifacts" / artifact / "allure-results"
+                source.mkdir(parents=True)
+                (source / f"{artifact}-result.json").write_text(
+                    json.dumps({"uuid": artifact, "labels": []})
+                )
+                if artifact == "source-a":
+                    (source / "ci-env-fragment.properties").write_text("Suite.Module=module-a\n")
+
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(results),
+                "--source-root",
+                str(root / "artifacts"),
+                "--auto",
+                "true",
+                "--module-label",
+                "module",
+            )
+
+            self.assertNotEqual(prepared.returncode, 0)
+            self.assertIn("Partial module provenance: 1 of 2", prepared.stderr)
+            self.assertEqual((results / "sentinel.txt").read_text(), "unchanged\n")
+
+    def test_prepare_results_rejects_symlinks(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-symlink-") as tmp:
+            root = Path(tmp)
+            source = root / "artifacts" / "test-report" / "allure-results"
+            source.mkdir(parents=True)
+            target = root / "outside-result.json"
+            target.write_text(json.dumps({"uuid": "outside"}))
+            (source / "linked-result.json").symlink_to(target)
+            (source / "ci-env-fragment.properties").write_text("Suite.Module=module-a\n")
+
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(root / "artifacts" / "allure-results"),
+                "--source-root",
+                str(root / "artifacts"),
+                "--module-label",
+                "module",
+            )
+
+            self.assertNotEqual(prepared.returncode, 0)
+            self.assertIn("Only regular files are allowed", prepared.stderr)
 
     def test_pr_summary_counts_results_without_epic_using_preserved_fallbacks(self) -> None:
         with tempfile.TemporaryDirectory(prefix="allure-report-action-") as tmp:
