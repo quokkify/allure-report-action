@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/quokkify/allure-report-action/compare/v0.2.0...v0.2.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* own provenance-aware result merging ([#15](https://github.com/quokkify/allure-report-action/issues/15)) ([c513031](https://github.com/quokkify/allure-report-action/commit/c513031cb4d2970a5cb73172135bca3a127e08e2))
+* recover module labels from result provenance ([#13](https://github.com/quokkify/allure-report-action/issues/13)) ([654694b](https://github.com/quokkify/allure-report-action/commit/654694be3620dcbc03bcb5dbd9b41d5078abb759))
+
 ## [0.2.0](https://github.com/quokkify/allure-report-action/compare/v0.1.3...v0.2.0) (2026-08-06)
 
 
