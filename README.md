@@ -2,7 +2,9 @@
 
 Build an Allure 3 HTML report from an already-merged results directory, generate the existing outcome badges and optional test-pyramid files, optionally publish the report to a GitHub Pages subdirectory, and finally create or update one pull-request comment with total and passed test counts.
 
-Tests do **not** need Allure `epic` metadata. Results without a recognized `epic` remain in the overall totals. The preserved CSP fallback classifies Playwright results as `E2E`; other unclassified results appear under `Other`.
+Tests do **not** need Allure `epic` metadata. Results without a recognized `epic` remain in the overall totals. The preserved CSP fallback classifies Playwright results as `E2E`; other unclassified results appear under `No epic assigned` so the missing relationship is explicit.
+
+Every generated pull-request comment ends with a link to this action, the bundled action version that generated it, and the latest release. This keeps immutable SHA pins visible while making upgrades discoverable.
 
 ## Usage
 
@@ -26,6 +28,18 @@ steps:
 Pin the action to a full commit SHA. The version comment documents the corresponding release without weakening the immutable reference.
 
 The action uses the caller repository from the GitHub Actions context and an explicitly supplied token, so the same action works in public and private repositories. Private organizations must allow this public action in their Actions policy. GitHub Pages publishing is disabled by default and is not required for the PR summary comment.
+
+## Module-scoped environments and variables
+
+By default, each distinct Allure result label named `module` becomes its own report environment. This prevents tests and variables from unrelated modules being mixed in one broad environment. Producers should add a stable module label to every result, for example:
+
+```json
+{"name": "module", "value": "common-utils:awaitility"}
+```
+
+The action keeps caller configuration global variables in the default environment. A variable whose key follows `<module>.<field>` moves to that module and is displayed as `<field>`; for example, `common-utils:awaitility.Runner` becomes `Runner` only in the `common-utils:awaitility` environment. Matching is case-insensitive, punctuation-insensitive, and ignores the generic token `utils`, so existing human-readable prefixes such as `Common awaitility.Runner` are also supported. Variables that match no module stay global. Once at least one result carries the configured module label, `<module>.Module` values also register zero-test modules so their metadata does not leak back into the global environment.
+
+Results without the configured label stay in Allure's `default` environment. If the merged result directory contains no such labels, the action preserves the caller's `environments` unchanged. Set `module-environment-label: ""` to disable normalization, or set it to another explicit label name when the producer already uses a different module contract.
 
 ## Optional GitHub Pages preview
 
@@ -64,6 +78,7 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 | `results-directory` | no | `artifacts/allure-results` | Already-merged Allure result files. |
 | `report-directory` | no | `allure-report` | Generated HTML report directory. |
 | `config-file` | yes | — | Caller-owned Allure 3 configuration file. |
+| `module-environment-label` | no | `module` | Result label used to create one environment per module; empty disables normalization. |
 | `categories-file` | no | empty | Optional caller-owned `categories.json`. |
 | `allure-version` | no | `3.14.2` | Exact Allure CLI version. |
 | `pr-number` | no | empty | PR to comment on; empty skips the API mutation. |
@@ -85,7 +100,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 bash tests/smoke.sh
 ```
 
-The smoke test generates a real Allure 3.14.2 HTML report from three synthetic passed results, including Playwright and unlabeled results without `epic` metadata.
+The smoke test generates a real Allure 3.14.2 HTML report from three synthetic passed results, verifies module-scoped environments and variables, and covers Playwright and unlabeled results without `epic` metadata.
 
 ## License
 

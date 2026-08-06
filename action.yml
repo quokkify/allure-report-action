@@ -23,6 +23,10 @@ inputs:
   config-file:
     description: Allure 3 configuration file, relative to the workspace
     required: true
+  module-environment-label:
+    description: Allure result label whose distinct values become module-scoped environments; empty preserves caller environments
+    required: false
+    default: "module"
   categories-file:
     description: Optional Allure categories JSON file, relative to the workspace
     required: false
@@ -129,6 +133,7 @@ runs:
         RESULTS_DIRECTORY: ${{ inputs.results-directory }}
         REPORT_DIRECTORY: ${{ inputs.report-directory }}
         CONFIG_FILE: ${{ inputs.config-file }}
+        MODULE_ENVIRONMENT_LABEL: ${{ inputs.module-environment-label }}
         CATEGORIES_FILE: ${{ inputs.categories-file }}
         ALLURE_VERSION: ${{ inputs.allure-version }}
         COMMENT_FILE: ${{ inputs.comment-file }}
@@ -152,7 +157,16 @@ runs:
         if [ -n "$CATEGORIES_FILE" ]; then
           cp -f "$CATEGORIES_FILE" "$RESULTS_DIRECTORY/categories.json"
         fi
-        npx --yes "allure@${ALLURE_VERSION}" generate "$RESULTS_DIRECTORY" -o "$REPORT_DIRECTORY" --config "$CONFIG_FILE"
+        EFFECTIVE_CONFIG_FILE="$CONFIG_FILE"
+        if [ -n "$MODULE_ENVIRONMENT_LABEL" ]; then
+          EFFECTIVE_CONFIG_FILE="$(mktemp "${RUNNER_TEMP:-/tmp}/allure-report-action-config-XXXXXX.mjs")"
+          node "$GITHUB_ACTION_PATH/allure-ci.mjs" module-config \
+            --results "$RESULTS_DIRECTORY" \
+            --config "$CONFIG_FILE" \
+            --output "$EFFECTIVE_CONFIG_FILE" \
+            --module-label "$MODULE_ENVIRONMENT_LABEL"
+        fi
+        npx --yes "allure@${ALLURE_VERSION}" generate "$RESULTS_DIRECTORY" -o "$REPORT_DIRECTORY" --config "$EFFECTIVE_CONFIG_FILE"
         node "$GITHUB_ACTION_PATH/allure-ci.mjs" badges --results "$RESULTS_DIRECTORY" --out "$REPORT_DIRECTORY"
         node "$GITHUB_ACTION_PATH/allure-ci.mjs" pr-body \
           --results "$RESULTS_DIRECTORY" \
