@@ -24,6 +24,11 @@ class AllureReportActionTests(unittest.TestCase):
             text.index("name: Post or update Allure comment on PR"),
         )
         self.assertIn("github-token: ${{ inputs.github-token }}", text)
+        self.assertRegex(
+            text,
+            re.compile(r"module-environment-label:.*?default: \"module\"", re.DOTALL),
+        )
+        self.assertIn("allure-ci.mjs\" module-config", text)
         self.assertIn("owner: context.repo.owner", text)
         self.assertIn("repo: context.repo.repo", text)
         self.assertIn("github.paginate(github.rest.issues.listComments", text)
@@ -149,6 +154,101 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_module_config_splits_module_variables_and_preserves_global_values(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-modules-") as tmp:
+            root = Path(tmp)
+            results = root / "results"
+            results.mkdir()
+            config = root / "allurerc.mjs"
+            config.write_text(
+                "export default {\n"
+                "  variables: {\n"
+                "    'GitHub.RunId': '123',\n"
+                "    'Default.Runner': 'runner-default',\n"
+                "    'Module A.Runner': 'runner-a',\n"
+                "    'Module B.Runner': 'runner-b',\n"
+                "    'Module C.Module': 'module-c',\n"
+                "    'Module C.Runner': 'runner-c',\n"
+                "  },\n"
+                "};\n"
+            )
+            for module in ("default", "module-a", "module-b"):
+                (results / f"{module}-result.json").write_text(
+                    json.dumps(
+                        {
+                            "uuid": module,
+                            "name": module,
+                            "status": "passed",
+                            "labels": [{"name": "module", "value": module}],
+                        }
+                    )
+                )
+            effective = root / "effective.mjs"
+            prepared = subprocess.run(
+                [
+                    "node",
+                    str(ROOT / "allure-ci.mjs"),
+                    "module-config",
+                    "--results",
+                    str(results),
+                    "--config",
+                    str(config),
+                    "--output",
+                    str(effective),
+                    "--module-label",
+                    "module",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            probe = subprocess.run(
+                [
+                    "node",
+                    "--input-type=module",
+                    "-e",
+                    (
+                        "const c=(await import(process.argv[1])).default;"
+                        "const e=Object.fromEntries(Object.entries(c.environments).map(([id,v])=>"
+                        "[id,{name:v.name,variables:v.variables,matches:v.matcher({labels:[{name:'module',value:v.name}]})}]));"
+                        "console.log(JSON.stringify({variables:c.variables,environments:e}));"
+                    ),
+                    effective.as_uri(),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(probe.returncode, 0, probe.stderr)
+            rendered = json.loads(probe.stdout)
+            self.assertEqual(rendered["variables"], {"GitHub.RunId": "123"})
+            self.assertEqual(
+                rendered["environments"],
+                {
+                    "default-2": {
+                        "name": "default",
+                        "variables": {"Runner": "runner-default"},
+                        "matches": True,
+                    },
+                    "module-a": {
+                        "name": "module-a",
+                        "variables": {"Runner": "runner-a"},
+                        "matches": True,
+                    },
+                    "module-b": {
+                        "name": "module-b",
+                        "variables": {"Runner": "runner-b"},
+                        "matches": True,
+                    },
+                    "module-c": {
+                        "name": "module-c",
+                        "variables": {"Module": "module-c", "Runner": "runner-c"},
+                        "matches": True,
+                    },
+                },
+            )
+
     def test_pr_summary_counts_results_without_epic_using_preserved_fallbacks(self) -> None:
         with tempfile.TemporaryDirectory(prefix="allure-report-action-") as tmp:
             root = Path(tmp)
@@ -214,6 +314,8 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                     str(comment),
                     "--comment-marker",
                     marker,
+                    "--action-version",
+                    "0.1.3",
                 ],
                 text=True,
                 capture_output=True,
@@ -224,7 +326,12 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
             self.assertIn("**3** tests · **3** passed · 100% pass rate", body)
             self.assertIn("| Unit | 1 | 1 | 0 | 0 | 0 | 100% |", body)
             self.assertIn("| E2E | 1 | 1 | 0 | 0 | 0 | 100% |", body)
-            self.assertIn("| Other | 1 | 1 | 0 | 0 | 0 | 100% |", body)
+            self.assertIn("| No epic assigned | 1 | 1 | 0 | 0 | 0 | 100% |", body)
+            self.assertIn(
+                "_Generated by [quokkify/allure-report-action](https://github.com/quokkify/allure-report-action) "
+                "`v0.1.3` · [Latest release](https://github.com/quokkify/allure-report-action/releases/latest)._",
+                body,
+            )
             self.assertTrue(body.endswith(marker))
 
 

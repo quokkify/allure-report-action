@@ -15,8 +15,10 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const EPICS = ["unit", "api", "ui", "end-to-end"];
+const ACTION_REPOSITORY_URL = "https://github.com/quokkify/allure-report-action";
 
 /** Pyramid export: base → middle → top (Allure epics). */
 const PYRAMID_LAYERS = [
@@ -54,8 +56,22 @@ const EPIC_DISPLAY = {
   api: "Integration",
   ui: "UI",
   "end-to-end": "E2E",
-  other: "Other",
+  other: "No epic assigned",
 };
+
+function bundledActionVersion() {
+  try {
+    return fs.readFileSync(new URL("./version.txt", import.meta.url), "utf8").trim();
+  } catch {
+    return "";
+  }
+}
+
+function displayActionVersion(version) {
+  const normalized = String(version || "").trim();
+  if (!normalized) return "unversioned";
+  return normalized.startsWith("v") ? normalized : `v${normalized}`;
+}
 
 function readJsonSafe(file) {
   try {
@@ -71,6 +87,153 @@ function listResultFiles(resultsDir) {
     .readdirSync(resultsDir, { withFileTypes: true })
     .filter((e) => e.isFile() && e.name.endsWith("-result.json"))
     .map((e) => path.join(resultsDir, e.name));
+}
+
+function labelValue(labels, name) {
+  if (!Array.isArray(labels)) return "";
+  const label = labels.find((item) => item && item.name === name && item.value);
+  return label ? String(label.value).trim() : "";
+}
+
+function normalizedModuleTokens(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/[\u0300-\u036f]/g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token && token !== "utils");
+}
+
+function moduleVariableParts(key) {
+  const index = key.lastIndexOf(".");
+  if (index <= 0 || index === key.length - 1) return null;
+  return {
+    moduleTokens: normalizedModuleTokens(key.slice(0, index)),
+    name: key.slice(index + 1).trim(),
+  };
+}
+
+function tokensEqual(left, right) {
+  return left.length === right.length && left.every((token, index) => token === right[index]);
+}
+
+function tokensEndWith(longer, shorter) {
+  if (shorter.length === 0 || longer.length < shorter.length) return false;
+  const offset = longer.length - shorter.length;
+  return shorter.every((token, index) => longer[offset + index] === token);
+}
+
+function environmentId(value, used) {
+  const base =
+    String(value || "")
+      .normalize("NFKD")
+      .toLowerCase()
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 52) || "module";
+  let candidate = base;
+  let suffix = 2;
+  while (used.has(candidate)) {
+    candidate = `${base.slice(0, 52 - String(suffix).length - 1)}-${suffix}`;
+    suffix += 1;
+  }
+  used.add(candidate);
+  return candidate;
+}
+
+async function cmdModuleConfig(resultsDir, configFile, outputFile, moduleLabel) {
+  if (!moduleLabel.trim()) {
+    throw new Error("--module-label must not be empty");
+  }
+  const configPath = path.resolve(configFile);
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`Allure config not found: ${configFile}`);
+  }
+
+  const moduleNames = new Set();
+  let unmatchedResults = 0;
+  for (const file of listResultFiles(resultsDir)) {
+    const doc = readJsonSafe(file);
+    const moduleName = labelValue(doc?.labels, moduleLabel);
+    if (moduleName) moduleNames.add(moduleName);
+    else unmatchedResults += 1;
+  }
+
+  const configUrl = pathToFileURL(configPath).href;
+  const baseConfigModule = await import(configUrl);
+  const baseConfig = baseConfigModule.default || {};
+  const allVariables = { ...(baseConfig.variables || {}) };
+  for (const descriptor of Object.values(baseConfig.environments || {})) {
+    Object.assign(allVariables, descriptor?.variables || {});
+  }
+  if (moduleNames.size > 0) {
+    for (const [key, value] of Object.entries(allVariables)) {
+      if (key.toLowerCase().endsWith(".module") && String(value || "").trim()) {
+        moduleNames.add(String(value).trim());
+      }
+    }
+  }
+  const names = [...moduleNames].sort((a, b) => a.localeCompare(b));
+  if (names.length === 0) {
+    const source = `import baseConfig from ${JSON.stringify(configUrl)};\nexport default baseConfig;\n`;
+    fs.mkdirSync(path.dirname(outputFile), { recursive: true });
+    fs.writeFileSync(outputFile, source, "utf8");
+    process.stdout.write(
+      `No ${moduleLabel} labels found; preserved caller environments in ${outputFile}\n`,
+    );
+    return;
+  }
+
+  const usedIds = new Set(["default"]);
+  const modules = names.map((name) => ({
+    id: environmentId(name, usedIds),
+    name,
+    tokens: normalizedModuleTokens(name),
+    variables: {},
+  }));
+  const globalVariables = {};
+  for (const [key, value] of Object.entries(allVariables)) {
+    const parts = moduleVariableParts(key);
+    const exactMatches = parts
+      ? modules.filter((candidate) => tokensEqual(candidate.tokens, parts.moduleTokens))
+      : [];
+    const suffixMatches =
+      parts && exactMatches.length === 0
+        ? modules.filter(
+            (candidate) =>
+              tokensEndWith(candidate.tokens, parts.moduleTokens) ||
+              tokensEndWith(parts.moduleTokens, candidate.tokens),
+          )
+        : [];
+    const matches = exactMatches.length > 0 ? exactMatches : suffixMatches;
+    const module = matches.length === 1 ? matches[0] : null;
+    if (module && parts.name) module.variables[parts.name] = String(value);
+    else globalVariables[key] = String(value);
+  }
+
+  const serializedModules = modules.map(({ id, name, variables }) => ({ id, name, variables }));
+  const source = `import baseConfig from ${JSON.stringify(configUrl)};
+const moduleLabel = ${JSON.stringify(moduleLabel)};
+const modules = ${JSON.stringify(serializedModules, null, 2)};
+const environments = Object.fromEntries(modules.map(({ id, name, variables }) => [id, {
+  name,
+  variables,
+  matcher: ({ labels }) => Array.isArray(labels) && labels.some(
+    (label) => label?.name === moduleLabel && String(label?.value || "").trim() === name,
+  ),
+}]));
+export default {
+  ...baseConfig,
+  variables: ${JSON.stringify(globalVariables, null, 2)},
+  environments,
+};
+`;
+  fs.mkdirSync(path.dirname(outputFile), { recursive: true });
+  fs.writeFileSync(outputFile, source, "utf8");
+  process.stdout.write(
+    `Prepared ${modules.length} module environment(s) from ${moduleLabel}; ${unmatchedResults} result(s) use default environment.\n`,
+  );
 }
 
 function epicFromLabels(labels) {
@@ -200,6 +363,7 @@ function cmdPrBody(
   forkPr,
   sourceRunId,
   commentMarker,
+  actionVersion,
 ) {
   const agg = aggregateResults(resultsDir);
   const summary = readWidgetSummary(reportDir);
@@ -285,6 +449,10 @@ function cmdPrBody(
   } else {
     lines.push("_GitHub Pages URL not available for this run._");
   }
+  lines.push("");
+  lines.push(
+    `_Generated by [quokkify/allure-report-action](${ACTION_REPOSITORY_URL}) \`${displayActionVersion(actionVersion)}\` · [Latest release](${ACTION_REPOSITORY_URL}/releases/latest)._`,
+  );
   lines.push("");
   lines.push(commentMarker);
 
@@ -467,7 +635,7 @@ function formatQualityGatesMarkdownSection(gates, m) {
     `| PYRAMID_E2E_SHARE_HIGH | ${warnIds.has("PYRAMID_E2E_SHARE_HIGH") ? "⚠️ warning" : "✓ ok"} | UI/E2E ≤ ${(100 * PYRAMID_ADVISORY.e2eShareMax).toFixed(0)}% of Σ layers (actual ${(100 * m.e2eShare).toFixed(1)}%) |`,
   );
   lines.push(
-    `| PYRAMID_UNKNOWN_EPIC | ${warnIds.has("PYRAMID_UNKNOWN_EPIC") ? "⚠️ warning" : "✓ ok"} | other epic count: ${m.other.total} |`,
+    `| PYRAMID_UNKNOWN_EPIC | ${warnIds.has("PYRAMID_UNKNOWN_EPIC") ? "⚠️ warning" : "✓ ok"} | no epic assigned: ${m.other.total} |`,
   );
   lines.push("");
   lines.push("_Blocking failures: none (reserved for a future strict mode)._");
@@ -638,7 +806,7 @@ function cmdPyramid(resultsDir, outputMd, outputJson, readmePath, policyPath) {
   md.push("");
   if (other.total > 0) {
     md.push(
-      `> **Other / unknown epic:** ${other.total} case(s) — assign \`epic\` in Vitest/pytest/Playwright setup so they roll into the pyramid.`,
+      `> **No epic assigned:** ${other.total} case(s) — assign \`epic\` in Vitest/pytest/Playwright setup so they roll into the pyramid.`,
     );
     md.push("");
   }
@@ -688,7 +856,7 @@ function cmdPyramid(resultsDir, outputMd, outputJson, readmePath, policyPath) {
     }
     tbl.push(`| **Σ pyramid layers** | | **${pyramidTotal}** |`);
     if (other.total > 0) {
-      tbl.push(`| Other (unknown epic) | — | **${other.total}** |`);
+      tbl.push(`| No epic assigned | — | **${other.total}** |`);
     }
     replaceReadmePyramidTable(readmePath, tbl.join("\n"));
   }
@@ -705,6 +873,7 @@ function parseArgs(argv) {
     cmd,
     results: get("--results") || "./allure-results",
     report: get("--report") || "./allure-report",
+    config: get("--config") || "./allurerc.mjs",
     out: get("--out") || get("--report") || "./allure-report",
     output:
       get("--output") ||
@@ -712,6 +881,8 @@ function parseArgs(argv) {
     pagesUrl: get("--pages-url") || "",
     forkPr: get("--fork-pr") || "false",
     sourceRunId: get("--source-run-id") || "",
+    actionVersion: get("--action-version") || bundledActionVersion(),
+    moduleLabel: get("--module-label") || "module",
     commentMarker: get("--comment-marker") || "<!-- project-toolkit-allure-ci -->",
     json: get("--json") || "",
     readme: get("--readme") || "",
@@ -723,21 +894,35 @@ const {
   cmd,
   results,
   report,
+  config,
   out,
   output,
   pagesUrl,
   forkPr,
   sourceRunId,
+  actionVersion,
+  moduleLabel,
   commentMarker,
   json,
   readme,
   policyPath,
 } = parseArgs(process.argv);
 
-if (cmd === "badges") {
+if (cmd === "module-config") {
+  await cmdModuleConfig(results, config, output, moduleLabel);
+} else if (cmd === "badges") {
   cmdBadges(results, out);
 } else if (cmd === "pr-body") {
-  cmdPrBody(results, report, output, pagesUrl, forkPr, sourceRunId, commentMarker);
+  cmdPrBody(
+    results,
+    report,
+    output,
+    pagesUrl,
+    forkPr,
+    sourceRunId,
+    commentMarker,
+    actionVersion,
+  );
 } else if (cmd === "pyramid") {
   cmdPyramid(results, output, json, readme, policyPath);
 } else if (cmd === "pyramid-check") {
@@ -746,7 +931,8 @@ if (cmd === "badges") {
 } else {
   console.error(
     "Usage: node allure-ci.mjs badges --results <dir> --out <reportDir>\n" +
-      "       node allure-ci.mjs pr-body --results <dir> --report <reportDir> --output <file> [--pages-url <url>] [--fork-pr true|false] [--source-run-id <id>]\n" +
+      "       node allure-ci.mjs module-config --results <dir> --config <allurerc.mjs> --output <effective.mjs> [--module-label module]\n" +
+      "       node allure-ci.mjs pr-body --results <dir> --report <reportDir> --output <file> [--pages-url <url>] [--fork-pr true|false] [--source-run-id <id>] [--action-version <version>]\n" +
       "       node allure-ci.mjs pyramid --results <dir> --output <file.md> [--json <file.json>] [--readme README.md] [--policy-path <file.md>]\n" +
       "       node allure-ci.mjs pyramid-check --results <dir> [--json <quality-gates.json>]",
   );
