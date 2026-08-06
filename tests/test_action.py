@@ -353,6 +353,133 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 },
             )
 
+    def test_module_config_defaults_source_root_to_results_parent(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-default-source-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            source = root / "artifacts" / "test-report" / "build" / "allure-results"
+            results.mkdir(parents=True)
+            source.mkdir(parents=True)
+            config = root / "allurerc.mjs"
+            config.write_text("export default {};\n")
+            document = {"uuid": "default-source", "name": "case", "labels": []}
+            encoded = json.dumps(document)
+            (results / "default-source-result.json").write_text(encoded)
+            (source / "default-source-result.json").write_text(encoded)
+            (source / "ci-env-fragment.properties").write_text("Suite.Module=module-a\n")
+
+            prepared = subprocess.run(
+                [
+                    "node",
+                    str(ROOT / "allure-ci.mjs"),
+                    "module-config",
+                    "--results",
+                    str(results),
+                    "--config",
+                    str(config),
+                    "--output",
+                    str(root / "effective.mjs"),
+                    "--module-label",
+                    "module",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            self.assertIn("Recovered module labels for 1 result(s) from 1 source directories", prepared.stdout)
+            recovered = json.loads((results / "default-source-result.json").read_text())
+            self.assertEqual(recovered["labels"], [{"name": "module", "value": "module-a"}])
+
+    def test_module_config_keeps_direct_label_over_discovered_provenance(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-direct-label-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            source = root / "artifacts" / "test-report" / "build" / "allure-results"
+            results.mkdir(parents=True)
+            source.mkdir(parents=True)
+            config = root / "allurerc.mjs"
+            config.write_text("export default {};\n")
+            merged = {
+                "uuid": "direct",
+                "name": "case",
+                "labels": [{"name": "module", "value": "direct-module"}],
+            }
+            source_document = {"uuid": "direct", "name": "case", "labels": []}
+            (results / "direct-result.json").write_text(json.dumps(merged))
+            (source / "direct-result.json").write_text(json.dumps(source_document))
+            (source / "ci-env-fragment.properties").write_text("Suite.Module=source-module\n")
+
+            prepared = subprocess.run(
+                [
+                    "node",
+                    str(ROOT / "allure-ci.mjs"),
+                    "module-config",
+                    "--results",
+                    str(results),
+                    "--config",
+                    str(config),
+                    "--output",
+                    str(root / "effective.mjs"),
+                    "--module-label",
+                    "module",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            self.assertIn("Recovered module labels for 0 result(s) from 1 source directories", prepared.stdout)
+            preserved = json.loads((results / "direct-result.json").read_text())
+            self.assertEqual(
+                preserved["labels"], [{"name": "module", "value": "direct-module"}]
+            )
+
+    def test_module_config_rejects_conflicting_result_provenance(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-conflict-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            results.mkdir(parents=True)
+            config = root / "allurerc.mjs"
+            config.write_text("export default {};\n")
+            document = {"uuid": "collision", "name": "case", "labels": []}
+            encoded = json.dumps(document)
+            (results / "collision-result.json").write_text(encoded)
+            for artifact, module in (("source-a", "module-a"), ("source-b", "module-b")):
+                source = root / "artifacts" / artifact / "allure-results"
+                source.mkdir(parents=True)
+                (source / "collision-result.json").write_text(encoded)
+                (source / "ci-env-fragment.properties").write_text(
+                    f"Suite.Module={module}\n"
+                )
+
+            prepared = subprocess.run(
+                [
+                    "node",
+                    str(ROOT / "allure-ci.mjs"),
+                    "module-config",
+                    "--results",
+                    str(results),
+                    "--config",
+                    str(config),
+                    "--output",
+                    str(root / "effective.mjs"),
+                    "--module-label",
+                    "module",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertNotEqual(prepared.returncode, 0)
+            self.assertIn(
+                "Conflicting module provenance for collision-result.json: module-a and module-b",
+                prepared.stderr,
+            )
+
     def test_pr_summary_counts_results_without_epic_using_preserved_fallbacks(self) -> None:
         with tempfile.TemporaryDirectory(prefix="allure-report-action-") as tmp:
             root = Path(tmp)
