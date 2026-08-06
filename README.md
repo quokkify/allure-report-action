@@ -31,11 +31,13 @@ The action uses the caller repository from the GitHub Actions context and an exp
 
 ## Module-scoped environments and variables
 
-By default, each distinct Allure result label named `module` becomes its own report environment. This prevents tests and variables from unrelated modules being mixed in one broad environment. Producers should add a stable module label to every result, for example:
+By default, each distinct Allure result label named `module` becomes its own report environment. This prevents tests and variables from unrelated modules being mixed in one broad environment. A producer may add a stable module label directly, for example:
 
 ```json
 {"name": "module", "value": "common-utils:awaitility"}
 ```
+
+When merged results do not contain that label, the action automatically recovers it from the already-downloaded source result directories. It scans `module-source-root` (the parent of `results-directory` by default), reads a colocated `ci-env-fragment.properties` entry named `Module` or `<prefix>.Module`, and applies that module to the corresponding copied result in the merged directory. Direct result labels remain authoritative. This keeps attribution in the reusable action: a consumer that already publishes module metadata fragments receives the behavior by updating the action or project-toolkit reference, without adding a result-rewriting script.
 
 The action keeps caller configuration global variables in the default environment. A variable whose key follows `<module>.<field>` moves to that module and is displayed as `<field>`; for example, `common-utils:awaitility.Runner` becomes `Runner` only in the `common-utils:awaitility` environment. Matching is case-insensitive, punctuation-insensitive, and ignores the generic token `utils`, so existing human-readable prefixes such as `Common awaitility.Runner` are also supported. Variables that match no module stay global. Once at least one result carries the configured module label, `<module>.Module` values also register zero-test modules so their metadata does not leak back into the global environment.
 
@@ -79,6 +81,7 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 | `report-directory` | no | `allure-report` | Generated HTML report directory. |
 | `config-file` | yes | — | Caller-owned Allure 3 configuration file. |
 | `module-environment-label` | no | `module` | Result label used to create one environment per module; empty disables normalization. |
+| `module-source-root` | no | parent of `results-directory` | Root containing downloaded source result directories and their `ci-env-fragment.properties` provenance. |
 | `categories-file` | no | empty | Optional caller-owned `categories.json`. |
 | `allure-version` | no | `3.14.2` | Exact Allure CLI version. |
 | `pr-number` | no | empty | PR to comment on; empty skips the API mutation. |
@@ -100,7 +103,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 bash tests/smoke.sh
 ```
 
-The smoke test generates a real Allure 3.14.2 HTML report from three synthetic passed results, verifies module-scoped environments and variables, and covers Playwright and unlabeled results without `epic` metadata.
+The tests also verify automatic module-label recovery from downloaded result provenance. The smoke test generates a real Allure 3.14.2 HTML report from three synthetic passed results, verifies module-scoped environments and variables, and covers Playwright and unlabeled results without `epic` metadata.
 
 ## License
 

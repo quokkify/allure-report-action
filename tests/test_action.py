@@ -28,7 +28,12 @@ class AllureReportActionTests(unittest.TestCase):
             text,
             re.compile(r"module-environment-label:.*?default: \"module\"", re.DOTALL),
         )
+        self.assertRegex(
+            text,
+            re.compile(r"module-source-root:.*?default: \"\"", re.DOTALL),
+        )
         self.assertIn("allure-ci.mjs\" module-config", text)
+        self.assertIn('--source-root "$MODULE_SOURCE_ROOT"', text)
         self.assertIn("owner: context.repo.owner", text)
         self.assertIn("repo: context.repo.repo", text)
         self.assertIn("github.paginate(github.rest.issues.listComments", text)
@@ -245,6 +250,105 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                         "name": "module-c",
                         "variables": {"Module": "module-c", "Runner": "runner-c"},
                         "matches": True,
+                    },
+                },
+            )
+
+    def test_module_config_recovers_labels_from_existing_source_fragments(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-provenance-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            results.mkdir(parents=True)
+            config = root / "allurerc.mjs"
+            config.write_text(
+                "export default { variables: {\n"
+                "  'Common core.Module': ':common-utils:core',\n"
+                "  'Common core.Runner': 'runner-core',\n"
+                "  'Data sql.Module': ':data-utils:sql',\n"
+                "  'Data sql.Runner': 'runner-sql',\n"
+                "  'GitHub.RunId': '123',\n"
+                "} };\n"
+            )
+
+            fixtures = (
+                ("test-report-common", "Common core", ":common-utils:core", "core-case"),
+                ("test-report-data", "Data sql", ":data-utils:sql", "sql-case"),
+            )
+            for artifact, prefix, module, uuid in fixtures:
+                source = root / "artifacts" / artifact / "build" / "allure-results"
+                source.mkdir(parents=True)
+                (source / "ci-env-fragment.properties").write_text(
+                    f"{prefix}.Suite=Gradle TestNG\n{prefix}.Module={module}\n"
+                )
+                document = {
+                    "uuid": uuid,
+                    "name": uuid,
+                    "status": "passed",
+                    "labels": [{"name": "epic", "value": "unit"}],
+                }
+                encoded = json.dumps(document)
+                (source / f"{uuid}-result.json").write_text(encoded)
+                (results / f"{uuid}-result.json").write_text(encoded)
+
+            effective = root / "effective.mjs"
+            prepared = subprocess.run(
+                [
+                    "node",
+                    str(ROOT / "allure-ci.mjs"),
+                    "module-config",
+                    "--results",
+                    str(results),
+                    "--source-root",
+                    str(root / "artifacts"),
+                    "--config",
+                    str(config),
+                    "--output",
+                    str(effective),
+                    "--module-label",
+                    "module",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            self.assertIn("Recovered module labels for 2 result(s) from 2 source directories", prepared.stdout)
+            for _, _, module, uuid in fixtures:
+                document = json.loads((results / f"{uuid}-result.json").read_text())
+                self.assertEqual(
+                    [label for label in document["labels"] if label.get("name") == "module"],
+                    [{"name": "module", "value": module}],
+                )
+
+            probe = subprocess.run(
+                [
+                    "node",
+                    "--input-type=module",
+                    "-e",
+                    (
+                        "const c=(await import(process.argv[1])).default;"
+                        "console.log(JSON.stringify(Object.fromEntries("
+                        "Object.entries(c.environments).map(([id,v])=>[id,{name:v.name,variables:v.variables}])"
+                        ")));"
+                    ),
+                    effective.as_uri(),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(probe.returncode, 0, probe.stderr)
+            self.assertEqual(
+                json.loads(probe.stdout),
+                {
+                    "common-utils-core": {
+                        "name": ":common-utils:core",
+                        "variables": {"Module": ":common-utils:core", "Runner": "runner-core"},
+                    },
+                    "data-utils-sql": {
+                        "name": ":data-utils:sql",
+                        "variables": {"Module": ":data-utils:sql", "Runner": "runner-sql"},
                     },
                 },
             )
