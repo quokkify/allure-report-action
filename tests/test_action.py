@@ -164,6 +164,7 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 "export default {\n"
                 "  variables: {\n"
                 "    'GitHub.RunId': '123',\n"
+                "    'Default.Runner': 'runner-default',\n"
                 "    'Module A.Runner': 'runner-a',\n"
                 "    'Module B.Runner': 'runner-b',\n"
                 "    'Module C.Module': 'module-c',\n"
@@ -171,7 +172,7 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 "  },\n"
                 "};\n"
             )
-            for module in ("module-a", "module-b"):
+            for module in ("default", "module-a", "module-b"):
                 (results / f"{module}-result.json").write_text(
                     json.dumps(
                         {
@@ -225,6 +226,11 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
             self.assertEqual(
                 rendered["environments"],
                 {
+                    "default-2": {
+                        "name": "default",
+                        "variables": {"Runner": "runner-default"},
+                        "matches": True,
+                    },
                     "module-a": {
                         "name": "module-a",
                         "variables": {"Runner": "runner-a"},

@@ -185,7 +185,7 @@ async function cmdModuleConfig(resultsDir, configFile, outputFile, moduleLabel) 
     return;
   }
 
-  const usedIds = new Set();
+  const usedIds = new Set(["default"]);
   const modules = names.map((name) => ({
     id: environmentId(name, usedIds),
     name,
