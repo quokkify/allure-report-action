@@ -4,15 +4,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP="$(mktemp -d "${RUNNER_TEMP:-/tmp}/allure-report-action-smoke-XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$TMP/results" "$TMP/source-results/module-b"
+mkdir -p "$TMP/results" "$TMP/source-results/module-a/allure-results" "$TMP/source-results/module-b/allure-results"
 
-python3 - "$TMP/results" "$TMP/source-results/module-b" <<'PY'
+python3 - "$TMP/results" "$TMP/source-results/module-a/allure-results" "$TMP/source-results/module-b/allure-results" <<'PY'
 import json
 import pathlib
 import sys
 
 root = pathlib.Path(sys.argv[1])
-module_b_source = pathlib.Path(sys.argv[2])
+module_a_source = pathlib.Path(sys.argv[2])
+module_b_source = pathlib.Path(sys.argv[3])
 documents = [
     {
         "uuid": "unit-1",
@@ -49,17 +50,22 @@ documents = [
     },
 ]
 for document in documents:
-    (root / f"{document['uuid']}-result.json").write_text(json.dumps(document))
-plain = next(document for document in documents if document["uuid"] == "plain-1")
+    destination = module_a_source if document["uuid"] == "unit-1" else module_b_source
+    (destination / f"{document['uuid']}-result.json").write_text(json.dumps(document))
+(module_a_source / "ci-env-fragment.properties").write_text("Smoke.Module=module-a\n")
 (module_b_source / "ci-env-fragment.properties").write_text("Smoke.Module=module-b\n")
-(module_b_source / "plain-1-result.json").write_text(json.dumps(plain))
+(root / "stale-result.json").write_text(json.dumps({"uuid": "stale"}))
+(root / "environment.properties").write_text("GitHub.RunId=123\n")
 PY
 
 (
   cd "$TMP"
-  node "$ROOT/allure-ci.mjs" module-config \
+  node "$ROOT/allure-ci.mjs" prepare-results \
     --results results \
     --source-root source-results \
+    --module-label module
+  node "$ROOT/allure-ci.mjs" module-config \
+    --results results \
     --config "$ROOT/tests/allurerc.mjs" \
     --output effective-allurerc.mjs \
     --module-label module

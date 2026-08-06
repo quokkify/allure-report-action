@@ -27,8 +27,8 @@ inputs:
     description: Allure result label whose distinct values become module-scoped environments; empty preserves caller environments
     required: false
     default: "module"
-  module-source-root:
-    description: Root containing downloaded result directories and ci-env-fragment.properties; empty uses the parent of results-directory
+  source-artifacts-directory:
+    description: Source root, auto for parent-directory detection, or empty for legacy pre-merged results
     required: false
     default: ""
   categories-file:
@@ -138,7 +138,7 @@ runs:
         REPORT_DIRECTORY: ${{ inputs.report-directory }}
         CONFIG_FILE: ${{ inputs.config-file }}
         MODULE_ENVIRONMENT_LABEL: ${{ inputs.module-environment-label }}
-        MODULE_SOURCE_ROOT: ${{ inputs.module-source-root }}
+        SOURCE_ARTIFACTS_DIRECTORY: ${{ inputs.source-artifacts-directory }}
         CATEGORIES_FILE: ${{ inputs.categories-file }}
         ALLURE_VERSION: ${{ inputs.allure-version }}
         COMMENT_FILE: ${{ inputs.comment-file }}
@@ -159,18 +159,26 @@ runs:
           echo "comment-marker must not be empty" >&2
           exit 1
         fi
+        if [ -n "$SOURCE_ARTIFACTS_DIRECTORY" ]; then
+          SOURCE_ARTIFACTS_AUTO="false"
+          if [ "$SOURCE_ARTIFACTS_DIRECTORY" = "auto" ]; then
+            SOURCE_ARTIFACTS_DIRECTORY="$(dirname "$RESULTS_DIRECTORY")"
+            SOURCE_ARTIFACTS_AUTO="true"
+          fi
+          node "$GITHUB_ACTION_PATH/allure-ci.mjs" prepare-results \
+            --source-root "$SOURCE_ARTIFACTS_DIRECTORY" \
+            --results "$RESULTS_DIRECTORY" \
+            --auto "$SOURCE_ARTIFACTS_AUTO" \
+            --module-label "$MODULE_ENVIRONMENT_LABEL"
+        fi
         if [ -n "$CATEGORIES_FILE" ]; then
           cp -f "$CATEGORIES_FILE" "$RESULTS_DIRECTORY/categories.json"
         fi
         EFFECTIVE_CONFIG_FILE="$CONFIG_FILE"
         if [ -n "$MODULE_ENVIRONMENT_LABEL" ]; then
-          if [ -z "$MODULE_SOURCE_ROOT" ]; then
-            MODULE_SOURCE_ROOT="$(dirname "$RESULTS_DIRECTORY")"
-          fi
           EFFECTIVE_CONFIG_FILE="$(mktemp "${RUNNER_TEMP:-/tmp}/allure-report-action-config-XXXXXX.mjs")"
           node "$GITHUB_ACTION_PATH/allure-ci.mjs" module-config \
             --results "$RESULTS_DIRECTORY" \
-            --source-root "$MODULE_SOURCE_ROOT" \
             --config "$CONFIG_FILE" \
             --output "$EFFECTIVE_CONFIG_FILE" \
             --module-label "$MODULE_ENVIRONMENT_LABEL"

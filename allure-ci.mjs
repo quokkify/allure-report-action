@@ -15,6 +15,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
 const EPICS = ["unit", "api", "ui", "end-to-end"];
@@ -89,7 +90,7 @@ function listResultFiles(resultsDir) {
     .map((e) => path.join(resultsDir, e.name));
 }
 
-const MODULE_SOURCE_SKIP_DIRECTORIES = new Set([
+const SOURCE_SCAN_SKIP_DIRECTORIES = new Set([
   ".git",
   ".gradle",
   ".idea",
@@ -99,8 +100,21 @@ const MODULE_SOURCE_SKIP_DIRECTORIES = new Set([
   "node_modules",
   "venv",
 ]);
+const MAX_SOURCE_FILES = 100_000;
+const MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024;
+const MAX_SOURCE_FILE_BYTES = 256 * 1024 * 1024;
+const MAX_FRAGMENT_BYTES = 1024 * 1024;
+const MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
+const PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
 
 function moduleFromFragment(fragmentPath) {
+  const stat = fs.lstatSync(fragmentPath);
+  if (!stat.isFile() || stat.isSymbolicLink()) {
+    throw new Error(`Module provenance must be a regular file: ${fragmentPath}`);
+  }
+  if (stat.size > MAX_FRAGMENT_BYTES) {
+    throw new Error(`Module provenance exceeds ${MAX_FRAGMENT_BYTES} bytes: ${fragmentPath}`);
+  }
   const modules = new Set();
   for (const rawLine of fs.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
     const line = rawLine.trim();
@@ -110,91 +124,190 @@ function moduleFromFragment(fragmentPath) {
     const value = line.slice(index + 1).trim();
     if ((key === "Module" || key.endsWith(".Module")) && value) modules.add(value);
   }
-  if (modules.size > 1) {
-    throw new Error(
-      `Conflicting module values in ${fragmentPath}: ${[...modules].sort().join(", ")}`,
-    );
+  if (modules.size !== 1) {
+    const detail = modules.size === 0 ? "none" : [...modules].sort().join(", ");
+    throw new Error(`Expected exactly one module value in ${fragmentPath}; found ${detail}`);
   }
-  return [...modules][0] || "";
+  const moduleName = [...modules][0];
+  if (moduleName.length > 512 || /[\u0000-\u001f\u007f]/.test(moduleName)) {
+    throw new Error(`Invalid module value in ${fragmentPath}`);
+  }
+  return moduleName;
 }
 
-function findModuleSourceDirectories(sourceRoot, resultsDir) {
+function findSourceResultDirectories(sourceRoot, resultsDir) {
   const root = path.resolve(sourceRoot);
   const destination = path.resolve(resultsDir);
-  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) return [];
+  if (!fs.existsSync(root)) throw new Error(`Source artifacts directory not found: ${sourceRoot}`);
+  const rootStat = fs.lstatSync(root);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
+    throw new Error(`Source artifacts path must be a regular directory: ${sourceRoot}`);
+  }
 
   const sources = [];
   const stack = [root];
   while (stack.length > 0) {
     const directory = stack.pop();
     if (directory === destination) continue;
-    const fragment = path.join(directory, "ci-env-fragment.properties");
-    if (fs.existsSync(fragment) && fs.statSync(fragment).isFile()) {
-      sources.push({ directory, fragment });
+    if (path.basename(directory) === "allure-results") {
+      sources.push(directory);
       continue;
     }
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
-      if (MODULE_SOURCE_SKIP_DIRECTORIES.has(entry.name)) continue;
-      stack.push(path.join(directory, entry.name));
+      const child = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) throw new Error(`Symbolic links are not allowed: ${child}`);
+      if (!entry.isDirectory()) continue;
+      if (SOURCE_SCAN_SKIP_DIRECTORIES.has(entry.name)) continue;
+      stack.push(child);
     }
   }
-  return sources.sort((left, right) => left.directory.localeCompare(right.directory));
+  return sources.sort();
 }
 
-let atomicWriteSequence = 0;
-function writeJsonAtomic(file, document) {
-  atomicWriteSequence += 1;
-  const temporary = path.join(
-    path.dirname(file),
-    `.${path.basename(file)}.${process.pid}.${atomicWriteSequence}.tmp`,
-  );
-  const mode = fs.statSync(file).mode & 0o777;
+function sha256(buffer) {
+  return createHash("sha256").update(buffer).digest("hex");
+}
+
+function attributedResultBuffer(file, moduleName, moduleLabel) {
+  let document;
   try {
-    fs.writeFileSync(temporary, `${JSON.stringify(document)}\n`, {
-      encoding: "utf8",
-      flag: "wx",
-      mode,
-    });
-    fs.renameSync(temporary, file);
-  } finally {
-    fs.rmSync(temporary, { force: true });
+    document = JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch (error) {
+    throw new Error(`Malformed Allure result JSON ${file}: ${error.message}`);
   }
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new Error(`Allure result must be a JSON object: ${file}`);
+  }
+  if (document.labels !== undefined && !Array.isArray(document.labels)) {
+    throw new Error(`Allure result labels must be an array: ${file}`);
+  }
+  const labels = (document.labels || []).filter(
+    (label) => !label || label.name !== moduleLabel,
+  );
+  labels.push({ name: moduleLabel, value: moduleName });
+  document.labels = labels;
+  return Buffer.from(`${JSON.stringify(document)}\n`, "utf8");
 }
 
-function recoverModuleLabels(resultsDir, sourceRoot, moduleLabel) {
-  const provenance = new Map();
+function prepareAttributedResults(sourceRoot, resultsDir, moduleLabel, autoMode) {
+  if (!sourceRoot.trim()) throw new Error("--source-root must not be empty");
+  if (!moduleLabel.trim()) throw new Error("--module-label must not be empty in attributed mode");
+  const destination = path.resolve(resultsDir);
+  const parent = path.dirname(destination);
+  fs.mkdirSync(parent, { recursive: true });
+  const temporary = fs.mkdtempSync(path.join(parent, `.${path.basename(destination)}-prepare-`));
+  const backup = path.join(
+    parent,
+    `.${path.basename(destination)}-backup-${process.pid}-${Date.now()}`,
+  );
+  let destinationMoved = false;
   let sourceDirectories = 0;
-  for (const { directory, fragment } of findModuleSourceDirectories(sourceRoot, resultsDir)) {
-    const moduleName = moduleFromFragment(fragment);
-    if (!moduleName) continue;
-    sourceDirectories += 1;
-    for (const sourceResult of listResultFiles(directory)) {
-      const basename = path.basename(sourceResult);
-      const previous = provenance.get(basename);
-      if (previous && previous !== moduleName) {
-        throw new Error(
-          `Conflicting module provenance for ${basename}: ${previous} and ${moduleName}`,
-        );
-      }
-      provenance.set(basename, moduleName);
+  let sourceFiles = 0;
+  let sourceBytes = 0;
+  let attributedResults = 0;
+  const staged = new Map();
+
+  const stage = (name, data, mode, source) => {
+    const digest = sha256(data);
+    const previous = staged.get(name);
+    if (previous) {
+      if (previous.digest === digest) return;
+      throw new Error(`Conflicting source files named ${name}: ${previous.source} and ${source}`);
     }
+    fs.writeFileSync(path.join(temporary, name), data, { flag: "wx", mode });
+    staged.set(name, { digest, source });
+  };
+
+  try {
+    const sourceDirectoriesFound = findSourceResultDirectories(sourceRoot, resultsDir);
+    const withProvenance = sourceDirectoriesFound.filter((directory) =>
+      fs.existsSync(path.join(directory, "ci-env-fragment.properties")),
+    );
+    if (autoMode && withProvenance.length === 0) {
+      fs.rmSync(temporary, { recursive: true, force: true });
+      process.stdout.write("No attributed source results detected; preserved legacy merged results\n");
+      return;
+    }
+    if (sourceDirectoriesFound.length === 0) {
+      throw new Error(`No source allure-results directories found under ${sourceRoot}`);
+    }
+    if (withProvenance.length !== sourceDirectoriesFound.length) {
+      throw new Error(
+        `Partial module provenance: ${withProvenance.length} of ${sourceDirectoriesFound.length} source directories contain ci-env-fragment.properties`,
+      );
+    }
+
+    if (fs.existsSync(destination)) {
+      const destinationStat = fs.lstatSync(destination);
+      if (!destinationStat.isDirectory() || destinationStat.isSymbolicLink()) {
+        throw new Error(`Results destination must be a regular directory: ${resultsDir}`);
+      }
+      for (const name of PRESERVED_DESTINATION_METADATA) {
+        const file = path.join(destination, name);
+        if (!fs.existsSync(file)) continue;
+        const stat = fs.lstatSync(file);
+        if (!stat.isFile() || stat.isSymbolicLink()) {
+          throw new Error(`Preserved metadata must be a regular file: ${file}`);
+        }
+        if (stat.size > MAX_PRESERVED_METADATA_BYTES) {
+          throw new Error(
+            `Preserved metadata exceeds ${MAX_PRESERVED_METADATA_BYTES} bytes: ${file}`,
+          );
+        }
+        stage(name, fs.readFileSync(file), stat.mode & 0o777, file);
+      }
+    }
+
+    for (const directory of sourceDirectoriesFound) {
+      sourceDirectories += 1;
+      const fragment = path.join(directory, "ci-env-fragment.properties");
+      if (!fs.existsSync(fragment)) {
+        throw new Error(`Missing module provenance: ${fragment}`);
+      }
+      const moduleName = moduleFromFragment(fragment);
+      for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        const file = path.join(directory, entry.name);
+        if (entry.isSymbolicLink() || !entry.isFile()) {
+          throw new Error(`Only regular files are allowed in source results: ${file}`);
+        }
+        if (entry.name === "ci-env-fragment.properties") continue;
+        const stat = fs.lstatSync(file);
+        if (stat.size > MAX_SOURCE_FILE_BYTES) {
+          throw new Error(`Source file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${file}`);
+        }
+        sourceFiles += 1;
+        sourceBytes += stat.size;
+        if (sourceFiles > MAX_SOURCE_FILES || sourceBytes > MAX_SOURCE_BYTES) {
+          throw new Error(
+            `Source results exceed limits (${MAX_SOURCE_FILES} files / ${MAX_SOURCE_BYTES} bytes)`,
+          );
+        }
+        const data = entry.name.endsWith("-result.json")
+          ? attributedResultBuffer(file, moduleName, moduleLabel)
+          : fs.readFileSync(file);
+        if (entry.name.endsWith("-result.json")) attributedResults += 1;
+        stage(entry.name, data, stat.mode & 0o777, file);
+      }
+    }
+
+    if (attributedResults === 0) throw new Error("No Allure result JSON files found in source artifacts");
+    if (fs.existsSync(destination)) {
+      fs.renameSync(destination, backup);
+      destinationMoved = true;
+    }
+    fs.renameSync(temporary, destination);
+    if (destinationMoved) fs.rmSync(backup, { recursive: true, force: true });
+  } catch (error) {
+    fs.rmSync(temporary, { recursive: true, force: true });
+    if (destinationMoved && !fs.existsSync(destination) && fs.existsSync(backup)) {
+      fs.renameSync(backup, destination);
+    }
+    throw error;
   }
 
-  let recovered = 0;
-  for (const resultFile of listResultFiles(resultsDir)) {
-    const moduleName = provenance.get(path.basename(resultFile));
-    if (!moduleName) continue;
-    const document = readJsonSafe(resultFile);
-    if (!document || typeof document !== "object" || Array.isArray(document)) continue;
-    if (labelValue(document.labels, moduleLabel)) continue;
-    if (document.labels !== undefined && !Array.isArray(document.labels)) continue;
-    document.labels = Array.isArray(document.labels) ? document.labels : [];
-    document.labels.push({ name: moduleLabel, value: moduleName });
-    writeJsonAtomic(resultFile, document);
-    recovered += 1;
-  }
-  return { recovered, sourceDirectories };
+  process.stdout.write(
+    `Prepared ${attributedResults} attributed result(s) from ${sourceDirectories} source directories (${sourceFiles} files)\n`,
+  );
 }
 
 function labelValue(labels, name) {
@@ -250,20 +363,13 @@ function environmentId(value, used) {
   return candidate;
 }
 
-async function cmdModuleConfig(resultsDir, sourceRoot, configFile, outputFile, moduleLabel) {
+async function cmdModuleConfig(resultsDir, configFile, outputFile, moduleLabel) {
   if (!moduleLabel.trim()) {
     throw new Error("--module-label must not be empty");
   }
   const configPath = path.resolve(configFile);
   if (!fs.existsSync(configPath)) {
     throw new Error(`Allure config not found: ${configFile}`);
-  }
-
-  const provenance = recoverModuleLabels(resultsDir, sourceRoot, moduleLabel);
-  if (provenance.sourceDirectories > 0) {
-    process.stdout.write(
-      `Recovered module labels for ${provenance.recovered} result(s) from ${provenance.sourceDirectories} source directories\n`,
-    );
   }
 
   const moduleNames = new Set();
@@ -997,8 +1103,9 @@ function parseArgs(argv) {
     forkPr: get("--fork-pr") || "false",
     sourceRunId: get("--source-run-id") || "",
     actionVersion: get("--action-version") || bundledActionVersion(),
+    autoSource: get("--auto") === "true",
     moduleLabel: get("--module-label") || "module",
-    sourceRoot: get("--source-root") || path.dirname(get("--results") || "./allure-results"),
+    sourceRoot: get("--source-root") || "",
     commentMarker: get("--comment-marker") || "<!-- project-toolkit-allure-ci -->",
     json: get("--json") || "",
     readme: get("--readme") || "",
@@ -1017,6 +1124,7 @@ const {
   forkPr,
   sourceRunId,
   actionVersion,
+  autoSource,
   moduleLabel,
   sourceRoot,
   commentMarker,
@@ -1026,7 +1134,9 @@ const {
 } = parseArgs(process.argv);
 
 if (cmd === "module-config") {
-  await cmdModuleConfig(results, sourceRoot, config, output, moduleLabel);
+  await cmdModuleConfig(results, config, output, moduleLabel);
+} else if (cmd === "prepare-results") {
+  prepareAttributedResults(sourceRoot, results, moduleLabel, autoSource);
 } else if (cmd === "badges") {
   cmdBadges(results, out);
 } else if (cmd === "pr-body") {
@@ -1048,7 +1158,8 @@ if (cmd === "module-config") {
 } else {
   console.error(
     "Usage: node allure-ci.mjs badges --results <dir> --out <reportDir>\n" +
-      "       node allure-ci.mjs module-config --results <dir> [--source-root <dir>] --config <allurerc.mjs> --output <effective.mjs> [--module-label module]\n" +
+      "       node allure-ci.mjs prepare-results --source-root <dir> --results <dir> [--auto true|false] [--module-label module]\n" +
+      "       node allure-ci.mjs module-config --results <dir> --config <allurerc.mjs> --output <effective.mjs> [--module-label module]\n" +
       "       node allure-ci.mjs pr-body --results <dir> --report <reportDir> --output <file> [--pages-url <url>] [--fork-pr true|false] [--source-run-id <id>] [--action-version <version>]\n" +
       "       node allure-ci.mjs pyramid --results <dir> --output <file.md> [--json <file.json>] [--readme README.md] [--policy-path <file.md>]\n" +
       "       node allure-ci.mjs pyramid-check --results <dir> [--json <quality-gates.json>]",
