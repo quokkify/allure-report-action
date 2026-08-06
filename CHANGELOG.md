@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/quokkify/allure-report-action/compare/v0.1.3...v0.2.0) (2026-08-06)
+
+
+### Features
+
+* improve Allure report attribution and environments ([#11](https://github.com/quokkify/allure-report-action/issues/11)) ([925bb96](https://github.com/quokkify/allure-report-action/commit/925bb969889752bb4bcf0de2bbe3216c398ff058))
+
 ## [0.1.3](https://github.com/quokkify/allure-report-action/compare/v0.1.2...v0.1.3) (2026-08-03)
 
 
