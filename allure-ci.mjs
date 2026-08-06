@@ -89,6 +89,114 @@ function listResultFiles(resultsDir) {
     .map((e) => path.join(resultsDir, e.name));
 }
 
+const MODULE_SOURCE_SKIP_DIRECTORIES = new Set([
+  ".git",
+  ".gradle",
+  ".idea",
+  ".venv",
+  "allure-report",
+  "dist",
+  "node_modules",
+  "venv",
+]);
+
+function moduleFromFragment(fragmentPath) {
+  const modules = new Set();
+  for (const rawLine of fs.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#") || !line.includes("=")) continue;
+    const index = line.indexOf("=");
+    const key = line.slice(0, index).trim();
+    const value = line.slice(index + 1).trim();
+    if ((key === "Module" || key.endsWith(".Module")) && value) modules.add(value);
+  }
+  if (modules.size > 1) {
+    throw new Error(
+      `Conflicting module values in ${fragmentPath}: ${[...modules].sort().join(", ")}`,
+    );
+  }
+  return [...modules][0] || "";
+}
+
+function findModuleSourceDirectories(sourceRoot, resultsDir) {
+  const root = path.resolve(sourceRoot);
+  const destination = path.resolve(resultsDir);
+  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) return [];
+
+  const sources = [];
+  const stack = [root];
+  while (stack.length > 0) {
+    const directory = stack.pop();
+    if (directory === destination) continue;
+    const fragment = path.join(directory, "ci-env-fragment.properties");
+    if (fs.existsSync(fragment) && fs.statSync(fragment).isFile()) {
+      sources.push({ directory, fragment });
+      continue;
+    }
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
+      if (MODULE_SOURCE_SKIP_DIRECTORIES.has(entry.name)) continue;
+      stack.push(path.join(directory, entry.name));
+    }
+  }
+  return sources.sort((left, right) => left.directory.localeCompare(right.directory));
+}
+
+let atomicWriteSequence = 0;
+function writeJsonAtomic(file, document) {
+  atomicWriteSequence += 1;
+  const temporary = path.join(
+    path.dirname(file),
+    `.${path.basename(file)}.${process.pid}.${atomicWriteSequence}.tmp`,
+  );
+  const mode = fs.statSync(file).mode & 0o777;
+  try {
+    fs.writeFileSync(temporary, `${JSON.stringify(document)}\n`, {
+      encoding: "utf8",
+      flag: "wx",
+      mode,
+    });
+    fs.renameSync(temporary, file);
+  } finally {
+    fs.rmSync(temporary, { force: true });
+  }
+}
+
+function recoverModuleLabels(resultsDir, sourceRoot, moduleLabel) {
+  const provenance = new Map();
+  let sourceDirectories = 0;
+  for (const { directory, fragment } of findModuleSourceDirectories(sourceRoot, resultsDir)) {
+    const moduleName = moduleFromFragment(fragment);
+    if (!moduleName) continue;
+    sourceDirectories += 1;
+    for (const sourceResult of listResultFiles(directory)) {
+      const basename = path.basename(sourceResult);
+      const previous = provenance.get(basename);
+      if (previous && previous !== moduleName) {
+        throw new Error(
+          `Conflicting module provenance for ${basename}: ${previous} and ${moduleName}`,
+        );
+      }
+      provenance.set(basename, moduleName);
+    }
+  }
+
+  let recovered = 0;
+  for (const resultFile of listResultFiles(resultsDir)) {
+    const moduleName = provenance.get(path.basename(resultFile));
+    if (!moduleName) continue;
+    const document = readJsonSafe(resultFile);
+    if (!document || typeof document !== "object" || Array.isArray(document)) continue;
+    if (labelValue(document.labels, moduleLabel)) continue;
+    if (document.labels !== undefined && !Array.isArray(document.labels)) continue;
+    document.labels = Array.isArray(document.labels) ? document.labels : [];
+    document.labels.push({ name: moduleLabel, value: moduleName });
+    writeJsonAtomic(resultFile, document);
+    recovered += 1;
+  }
+  return { recovered, sourceDirectories };
+}
+
 function labelValue(labels, name) {
   if (!Array.isArray(labels)) return "";
   const label = labels.find((item) => item && item.name === name && item.value);
@@ -142,13 +250,20 @@ function environmentId(value, used) {
   return candidate;
 }
 
-async function cmdModuleConfig(resultsDir, configFile, outputFile, moduleLabel) {
+async function cmdModuleConfig(resultsDir, sourceRoot, configFile, outputFile, moduleLabel) {
   if (!moduleLabel.trim()) {
     throw new Error("--module-label must not be empty");
   }
   const configPath = path.resolve(configFile);
   if (!fs.existsSync(configPath)) {
     throw new Error(`Allure config not found: ${configFile}`);
+  }
+
+  const provenance = recoverModuleLabels(resultsDir, sourceRoot, moduleLabel);
+  if (provenance.sourceDirectories > 0) {
+    process.stdout.write(
+      `Recovered module labels for ${provenance.recovered} result(s) from ${provenance.sourceDirectories} source directories\n`,
+    );
   }
 
   const moduleNames = new Set();
@@ -883,6 +998,7 @@ function parseArgs(argv) {
     sourceRunId: get("--source-run-id") || "",
     actionVersion: get("--action-version") || bundledActionVersion(),
     moduleLabel: get("--module-label") || "module",
+    sourceRoot: get("--source-root") || path.dirname(get("--results") || "./allure-results"),
     commentMarker: get("--comment-marker") || "<!-- project-toolkit-allure-ci -->",
     json: get("--json") || "",
     readme: get("--readme") || "",
@@ -902,6 +1018,7 @@ const {
   sourceRunId,
   actionVersion,
   moduleLabel,
+  sourceRoot,
   commentMarker,
   json,
   readme,
@@ -909,7 +1026,7 @@ const {
 } = parseArgs(process.argv);
 
 if (cmd === "module-config") {
-  await cmdModuleConfig(results, config, output, moduleLabel);
+  await cmdModuleConfig(results, sourceRoot, config, output, moduleLabel);
 } else if (cmd === "badges") {
   cmdBadges(results, out);
 } else if (cmd === "pr-body") {
@@ -931,7 +1048,7 @@ if (cmd === "module-config") {
 } else {
   console.error(
     "Usage: node allure-ci.mjs badges --results <dir> --out <reportDir>\n" +
-      "       node allure-ci.mjs module-config --results <dir> --config <allurerc.mjs> --output <effective.mjs> [--module-label module]\n" +
+      "       node allure-ci.mjs module-config --results <dir> [--source-root <dir>] --config <allurerc.mjs> --output <effective.mjs> [--module-label module]\n" +
       "       node allure-ci.mjs pr-body --results <dir> --report <reportDir> --output <file> [--pages-url <url>] [--fork-pr true|false] [--source-run-id <id>] [--action-version <version>]\n" +
       "       node allure-ci.mjs pyramid --results <dir> --output <file.md> [--json <file.json>] [--readme README.md] [--policy-path <file.md>]\n" +
       "       node allure-ci.mjs pyramid-check --results <dir> [--json <quality-gates.json>]",

@@ -4,14 +4,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP="$(mktemp -d "${RUNNER_TEMP:-/tmp}/allure-report-action-smoke-XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$TMP/results"
+mkdir -p "$TMP/results" "$TMP/source-results/module-b"
 
-python3 - "$TMP/results" <<'PY'
+python3 - "$TMP/results" "$TMP/source-results/module-b" <<'PY'
 import json
 import pathlib
 import sys
 
 root = pathlib.Path(sys.argv[1])
+module_b_source = pathlib.Path(sys.argv[2])
 documents = [
     {
         "uuid": "unit-1",
@@ -32,7 +33,7 @@ documents = [
         "stage": "finished",
         "start": 1,
         "stop": 2,
-        "labels": [{"name": "module", "value": "module-b"}],
+        "labels": [],
     },
     {
         "uuid": "playwright-1",
@@ -49,12 +50,16 @@ documents = [
 ]
 for document in documents:
     (root / f"{document['uuid']}-result.json").write_text(json.dumps(document))
+plain = next(document for document in documents if document["uuid"] == "plain-1")
+(module_b_source / "ci-env-fragment.properties").write_text("Smoke.Module=module-b\n")
+(module_b_source / "plain-1-result.json").write_text(json.dumps(plain))
 PY
 
 (
   cd "$TMP"
   node "$ROOT/allure-ci.mjs" module-config \
     --results results \
+    --source-root source-results \
     --config "$ROOT/tests/allurerc.mjs" \
     --output effective-allurerc.mjs \
     --module-label module
