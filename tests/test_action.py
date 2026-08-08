@@ -271,10 +271,6 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
             config = root / "allurerc.mjs"
             config.write_text(
                 "export default { variables: {\n"
-                "  'Common core.Module': ':common-utils:core',\n"
-                "  'Common core.Runner': 'runner-core',\n"
-                "  'Data sql.Module': ':data-utils:sql',\n"
-                "  'Data sql.Runner': 'runner-sql',\n"
                 "  'GitHub.RunId': '123',\n"
                 "} };\n"
             )
@@ -287,7 +283,9 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 source = root / "artifacts" / artifact / "build" / "allure-results"
                 source.mkdir(parents=True)
                 (source / "ci-env-fragment.properties").write_text(
-                    f"{prefix}.Suite=Gradle TestNG\n{prefix}.Module={module}\n"
+                    f"{prefix}.Suite=Gradle TestNG\n"
+                    f"{prefix}.Module={module}\n"
+                    f"{prefix}.Runner=runner-{uuid.removesuffix('-case')}\n"
                 )
                 document = {
                     "uuid": uuid,
@@ -378,11 +376,19 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 {
                     "common-utils-core": {
                         "name": ":common-utils:core",
-                        "variables": {"Module": ":common-utils:core", "Runner": "runner-core"},
+                        "variables": {
+                            "Module": ":common-utils:core",
+                            "Runner": "runner-core",
+                            "Suite": "Gradle TestNG",
+                        },
                     },
                     "data-utils-sql": {
                         "name": ":data-utils:sql",
-                        "variables": {"Module": ":data-utils:sql", "Runner": "runner-sql"},
+                        "variables": {
+                            "Module": ":data-utils:sql",
+                            "Runner": "runner-sql",
+                            "Suite": "Gradle TestNG",
+                        },
                     },
                 },
             )
@@ -462,13 +468,13 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
             results = root / "artifacts" / "allure-results"
             results.mkdir(parents=True)
             (results / "sentinel.txt").write_text("unchanged\n")
-            document = {"uuid": "collision", "name": "case", "labels": []}
-            for artifact, module in (("source-a", "module-a"), ("source-b", "module-b")):
+            for artifact in ("source-a", "source-b"):
                 source = root / "artifacts" / artifact / "allure-results"
                 source.mkdir(parents=True)
+                document = {"uuid": "collision", "name": artifact, "labels": []}
                 (source / "collision-result.json").write_text(json.dumps(document))
                 (source / "ci-env-fragment.properties").write_text(
-                    f"Suite.Module={module}\n"
+                    "Suite.Module=module-a\n"
                 )
 
             prepared = self.run_cli(
@@ -508,6 +514,238 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
 
             self.assertEqual(prepared.returncode, 0, prepared.stderr)
             self.assertEqual(len(list(results.glob("*-result.json"))), 1)
+
+    def test_prepare_results_deduplicates_identical_fragment_variables_deterministically(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-variable-deduplicate-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            for artifact, uuid in (("source-b", "case-b"), ("source-a", "case-a")):
+                source = root / "artifacts" / artifact / "allure-results"
+                source.mkdir(parents=True)
+                (source / f"{uuid}-result.json").write_text(
+                    json.dumps({"uuid": uuid, "labels": []})
+                )
+                (source / "ci-env-fragment.properties").write_text(
+                    "Z.Shared=same\nA.Module=module-a\nA.Runner=runner-a\n"
+                )
+
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(results),
+                "--source-root",
+                str(root / "artifacts"),
+                "--module-label",
+                "module",
+            )
+
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            metadata = results / ".allure-module-variables.json"
+            self.assertEqual(
+                metadata.read_text(),
+                '{"A.Module":"module-a","A.Runner":"runner-a","Z.Shared":"same"}',
+            )
+            self.assertEqual(metadata.stat().st_mode & 0o777, 0o600)
+
+    def test_prepare_results_rejects_conflicting_fragment_variables_atomically(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-variable-conflict-") as tmp:
+            root = Path(tmp)
+            results = root / "artifacts" / "allure-results"
+            results.mkdir(parents=True)
+            (results / "sentinel.txt").write_text("unchanged\n")
+            for artifact, value in (("source-a", "one"), ("source-b", "two")):
+                source = root / "artifacts" / artifact / "allure-results"
+                source.mkdir(parents=True)
+                (source / f"{artifact}-result.json").write_text(
+                    json.dumps({"uuid": artifact, "labels": []})
+                )
+                (source / "ci-env-fragment.properties").write_text(
+                    f"Suite.Module=module-a\nSuite.Runner={value}\n"
+                )
+
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(results),
+                "--source-root",
+                str(root / "artifacts"),
+                "--module-label",
+                "module",
+            )
+
+            self.assertNotEqual(prepared.returncode, 0)
+            self.assertIn("Conflicting environment variable Suite.Runner", prepared.stderr)
+            self.assertEqual((results / "sentinel.txt").read_text(), "unchanged\n")
+            self.assertFalse((results / ".allure-module-variables.json").exists())
+
+    def test_prepare_results_enforces_fragment_variable_count_boundary(self) -> None:
+        for count, succeeds in ((10_000, True), (10_001, False)):
+            with self.subTest(count=count):
+                with tempfile.TemporaryDirectory(prefix="allure-report-action-variable-count-") as tmp:
+                    root = Path(tmp)
+                    source = root / "artifacts" / "source" / "allure-results"
+                    results = root / "artifacts" / "allure-results"
+                    source.mkdir(parents=True)
+                    (source / "case-result.json").write_text(
+                        json.dumps({"uuid": "case", "labels": []})
+                    )
+                    variables = ["Suite.Module=module-a"]
+                    variables.extend(f"K{index}=v" for index in range(count - 1))
+                    (source / "ci-env-fragment.properties").write_text("\n".join(variables))
+
+                    prepared = self.run_cli(
+                        "prepare-results",
+                        "--results",
+                        str(results),
+                        "--source-root",
+                        str(root / "artifacts"),
+                        "--module-label",
+                        "module",
+                    )
+
+                    self.assertEqual(prepared.returncode == 0, succeeds, prepared.stderr)
+                    if succeeds:
+                        self.assertEqual(
+                            len(json.loads((results / ".allure-module-variables.json").read_text())),
+                            count,
+                        )
+                    else:
+                        self.assertIn("exceed count or byte limits", prepared.stderr)
+
+    def test_prepare_results_rejects_reserved_metadata_filename(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-reserved-metadata-") as tmp:
+            root = Path(tmp)
+            source = root / "artifacts" / "source" / "allure-results"
+            results = root / "artifacts" / "allure-results"
+            results.mkdir(parents=True)
+            (results / "sentinel.txt").write_text("unchanged\n")
+            source.mkdir(parents=True)
+            (source / "case-result.json").write_text(json.dumps({"uuid": "case", "labels": []}))
+            (source / "ci-env-fragment.properties").write_text("Suite.Module=module-a\n")
+            (source / ".allure-module-variables.json").write_text(
+                '{"Suite.Module":"module-a"}'
+            )
+
+            prepared = self.run_cli(
+                "prepare-results",
+                "--results",
+                str(results),
+                "--source-root",
+                str(root / "artifacts"),
+                "--module-label",
+                "module",
+            )
+
+            self.assertNotEqual(prepared.returncode, 0)
+            self.assertIn("Reserved source result filename is not allowed", prepared.stderr)
+            self.assertEqual((results / "sentinel.txt").read_text(), "unchanged\n")
+
+    def test_module_config_rejects_invalid_module_variable_metadata(self) -> None:
+        fixtures = (
+            ("malformed", "{", "Malformed module environment metadata"),
+            ("array", "[]", "Invalid module environment metadata"),
+            ("null", "null", "Invalid module environment metadata"),
+            ("non-string", '{"Suite.Module":42}', "Invalid module environment metadata"),
+            ("prototype", '{"__proto__":"attacker"}', "Invalid module environment metadata"),
+        )
+        for fixture, metadata, expected in fixtures:
+            with self.subTest(fixture=fixture):
+                with tempfile.TemporaryDirectory(prefix=f"allure-report-action-metadata-{fixture}-") as tmp:
+                    root = Path(tmp)
+                    results = root / "results"
+                    results.mkdir()
+                    (results / "case-result.json").write_text(
+                        json.dumps(
+                            {
+                                "uuid": "case",
+                                "labels": [{"name": "module", "value": "module-a"}],
+                            }
+                        )
+                    )
+                    (results / ".allure-module-variables.json").write_text(metadata)
+                    config = root / "allurerc.mjs"
+                    config.write_text("export default {};\n")
+                    prepared = self.run_cli(
+                        "module-config",
+                        "--results",
+                        str(results),
+                        "--config",
+                        str(config),
+                        "--output",
+                        str(root / "effective.mjs"),
+                        "--module-label",
+                        "module",
+                    )
+                    self.assertNotEqual(prepared.returncode, 0)
+                    self.assertIn(expected, prepared.stderr)
+                    self.assertFalse((root / "effective.mjs").exists())
+
+    def test_module_config_enforces_metadata_size_boundary(self) -> None:
+        limit = 4 * 1024 * 1024
+        for size, succeeds in ((limit, True), (limit + 1, False)):
+            with self.subTest(size=size):
+                with tempfile.TemporaryDirectory(prefix="allure-report-action-metadata-size-") as tmp:
+                    root = Path(tmp)
+                    results = root / "results"
+                    results.mkdir()
+                    (results / "case-result.json").write_text(
+                        json.dumps(
+                            {
+                                "uuid": "case",
+                                "labels": [{"name": "module", "value": "module-a"}],
+                            }
+                        )
+                    )
+                    payload = '{"Suite.Module":"module-a"}'
+                    (results / ".allure-module-variables.json").write_text(
+                        payload + " " * (size - len(payload))
+                    )
+                    config = root / "allurerc.mjs"
+                    config.write_text("export default {};\n")
+                    prepared = self.run_cli(
+                        "module-config",
+                        "--results",
+                        str(results),
+                        "--config",
+                        str(config),
+                        "--output",
+                        str(root / "effective.mjs"),
+                        "--module-label",
+                        "module",
+                    )
+                    self.assertEqual(prepared.returncode == 0, succeeds, prepared.stderr)
+                    if not succeeds:
+                        self.assertIn("Invalid module environment metadata", prepared.stderr)
+
+    def test_module_config_rejects_non_regular_module_variable_metadata(self) -> None:
+        for fixture in ("symlink", "directory"):
+            with self.subTest(fixture=fixture):
+                with tempfile.TemporaryDirectory(prefix=f"allure-report-action-metadata-{fixture}-") as tmp:
+                    root = Path(tmp)
+                    results = root / "results"
+                    results.mkdir()
+                    metadata = results / ".allure-module-variables.json"
+                    if fixture == "symlink":
+                        target = root / "outside.json"
+                        target.write_text('{"Suite.Module":"attacker"}')
+                        metadata.symlink_to(target)
+                    else:
+                        metadata.mkdir()
+                    config = root / "allurerc.mjs"
+                    config.write_text("export default {};\n")
+                    prepared = self.run_cli(
+                        "module-config",
+                        "--results",
+                        str(results),
+                        "--config",
+                        str(config),
+                        "--output",
+                        str(root / "effective.mjs"),
+                        "--module-label",
+                        "module",
+                    )
+                    self.assertNotEqual(prepared.returncode, 0)
+                    self.assertIn("Invalid module environment metadata", prepared.stderr)
 
     def test_prepare_results_rejects_missing_module_and_malformed_json(self) -> None:
         for fixture, fragment, content, expected in (
