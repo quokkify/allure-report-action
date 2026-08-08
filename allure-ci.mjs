@@ -104,10 +104,13 @@ const MAX_SOURCE_FILES = 100_000;
 const MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024;
 const MAX_SOURCE_FILE_BYTES = 256 * 1024 * 1024;
 const MAX_FRAGMENT_BYTES = 1024 * 1024;
+const MAX_FRAGMENT_VARIABLES = 10_000;
+const MAX_FRAGMENT_VARIABLE_BYTES = 4 * 1024 * 1024;
 const MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
 const PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
+const MODULE_VARIABLES_METADATA = ".allure-module-variables.json";
 
-function moduleFromFragment(fragmentPath) {
+function parseModuleFragment(fragmentPath) {
   const stat = fs.lstatSync(fragmentPath);
   if (!stat.isFile() || stat.isSymbolicLink()) {
     throw new Error(`Module provenance must be a regular file: ${fragmentPath}`);
@@ -116,12 +119,28 @@ function moduleFromFragment(fragmentPath) {
     throw new Error(`Module provenance exceeds ${MAX_FRAGMENT_BYTES} bytes: ${fragmentPath}`);
   }
   const modules = new Set();
+  const variables = new Map();
   for (const rawLine of fs.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith("#") || !line.includes("=")) continue;
     const index = line.indexOf("=");
     const key = line.slice(0, index).trim();
     const value = line.slice(index + 1).trim();
+    if (
+      !key ||
+      key === "__proto__" ||
+      key.length > 512 ||
+      value.length > 8192 ||
+      /[\u0000-\u001f\u007f]/.test(key) ||
+      /[\u0000-\u001f\u007f]/.test(value)
+    ) {
+      throw new Error(`Invalid environment variable in ${fragmentPath}`);
+    }
+    const previous = variables.get(key);
+    if (previous !== undefined && previous !== value) {
+      throw new Error(`Conflicting environment variable ${key} in ${fragmentPath}`);
+    }
+    variables.set(key, value);
     if ((key === "Module" || key.endsWith(".Module")) && value) modules.add(value);
   }
   if (modules.size !== 1) {
@@ -132,7 +151,41 @@ function moduleFromFragment(fragmentPath) {
   if (moduleName.length > 512 || /[\u0000-\u001f\u007f]/.test(moduleName)) {
     throw new Error(`Invalid module value in ${fragmentPath}`);
   }
-  return moduleName;
+  return { moduleName, variables };
+}
+
+function readModuleVariables(resultsDir) {
+  const metadata = path.join(resultsDir, MODULE_VARIABLES_METADATA);
+  if (!fs.existsSync(metadata)) return {};
+  const stat = fs.lstatSync(metadata);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_FRAGMENT_VARIABLE_BYTES) {
+    throw new Error(`Invalid module environment metadata: ${metadata}`);
+  }
+  let document;
+  try {
+    document = JSON.parse(fs.readFileSync(metadata, "utf8"));
+  } catch {
+    throw new Error(`Malformed module environment metadata: ${metadata}`);
+  }
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new Error(`Invalid module environment metadata: ${metadata}`);
+  }
+  const entries = Object.entries(document);
+  if (
+    entries.length > MAX_FRAGMENT_VARIABLES ||
+    entries.some(([key, value]) =>
+      !key ||
+      key === "__proto__" ||
+      key.length > 512 ||
+      typeof value !== "string" ||
+      value.length > 8192 ||
+      /[\u0000-\u001f\u007f]/.test(key) ||
+      /[\u0000-\u001f\u007f]/.test(value)
+    )
+  ) {
+    throw new Error(`Invalid module environment metadata: ${metadata}`);
+  }
+  return document;
 }
 
 function findSourceResultDirectories(sourceRoot, resultsDir) {
@@ -205,7 +258,9 @@ function prepareAttributedResults(sourceRoot, resultsDir, moduleLabel, autoMode)
   let sourceFiles = 0;
   let sourceBytes = 0;
   let attributedResults = 0;
+  let fragmentVariableBytes = 0;
   const staged = new Map();
+  const fragmentVariables = new Map();
 
   const stage = (name, data, mode, source) => {
     const digest = sha256(data);
@@ -264,13 +319,32 @@ function prepareAttributedResults(sourceRoot, resultsDir, moduleLabel, autoMode)
       if (!fs.existsSync(fragment)) {
         throw new Error(`Missing module provenance: ${fragment}`);
       }
-      const moduleName = moduleFromFragment(fragment);
+      const { moduleName, variables } = parseModuleFragment(fragment);
+      for (const [key, value] of variables) {
+        const previous = fragmentVariables.get(key);
+        if (previous !== undefined && previous !== value) {
+          throw new Error(`Conflicting environment variable ${key} across source fragments`);
+        }
+        if (previous === undefined) {
+          fragmentVariableBytes += Buffer.byteLength(key) + Buffer.byteLength(value);
+          if (
+            fragmentVariables.size >= MAX_FRAGMENT_VARIABLES ||
+            fragmentVariableBytes > MAX_FRAGMENT_VARIABLE_BYTES
+          ) {
+            throw new Error("Module environment variables exceed count or byte limits");
+          }
+          fragmentVariables.set(key, value);
+        }
+      }
       for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
         const file = path.join(directory, entry.name);
         if (entry.isSymbolicLink() || !entry.isFile()) {
           throw new Error(`Only regular files are allowed in source results: ${file}`);
         }
         if (entry.name === "ci-env-fragment.properties") continue;
+        if (entry.name === MODULE_VARIABLES_METADATA) {
+          throw new Error(`Reserved source result filename is not allowed: ${file}`);
+        }
         const stat = fs.lstatSync(file);
         if (stat.size > MAX_SOURCE_FILE_BYTES) {
           throw new Error(`Source file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${file}`);
@@ -291,6 +365,16 @@ function prepareAttributedResults(sourceRoot, resultsDir, moduleLabel, autoMode)
     }
 
     if (attributedResults === 0) throw new Error("No Allure result JSON files found in source artifacts");
+    const environmentMetadata = Buffer.from(
+      JSON.stringify(Object.fromEntries([...fragmentVariables].sort(([left], [right]) =>
+        left.localeCompare(right)
+      ))),
+      "utf8",
+    );
+    if (environmentMetadata.length > MAX_FRAGMENT_VARIABLE_BYTES) {
+      throw new Error("Module environment metadata exceeds byte limit");
+    }
+    stage(MODULE_VARIABLES_METADATA, environmentMetadata, 0o600, "source fragments");
     if (fs.existsSync(destination)) {
       fs.renameSync(destination, backup);
       destinationMoved = true;
@@ -388,6 +472,7 @@ async function cmdModuleConfig(resultsDir, configFile, outputFile, moduleLabel) 
   for (const descriptor of Object.values(baseConfig.environments || {})) {
     Object.assign(allVariables, descriptor?.variables || {});
   }
+  Object.assign(allVariables, readModuleVariables(resultsDir));
   if (moduleNames.size > 0) {
     for (const [key, value] of Object.entries(allVariables)) {
       if (key.toLowerCase().endsWith(".module") && String(value || "").trim()) {

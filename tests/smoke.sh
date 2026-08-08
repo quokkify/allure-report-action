@@ -52,8 +52,12 @@ documents = [
 for document in documents:
     destination = module_a_source if document["uuid"] == "unit-1" else module_b_source
     (destination / f"{document['uuid']}-result.json").write_text(json.dumps(document))
-(module_a_source / "ci-env-fragment.properties").write_text("Smoke.Module=module-a\n")
-(module_b_source / "ci-env-fragment.properties").write_text("Smoke.Module=module-b\n")
+(module_a_source / "ci-env-fragment.properties").write_text(
+    "Module A.Module=module-a\nModule A.Runner=runner-a\n"
+)
+(module_b_source / "ci-env-fragment.properties").write_text(
+    "Module B.Module=module-b\nModule B.Runner=runner-b\n"
+)
 (root / "stale-result.json").write_text(json.dumps({"uuid": "stale"}))
 (root / "environment.properties").write_text("GitHub.RunId=123\n")
 PY
