@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/quokkify/allure-report-action/compare/v0.2.1...v0.2.2) (2026-08-08)
+
+
+### Bug Fixes
+
+* preserve sidecar environment variables ([#17](https://github.com/quokkify/allure-report-action/issues/17)) ([f59bfef](https://github.com/quokkify/allure-report-action/commit/f59bfeff135bb07e63a3e7a1b86e810a0efaddd2))
+
 ## [0.2.1](https://github.com/quokkify/allure-report-action/compare/v0.2.0...v0.2.1) (2026-08-06)
 
 
