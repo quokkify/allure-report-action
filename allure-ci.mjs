@@ -413,6 +413,7 @@ function moduleVariableParts(key) {
   const index = key.lastIndexOf(".");
   if (index <= 0 || index === key.length - 1) return null;
   return {
+    prefix: key.slice(0, index).trim(),
     moduleTokens: normalizedModuleTokens(key.slice(0, index)),
     name: key.slice(index + 1).trim(),
   };
@@ -498,14 +499,28 @@ async function cmdModuleConfig(resultsDir, configFile, outputFile, moduleLabel) 
     tokens: normalizedModuleTokens(name),
     variables: {},
   }));
+  const modulesByName = new Map(modules.map((module) => [module.name, module]));
+  const modulesByVariablePrefix = new Map();
+  for (const [key, value] of Object.entries(allVariables)) {
+    const parts = moduleVariableParts(key);
+    if (!parts || parts.name.toLowerCase() !== "module") continue;
+    const module = modulesByName.get(String(value || "").trim());
+    if (!module) continue;
+    const previous = modulesByVariablePrefix.get(parts.prefix);
+    if (previous && previous !== module) {
+      throw new Error(`Conflicting module declarations for variable prefix ${parts.prefix}`);
+    }
+    modulesByVariablePrefix.set(parts.prefix, module);
+  }
   const globalVariables = {};
   for (const [key, value] of Object.entries(allVariables)) {
     const parts = moduleVariableParts(key);
-    const exactMatches = parts
+    const declaredModule = parts ? modulesByVariablePrefix.get(parts.prefix) : null;
+    const exactMatches = parts && !declaredModule
       ? modules.filter((candidate) => tokensEqual(candidate.tokens, parts.moduleTokens))
       : [];
     const suffixMatches =
-      parts && exactMatches.length === 0
+      parts && !declaredModule && exactMatches.length === 0
         ? modules.filter(
             (candidate) =>
               tokensEndWith(candidate.tokens, parts.moduleTokens) ||
@@ -513,7 +528,7 @@ async function cmdModuleConfig(resultsDir, configFile, outputFile, moduleLabel) 
           )
         : [];
     const matches = exactMatches.length > 0 ? exactMatches : suffixMatches;
-    const module = matches.length === 1 ? matches[0] : null;
+    const module = declaredModule || (matches.length === 1 ? matches[0] : null);
     if (module && parts.name) module.variables[parts.name] = String(value);
     else globalVariables[key] = String(value);
   }
