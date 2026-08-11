@@ -276,8 +276,18 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
             )
 
             fixtures = (
-                ("test-report-common", "Common core", ":common-utils:core", "core-case"),
-                ("test-report-data", "Data sql", ":data-utils:sql", "sql-case"),
+                (
+                    "test-report-common",
+                    "Common q4j-core",
+                    ":common-utils:core",
+                    "core-case",
+                ),
+                (
+                    "test-report-data",
+                    "Data q4j-sql",
+                    ":data-utils:sql",
+                    "sql-case",
+                ),
             )
             for artifact, prefix, module, uuid in fixtures:
                 source = root / "artifacts" / artifact / "build" / "allure-results"
