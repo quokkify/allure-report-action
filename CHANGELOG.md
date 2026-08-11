@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/quokkify/allure-report-action/compare/v0.2.2...v0.2.3) (2026-08-11)
+
+
+### Bug Fixes
+
+* scope environment variables by provenance ([#19](https://github.com/quokkify/allure-report-action/issues/19)) ([8b732a2](https://github.com/quokkify/allure-report-action/commit/8b732a2b201a92e97fed3aa7e98f6008b458c8ce))
+
 ## [0.2.2](https://github.com/quokkify/allure-report-action/compare/v0.2.1...v0.2.2) (2026-08-08)
 
 
