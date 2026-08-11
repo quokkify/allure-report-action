@@ -412,9 +412,11 @@ function normalizedModuleTokens(value) {
 function moduleVariableParts(key) {
   const index = key.lastIndexOf(".");
   if (index <= 0 || index === key.length - 1) return null;
+  const prefix = key.slice(0, index).trim();
+  if (!prefix) return null;
   return {
-    prefix: key.slice(0, index).trim(),
-    moduleTokens: normalizedModuleTokens(key.slice(0, index)),
+    prefix,
+    moduleTokens: normalizedModuleTokens(prefix),
     name: key.slice(index + 1).trim(),
   };
 }
