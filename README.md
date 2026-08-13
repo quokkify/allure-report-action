@@ -1,5 +1,7 @@
 # allure-report-action
 
+Generated with `quokkify/project-toolkit` at `v2.10.1`. Run `copier update` to apply future template changes; Renovate updates workflow version references independently.
+
 Build an Allure 3 HTML report from an already-merged results directory, generate the existing outcome badges and optional test-pyramid files, optionally publish the report to a GitHub Pages subdirectory, and finally create or update one pull-request comment with total and passed test counts.
 
 Tests do **not** need Allure `epic` metadata. Results without a recognized `epic` remain in the overall totals. The preserved CSP fallback classifies Playwright results as `E2E`; other unclassified results appear under `No epic assigned` so the missing relationship is explicit.
