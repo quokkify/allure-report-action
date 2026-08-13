@@ -1,6 +1,6 @@
 # allure-report-action
 
-Generated with `quokkify/project-toolkit` at `v2.10.1`. Run `copier update` to apply future template changes; Renovate updates workflow version references independently.
+Generated with `quokkify/project-toolkit` at `v2.12.1`. Run `copier update` to apply future template changes; Renovate updates workflow version references independently.
 
 Build an Allure 3 HTML report from an already-merged results directory, generate the existing outcome badges and optional test-pyramid files, optionally publish the report to a GitHub Pages subdirectory, and finally create or update one pull-request comment with total and passed test counts.
 
