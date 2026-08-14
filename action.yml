@@ -229,7 +229,7 @@ runs:
 
     - name: Deploy Allure HTML to GitHub Pages
       if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}
-      uses: quokkify/gh-pages-subdir-action@816d85aa756f480457befb42168633cb6ccf09c7 # v0.1.0
+      uses: quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b # v0.1.1
       with:
         token: ${{ inputs.github-token }}
         publish-dir: ${{ inputs.report-directory }}
