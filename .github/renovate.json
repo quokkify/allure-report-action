@@ -1,4 +1,15 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>quokkify/renovate-presets//presets/base", "github>quokkify/renovate-presets//presets/github-actions/default"]
+  "extends": ["github>quokkify/renovate-presets//presets/base", "github>quokkify/renovate-presets//presets/github-actions/default"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^action\\.yml$/"],
+      "matchStrings": [
+        "(?m)^  allure-version:\\n(?:    [^\\n]*\\n)*?    default:\\s*[\\\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\\\"']?\\s*$"
+      ],
+      "datasourceTemplate": "npm",
+      "depNameTemplate": "allure"
+    }
+  ]
 }
