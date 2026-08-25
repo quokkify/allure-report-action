@@ -1,7 +1,12 @@
 /**
  * Pyramid check command
  */
-import { aggregateResults } from '../allure/parser.js';
+import {
+  listResultFiles,
+  readJsonSafe,
+  getEpicForResult,
+  aggregateResults,
+} from '../report/index.js';
 import {
   evaluatePyramidQualityGates,
   writeQualityGatesJson,
@@ -9,7 +14,7 @@ import {
   appendJobSummary,
   formatQualityGatesMarkdownSection,
   PyramidMetrics,
-} from '../renderer/pyramid.js';
+} from '../report/quality-gates.js';
 
 export interface PyramidCheckCommandOptions {
   resultsDir: string;
@@ -22,7 +27,11 @@ export interface PyramidCheckCommandOptions {
 export function runPyramidCheck(options: PyramidCheckCommandOptions): void {
   const { resultsDir, outputJson } = options;
 
-  const aggregated = aggregateResults(resultsDir);
+  const aggregated = aggregateResults(
+    listResultFiles(resultsDir),
+    (file: string) => readJsonSafe(file),
+    result => getEpicForResult(result as any)
+  );
   const { pyramidTotal, unitShare, apiShare, e2eShare, otherEpicTotal } = aggregated;
 
   const metrics: PyramidMetrics = {

@@ -3,10 +3,15 @@
  */
 import * as fs from 'node:fs';
 
-import { aggregateResults } from '../allure/parser.js';
 import { renderPrComment, PrCommentData } from '../renderer/markdown.js';
-import { readWidgetSummary } from '../report/summary.js';
-import { mergeSummary } from '../report/summary.js';
+import {
+  aggregateResults,
+  listResultFiles,
+  readJsonSafe,
+  getEpicForResult,
+  readWidgetSummary,
+  mergeSummary,
+} from '../report/index.js';
 
 export interface PrBodyCommandOptions {
   resultsDir: string;
@@ -22,7 +27,7 @@ export interface PrBodyCommandOptions {
 /**
  * Executes pr-body command
  */
-export function runPrBody(options: PrBodyCommandOptions): void {
+export async function runPrBody(options: PrBodyCommandOptions): Promise<void> {
   const {
     resultsDir,
     reportDir,
@@ -34,9 +39,13 @@ export function runPrBody(options: PrBodyCommandOptions): void {
     commentMarker,
   } = options;
 
-  const aggregated = aggregateResults(resultsDir);
-  const widget = readWidgetSummary(reportDir);
-  const summary = mergeSummary(widget, aggregated);
+  const aggregated = aggregateResults(
+    listResultFiles(resultsDir),
+    (file: string) => readJsonSafe(file),
+    result => getEpicForResult(result as any)
+  );
+  const widget = await readWidgetSummary(reportDir);
+  const summary = mergeSummary(await widget, aggregated);
 
   const data: PrCommentData = {
     summary,

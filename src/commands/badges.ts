@@ -2,7 +2,12 @@
  * Badges command
  */
 import { generateBadges } from '../allure/badges.js';
-import { aggregateResults } from '../allure/parser.js';
+import {
+  aggregateResults,
+  listResultFiles,
+  readJsonSafe,
+  getEpicForResult,
+} from '../report/index.js';
 
 export interface BadgesCommandOptions {
   resultsDir: string;
@@ -14,6 +19,10 @@ export interface BadgesCommandOptions {
  */
 export function runBadges(options: BadgesCommandOptions): void {
   const { resultsDir, reportDir } = options;
-  const results = aggregateResults(resultsDir);
+  const results = aggregateResults(
+    listResultFiles(resultsDir),
+    (file: string) => readJsonSafe(file),
+    getEpicForResult
+  );
   generateBadges(results, reportDir);
 }

@@ -1,6 +1,16 @@
-import { readWidgetSummary } from '../allure/parser.js';
-// Re-export the parser's implementation
-export { readWidgetSummary };
+/**
+ * Reads widget summary from Allure report
+ */
+export async function readWidgetSummary(reportDir) {
+    try {
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        return JSON.parse(fs.readFileSync(path.join(reportDir, 'widgets', 'summary.json'), 'utf8'));
+    }
+    catch {
+        return null;
+    }
+}
 /**
  * Merges widget summary with aggregated results
  * Widget summary is the source of truth for counts, but aggregated results

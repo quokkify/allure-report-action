@@ -77,7 +77,7 @@ describe('Commands', () => {
       );
     });
 
-    it('generates PR comment markdown', () => {
+    it('generates PR comment markdown', async () => {
       writeResult('unit1', {
         uuid: '1',
         status: 'passed',
@@ -91,7 +91,7 @@ describe('Commands', () => {
       writeResult('plain', { uuid: '3', status: 'passed' });
 
       const outputFile = path.join(tempDir, 'comment.md');
-      runPrBody({
+      await runPrBody({
         resultsDir,
         reportDir,
         outputFile,

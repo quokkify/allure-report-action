@@ -178,7 +178,7 @@ var require_file_command = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.prepareKeyValueMessage = exports2.issueFileCommand = void 0;
     var crypto = __importStar(require("crypto"));
-    var fs8 = __importStar(require("fs"));
+    var fs9 = __importStar(require("fs"));
     var os = __importStar(require("os"));
     var utils_1 = require_utils();
     function issueFileCommand(command, message) {
@@ -186,10 +186,10 @@ var require_file_command = __commonJS({
       if (!filePath) {
         throw new Error(`Unable to find environment variable for file command ${command}`);
       }
-      if (!fs8.existsSync(filePath)) {
+      if (!fs9.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
       }
-      fs8.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os.EOL}`, {
+      fs9.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os.EOL}`, {
         encoding: "utf8"
       });
     }
@@ -992,14 +992,14 @@ var require_util = __commonJS({
         }
         const port = url.port != null ? url.port : url.protocol === "https:" ? 443 : 80;
         let origin = url.origin != null ? url.origin : `${url.protocol}//${url.hostname}:${port}`;
-        let path6 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
+        let path7 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
         if (origin.endsWith("/")) {
           origin = origin.substring(0, origin.length - 1);
         }
-        if (path6 && !path6.startsWith("/")) {
-          path6 = `/${path6}`;
+        if (path7 && !path7.startsWith("/")) {
+          path7 = `/${path7}`;
         }
-        url = new URL(origin + path6);
+        url = new URL(origin + path7);
       }
       return url;
     }
@@ -2613,20 +2613,20 @@ var require_parseParams = __commonJS({
 var require_basename = __commonJS({
   "node_modules/@fastify/busboy/lib/utils/basename.js"(exports2, module2) {
     "use strict";
-    module2.exports = function basename2(path6) {
-      if (typeof path6 !== "string") {
+    module2.exports = function basename2(path7) {
+      if (typeof path7 !== "string") {
         return "";
       }
-      for (var i = path6.length - 1; i >= 0; --i) {
-        switch (path6.charCodeAt(i)) {
+      for (var i = path7.length - 1; i >= 0; --i) {
+        switch (path7.charCodeAt(i)) {
           case 47:
           // '/'
           case 92:
-            path6 = path6.slice(i + 1);
-            return path6 === ".." || path6 === "." ? "" : path6;
+            path7 = path7.slice(i + 1);
+            return path7 === ".." || path7 === "." ? "" : path7;
         }
       }
-      return path6 === ".." || path6 === "." ? "" : path6;
+      return path7 === ".." || path7 === "." ? "" : path7;
     };
   }
 });
@@ -5656,7 +5656,7 @@ var require_request = __commonJS({
     }
     var Request = class _Request {
       constructor(origin, {
-        path: path6,
+        path: path7,
         method,
         body,
         headers,
@@ -5670,11 +5670,11 @@ var require_request = __commonJS({
         throwOnError,
         expectContinue
       }, handler2) {
-        if (typeof path6 !== "string") {
+        if (typeof path7 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path6[0] !== "/" && !(path6.startsWith("http://") || path6.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path7[0] !== "/" && !(path7.startsWith("http://") || path7.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.exec(path6) !== null) {
+        } else if (invalidPathRegex.exec(path7) !== null) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -5737,7 +5737,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? util.buildURL(path6, query) : path6;
+        this.path = query ? util.buildURL(path7, query) : path7;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -6745,9 +6745,9 @@ var require_RedirectHandler = __commonJS({
           return this.handler.onHeaders(statusCode, headers, resume, statusText);
         }
         const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path6 = search ? `${pathname}${search}` : pathname;
+        const path7 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path6;
+        this.opts.path = path7;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -7987,7 +7987,7 @@ var require_client = __commonJS({
         writeH2(client, client[kHTTP2Session], request2);
         return;
       }
-      const { body, method, path: path6, host, upgrade, headers, blocking, reset } = request2;
+      const { body, method, path: path7, host, upgrade, headers, blocking, reset } = request2;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
         body.read(0);
@@ -8037,7 +8037,7 @@ var require_client = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path6} HTTP/1.1\r
+      let header = `${method} ${path7} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -8100,7 +8100,7 @@ upgrade: ${upgrade}\r
       return true;
     }
     function writeH2(client, session, request2) {
-      const { body, method, path: path6, host, upgrade, expectContinue, signal, headers: reqHeaders } = request2;
+      const { body, method, path: path7, host, upgrade, expectContinue, signal, headers: reqHeaders } = request2;
       let headers;
       if (typeof reqHeaders === "string") headers = Request[kHTTP2CopyHeaders](reqHeaders.trim());
       else headers = reqHeaders;
@@ -8143,7 +8143,7 @@ upgrade: ${upgrade}\r
         });
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path6;
+      headers[HTTP2_HEADER_PATH] = path7;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -10383,20 +10383,20 @@ var require_mock_utils = __commonJS({
       }
       return true;
     }
-    function safeUrl(path6) {
-      if (typeof path6 !== "string") {
-        return path6;
+    function safeUrl(path7) {
+      if (typeof path7 !== "string") {
+        return path7;
       }
-      const pathSegments = path6.split("?");
+      const pathSegments = path7.split("?");
       if (pathSegments.length !== 2) {
-        return path6;
+        return path7;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path6, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path6);
+    function matchKey(mockDispatch2, { path: path7, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path7);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -10414,7 +10414,7 @@ var require_mock_utils = __commonJS({
     function getMockDispatch(mockDispatches, key) {
       const basePath = key.query ? buildURL(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path6 }) => matchValue(safeUrl(path6), resolvedPath));
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path7 }) => matchValue(safeUrl(path7), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
@@ -10451,9 +10451,9 @@ var require_mock_utils = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path6, method, body, headers, query } = opts;
+      const { path: path7, method, body, headers, query } = opts;
       return {
-        path: path6,
+        path: path7,
         method,
         body,
         headers,
@@ -10902,10 +10902,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path6, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path7, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path6,
+            Path: path7,
             "Status code": statusCode,
             Persistent: persist ? "\u2705" : "\u274C",
             Invocations: timesInvoked,
@@ -15525,8 +15525,8 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path6) {
-      for (const char of path6) {
+    function validateCookiePath(path7) {
+      for (const char of path7) {
         const code = char.charCodeAt(0);
         if (code < 33 || char === ";") {
           throw new Error("Invalid cookie path");
@@ -17206,11 +17206,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path6 = opts.path;
+          let path7 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path6 = `/${path6}`;
+            path7 = `/${path7}`;
           }
-          url = new URL(util.parseOrigin(url).origin + path6);
+          url = new URL(util.parseOrigin(url).origin + path7);
         } else {
           if (!opts) {
             opts = typeof url === "object" ? url : {};
@@ -18433,7 +18433,7 @@ var require_path_utils = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.toPlatformPath = exports2.toWin32Path = exports2.toPosixPath = void 0;
-    var path6 = __importStar(require("path"));
+    var path7 = __importStar(require("path"));
     function toPosixPath(pth) {
       return pth.replace(/[\\]/g, "/");
     }
@@ -18443,7 +18443,7 @@ var require_path_utils = __commonJS({
     }
     exports2.toWin32Path = toWin32Path;
     function toPlatformPath(pth) {
-      return pth.replace(/[/\\]/g, path6.sep);
+      return pth.replace(/[/\\]/g, path7.sep);
     }
     exports2.toPlatformPath = toPlatformPath;
   }
@@ -18506,12 +18506,12 @@ var require_io_util = __commonJS({
     var _a;
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getCmdPath = exports2.tryGetExecutablePath = exports2.isRooted = exports2.isDirectory = exports2.exists = exports2.READONLY = exports2.UV_FS_O_EXLOCK = exports2.IS_WINDOWS = exports2.unlink = exports2.symlink = exports2.stat = exports2.rmdir = exports2.rm = exports2.rename = exports2.readlink = exports2.readdir = exports2.open = exports2.mkdir = exports2.lstat = exports2.copyFile = exports2.chmod = void 0;
-    var fs8 = __importStar(require("fs"));
-    var path6 = __importStar(require("path"));
-    _a = fs8.promises, exports2.chmod = _a.chmod, exports2.copyFile = _a.copyFile, exports2.lstat = _a.lstat, exports2.mkdir = _a.mkdir, exports2.open = _a.open, exports2.readdir = _a.readdir, exports2.readlink = _a.readlink, exports2.rename = _a.rename, exports2.rm = _a.rm, exports2.rmdir = _a.rmdir, exports2.stat = _a.stat, exports2.symlink = _a.symlink, exports2.unlink = _a.unlink;
+    var fs9 = __importStar(require("fs"));
+    var path7 = __importStar(require("path"));
+    _a = fs9.promises, exports2.chmod = _a.chmod, exports2.copyFile = _a.copyFile, exports2.lstat = _a.lstat, exports2.mkdir = _a.mkdir, exports2.open = _a.open, exports2.readdir = _a.readdir, exports2.readlink = _a.readlink, exports2.rename = _a.rename, exports2.rm = _a.rm, exports2.rmdir = _a.rmdir, exports2.stat = _a.stat, exports2.symlink = _a.symlink, exports2.unlink = _a.unlink;
     exports2.IS_WINDOWS = process.platform === "win32";
     exports2.UV_FS_O_EXLOCK = 268435456;
-    exports2.READONLY = fs8.constants.O_RDONLY;
+    exports2.READONLY = fs9.constants.O_RDONLY;
     function exists(fsPath) {
       return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -18556,7 +18556,7 @@ var require_io_util = __commonJS({
         }
         if (stats && stats.isFile()) {
           if (exports2.IS_WINDOWS) {
-            const upperExt = path6.extname(filePath).toUpperCase();
+            const upperExt = path7.extname(filePath).toUpperCase();
             if (extensions.some((validExt) => validExt.toUpperCase() === upperExt)) {
               return filePath;
             }
@@ -18580,11 +18580,11 @@ var require_io_util = __commonJS({
           if (stats && stats.isFile()) {
             if (exports2.IS_WINDOWS) {
               try {
-                const directory = path6.dirname(filePath);
-                const upperName = path6.basename(filePath).toUpperCase();
+                const directory = path7.dirname(filePath);
+                const upperName = path7.basename(filePath).toUpperCase();
                 for (const actualName of yield exports2.readdir(directory)) {
                   if (upperName === actualName.toUpperCase()) {
-                    filePath = path6.join(directory, actualName);
+                    filePath = path7.join(directory, actualName);
                     break;
                   }
                 }
@@ -18679,7 +18679,7 @@ var require_io = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.findInPath = exports2.which = exports2.mkdirP = exports2.rmRF = exports2.mv = exports2.cp = void 0;
     var assert_1 = require("assert");
-    var path6 = __importStar(require("path"));
+    var path7 = __importStar(require("path"));
     var ioUtil = __importStar(require_io_util());
     function cp(source, dest, options = {}) {
       return __awaiter(this, void 0, void 0, function* () {
@@ -18688,7 +18688,7 @@ var require_io = __commonJS({
         if (destStat && destStat.isFile() && !force) {
           return;
         }
-        const newDest = destStat && destStat.isDirectory() && copySourceDirectory ? path6.join(dest, path6.basename(source)) : dest;
+        const newDest = destStat && destStat.isDirectory() && copySourceDirectory ? path7.join(dest, path7.basename(source)) : dest;
         if (!(yield ioUtil.exists(source))) {
           throw new Error(`no such file or directory: ${source}`);
         }
@@ -18700,7 +18700,7 @@ var require_io = __commonJS({
             yield cpDirRecursive(source, newDest, 0, force);
           }
         } else {
-          if (path6.relative(source, newDest) === "") {
+          if (path7.relative(source, newDest) === "") {
             throw new Error(`'${newDest}' and '${source}' are the same file`);
           }
           yield copyFile(source, newDest, force);
@@ -18713,7 +18713,7 @@ var require_io = __commonJS({
         if (yield ioUtil.exists(dest)) {
           let destExists = true;
           if (yield ioUtil.isDirectory(dest)) {
-            dest = path6.join(dest, path6.basename(source));
+            dest = path7.join(dest, path7.basename(source));
             destExists = yield ioUtil.exists(dest);
           }
           if (destExists) {
@@ -18724,7 +18724,7 @@ var require_io = __commonJS({
             }
           }
         }
-        yield mkdirP(path6.dirname(dest));
+        yield mkdirP(path7.dirname(dest));
         yield ioUtil.rename(source, dest);
       });
     }
@@ -18787,7 +18787,7 @@ var require_io = __commonJS({
         }
         const extensions = [];
         if (ioUtil.IS_WINDOWS && process.env["PATHEXT"]) {
-          for (const extension of process.env["PATHEXT"].split(path6.delimiter)) {
+          for (const extension of process.env["PATHEXT"].split(path7.delimiter)) {
             if (extension) {
               extensions.push(extension);
             }
@@ -18800,12 +18800,12 @@ var require_io = __commonJS({
           }
           return [];
         }
-        if (tool.includes(path6.sep)) {
+        if (tool.includes(path7.sep)) {
           return [];
         }
         const directories = [];
         if (process.env.PATH) {
-          for (const p of process.env.PATH.split(path6.delimiter)) {
+          for (const p of process.env.PATH.split(path7.delimiter)) {
             if (p) {
               directories.push(p);
             }
@@ -18813,7 +18813,7 @@ var require_io = __commonJS({
         }
         const matches = [];
         for (const directory of directories) {
-          const filePath = yield ioUtil.tryGetExecutablePath(path6.join(directory, tool), extensions);
+          const filePath = yield ioUtil.tryGetExecutablePath(path7.join(directory, tool), extensions);
           if (filePath) {
             matches.push(filePath);
           }
@@ -18929,7 +18929,7 @@ var require_toolrunner = __commonJS({
     var os = __importStar(require("os"));
     var events = __importStar(require("events"));
     var child = __importStar(require("child_process"));
-    var path6 = __importStar(require("path"));
+    var path7 = __importStar(require("path"));
     var io = __importStar(require_io());
     var ioUtil = __importStar(require_io_util());
     var timers_1 = require("timers");
@@ -19144,7 +19144,7 @@ var require_toolrunner = __commonJS({
       exec() {
         return __awaiter(this, void 0, void 0, function* () {
           if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) {
-            this.toolPath = path6.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+            this.toolPath = path7.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
           }
           this.toolPath = yield io.which(this.toolPath, true);
           return new Promise((resolve4, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -19644,7 +19644,7 @@ var require_core = __commonJS({
     var file_command_1 = require_file_command();
     var utils_1 = require_utils();
     var os = __importStar(require("os"));
-    var path6 = __importStar(require("path"));
+    var path7 = __importStar(require("path"));
     var oidc_utils_1 = require_oidc_utils();
     var ExitCode;
     (function(ExitCode2) {
@@ -19672,7 +19672,7 @@ var require_core = __commonJS({
       } else {
         (0, command_1.issueCommand)("add-path", {}, inputPath);
       }
-      process.env["PATH"] = `${inputPath}${path6.delimiter}${process.env["PATH"]}`;
+      process.env["PATH"] = `${inputPath}${path7.delimiter}${process.env["PATH"]}`;
     }
     exports2.addPath = addPath;
     function getInput2(name, options) {
@@ -19828,8 +19828,8 @@ var require_context = __commonJS({
           if ((0, fs_1.existsSync)(process.env.GITHUB_EVENT_PATH)) {
             this.payload = JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: "utf8" }));
           } else {
-            const path6 = process.env.GITHUB_EVENT_PATH;
-            process.stdout.write(`GITHUB_EVENT_PATH ${path6} does not exist${os_1.EOL}`);
+            const path7 = process.env.GITHUB_EVENT_PATH;
+            process.stdout.write(`GITHUB_EVENT_PATH ${path7} does not exist${os_1.EOL}`);
           }
         }
         this.eventName = process.env.GITHUB_EVENT_NAME;
@@ -23917,39 +23917,6 @@ var require_github = __commonJS({
 // dist/main.js
 var core2 = __toESM(require_core(), 1);
 
-// dist/allure/model.js
-var PYRAMID_LAYERS = [
-  { id: "unit", epics: ["unit"], label: "Unit (base)", epicNote: "`unit`" },
-  {
-    id: "api",
-    epics: ["api"],
-    label: "Integration (middle)",
-    epicNote: "`epic: api`, Allure `layer: integration`"
-  },
-  {
-    id: "ui_e2e",
-    epics: ["end-to-end", "ui"],
-    label: "UI / E2E (top)",
-    epicNote: "`end-to-end` (+ `ui` if used)"
-  }
-];
-var EPIC_DISPLAY = {
-  unit: "Unit",
-  api: "Integration",
-  ui: "UI",
-  "end-to-end": "E2E",
-  other: "No epic assigned"
-};
-var PYRAMID_ADVISORY = {
-  unitShareMin: 0.45,
-  e2eShareMax: 0.28
-};
-var ACTION_REPOSITORY_URL = "https://github.com/quokkify/allure-report-action";
-var ACTION_VERSION = "";
-function setActionVersion(version) {
-  ACTION_VERSION = version;
-}
-
 // dist/allure/badges.js
 var fs = __toESM(require("node:fs"), 1);
 var path = __toESM(require("node:path"), 1);
@@ -24006,59 +23973,96 @@ function generateBadges(results, reportDir) {
   }
 }
 
-// dist/allure/parser.js
-var fs2 = __toESM(require("node:fs"), 1);
-var path2 = __toESM(require("node:path"), 1);
-function listResultFiles(resultsDir) {
-  if (!fs2.existsSync(resultsDir))
-    return [];
-  return fs2.readdirSync(resultsDir, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith("-result.json")).map((entry) => path2.join(resultsDir, entry.name));
+// dist/report/model.js
+var EPIC_DISPLAY = {
+  unit: "Unit",
+  api: "Integration",
+  ui: "UI",
+  "end-to-end": "E2E",
+  other: "No epic assigned"
+};
+var PYRAMID_LAYERS = [
+  { id: "unit", epics: ["unit"], label: "Unit (base)", epicNote: "`unit`" },
+  {
+    id: "api",
+    epics: ["api"],
+    label: "Integration (middle)",
+    epicNote: "`epic: api`, Allure `layer: integration`"
+  },
+  {
+    id: "ui_e2e",
+    epics: ["end-to-end", "ui"],
+    label: "UI / E2E (top)",
+    epicNote: "`end-to-end` (+ `ui` if used)"
+  }
+];
+var PYRAMID_ADVISORY = {
+  unitShareMin: 0.45,
+  e2eShareMax: 0.28
+};
+var ACTION_REPOSITORY_URL = "https://github.com/quokkify/allure-report-action";
+var ACTION_VERSION = "";
+function setActionVersion(version) {
+  ACTION_VERSION = version;
 }
-function readJsonSafe(file) {
+
+// dist/report/summary.js
+async function readWidgetSummary(reportDir) {
   try {
-    return JSON.parse(fs2.readFileSync(file, "utf8"));
+    const fs9 = await import("node:fs");
+    const path7 = await import("node:path");
+    return JSON.parse(fs9.readFileSync(path7.join(reportDir, "widgets", "summary.json"), "utf8"));
   } catch {
     return null;
   }
 }
-function getLabelValue(labels, name) {
-  if (!Array.isArray(labels))
-    return "";
-  const label = labels.find((item) => item && item.name === name && item.value);
-  return label ? String(label.value).trim() : "";
+function mergeSummary(widget, aggregated) {
+  if (!widget?.statistic)
+    return aggregated.total;
+  const stat = widget.statistic;
+  return {
+    total: stat.total ?? aggregated.total.total,
+    passed: stat.passed ?? 0,
+    failed: stat.failed ?? 0,
+    broken: stat.broken ?? 0,
+    skipped: stat.skipped ?? 0,
+    unknown: Math.max(stat.unknown ?? 0, aggregated.total.unknown)
+  };
 }
-function getEpicForResult(result) {
-  const rawEpic = getLabelValue(result.labels, "epic");
-  if (rawEpic && ["unit", "api", "ui", "end-to-end"].includes(rawEpic)) {
-    return rawEpic;
-  }
-  if (!Array.isArray(result.labels))
-    return "other";
-  const framework = result.labels.find((l) => l && l.name === "framework");
-  if (framework && String(framework.value).toLowerCase() === "playwright") {
-    return "end-to-end";
-  }
-  return "other";
-}
-function emptySummary() {
+
+// dist/report/aggregation.js
+function emptyStats() {
   return { total: 0, passed: 0, failed: 0, broken: 0, skipped: 0, unknown: 0 };
 }
-function aggregateResults(resultsDir) {
-  const files = listResultFiles(resultsDir);
+function sumEpicStats(epics, byEpic) {
+  const sum = emptyStats();
+  for (const epic of epics) {
+    const stats = byEpic[epic];
+    sum.passed += stats.passed;
+    sum.failed += stats.failed;
+    sum.broken += stats.broken;
+    sum.skipped += stats.skipped;
+    sum.unknown += stats.unknown;
+    sum.total += stats.total;
+  }
+  return sum;
+}
+function aggregateResults(files, readJsonFile, getEpicForResult2) {
   const byEpic = {
-    unit: emptySummary(),
-    api: emptySummary(),
-    ui: emptySummary(),
-    "end-to-end": emptySummary(),
-    other: emptySummary()
+    unit: emptyStats(),
+    api: emptyStats(),
+    ui: emptyStats(),
+    "end-to-end": emptyStats(),
+    other: emptyStats()
   };
-  const total = emptySummary();
+  const total = emptyStats();
+  let resultCount = 0;
   for (const file of files) {
-    const result = readJsonSafe(file);
+    const result = readJsonFile(file);
     if (!result || typeof result.status !== "string")
       continue;
     const status = result.status.toLowerCase();
-    const epic = getEpicForResult(result);
+    const epic = getEpicForResult2(result);
     const bucket = byEpic[epic];
     bucket.total++;
     total.total++;
@@ -24083,6 +24087,7 @@ function aggregateResults(resultsDir) {
         bucket.unknown++;
         total.unknown++;
     }
+    resultCount++;
   }
   const layers = PYRAMID_LAYERS.map((layerDef) => ({
     id: layerDef.id,
@@ -24091,16 +24096,16 @@ function aggregateResults(resultsDir) {
     stats: sumEpicStats([...layerDef.epics], byEpic)
   }));
   const pyramidTotal = layers.reduce((sum, layer) => sum + layer.stats.total, 0);
-  const unitStats = layers.find((l) => l.id === "unit")?.stats ?? emptySummary();
-  const apiStats = layers.find((l) => l.id === "api")?.stats ?? emptySummary();
+  const unitStats = layers.find((l) => l.id === "unit")?.stats ?? emptyStats();
+  const apiStats = layers.find((l) => l.id === "api")?.stats ?? emptyStats();
   const e2eLayer = layers.find((l) => l.id === "ui_e2e");
-  const e2eStats = e2eLayer?.stats ?? emptySummary();
+  const e2eStats = e2eLayer?.stats ?? emptyStats();
   const other = byEpic.other;
   const otherEpicTotal = other.total;
   return {
     byEpic,
     total,
-    resultCount: files.length,
+    resultCount,
     layers,
     otherEpicTotal,
     pyramidTotal,
@@ -24109,667 +24114,10 @@ function aggregateResults(resultsDir) {
     e2eShare: pyramidTotal ? e2eStats.total / pyramidTotal : 0
   };
 }
-function sumEpicStats(epics, byEpic) {
-  const sum = emptySummary();
-  for (const epic of epics) {
-    const stats = byEpic[epic];
-    sum.passed += stats.passed;
-    sum.failed += stats.failed;
-    sum.broken += stats.broken;
-    sum.skipped += stats.skipped;
-    sum.unknown += stats.unknown;
-    sum.total += stats.total;
-  }
-  return sum;
-}
-function readWidgetSummary(reportDir) {
-  return readJsonSafe(path2.join(reportDir, "widgets", "summary.json"));
-}
-function calculatePassRate(passed, total) {
-  if (!total)
-    return "\u2014";
-  const pct = 100 * passed / total;
-  const rounded = Math.round(pct * 10) / 10;
-  return Number.isInteger(rounded) ? `${rounded}%` : `${rounded}%`;
-}
 
-// dist/commands/badges.js
-function runBadges(options) {
-  const { resultsDir, reportDir } = options;
-  const results = aggregateResults(resultsDir);
-  generateBadges(results, reportDir);
-}
-
-// dist/allure/config-generator.js
-var fs3 = __toESM(require("node:fs"), 1);
-var path3 = __toESM(require("node:path"), 1);
-var import_node_url = require("node:url");
-var MODULE_VARIABLES_METADATA = ".allure-module-variables.json";
-var MAX_FRAGMENT_VARIABLES = 1e4;
-var MAX_FRAGMENT_VARIABLE_BYTES = 4 * 1024 * 1024;
-function normalizeModuleTokens(value) {
-  return String(value || "").normalize("NFKD").toLowerCase().replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((token) => token && token !== "utils");
-}
-function parseVariableParts(key) {
-  const index = key.lastIndexOf(".");
-  if (index <= 0 || index === key.length - 1)
-    return null;
-  const prefix = key.slice(0, index).trim();
-  if (!prefix)
-    return null;
-  return {
-    prefix,
-    moduleTokens: normalizeModuleTokens(prefix),
-    name: key.slice(index + 1).trim()
-  };
-}
-function tokensEqual(left, right) {
-  return left.length === right.length && left.every((token, index) => token === right[index]);
-}
-function tokensEndWith(longer, shorter) {
-  if (shorter.length === 0 || longer.length < shorter.length)
-    return false;
-  const offset = longer.length - shorter.length;
-  return shorter.every((token, index) => longer[offset + index] === token);
-}
-function generateEnvironmentId(value, used) {
-  const base = String(value || "").normalize("NFKD").toLowerCase().replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 52) || "module";
-  let candidate = base;
-  let suffix = 2;
-  while (used.has(candidate)) {
-    candidate = `${base.slice(0, 52 - String(suffix).length - 1)}-${suffix}`;
-    suffix += 1;
-  }
-  used.add(candidate);
-  return candidate;
-}
-function readModuleVariables(resultsDir) {
-  const metadata = path3.join(resultsDir, MODULE_VARIABLES_METADATA);
-  if (!fs3.existsSync(metadata))
-    return {};
-  const stat = fs3.lstatSync(metadata);
-  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_FRAGMENT_VARIABLE_BYTES) {
-    throw new Error(`Invalid module environment metadata: ${metadata}`);
-  }
-  let document;
-  try {
-    document = JSON.parse(fs3.readFileSync(metadata, "utf8"));
-  } catch {
-    throw new Error(`Malformed module environment metadata: ${metadata}`);
-  }
-  if (!document || typeof document !== "object" || Array.isArray(document)) {
-    throw new Error(`Invalid module environment metadata: ${metadata}`);
-  }
-  const entries = Object.entries(document);
-  if (entries.length > MAX_FRAGMENT_VARIABLES || entries.some(([key, value]) => !key || key === "__proto__" || key.length > 512 || typeof value !== "string" || value.length > 8192 || /[\u0000-\u001f\u007f]/.test(key) || /[\u0000-\u001f\u007f]/.test(value))) {
-    throw new Error(`Invalid module environment metadata: ${metadata}`);
-  }
-  return document;
-}
-async function generateModuleConfig(options) {
-  const { resultsDir, configFile, outputFile, moduleLabel } = options;
-  if (!moduleLabel.trim()) {
-    throw new Error("--module-label must not be empty");
-  }
-  const configPath = path3.resolve(configFile);
-  if (!fs3.existsSync(configPath)) {
-    throw new Error(`Allure config not found: ${configFile}`);
-  }
-  const moduleNames = /* @__PURE__ */ new Set();
-  let unmatchedResults = 0;
-  for (const file of listResultFiles(resultsDir)) {
-    const doc = readJsonSafe(file);
-    const moduleName = getLabelValue(doc?.labels, moduleLabel);
-    if (moduleName)
-      moduleNames.add(moduleName);
-    else
-      unmatchedResults += 1;
-  }
-  const configUrl = (0, import_node_url.pathToFileURL)(configPath).href;
-  const baseConfigModule = await import(configUrl);
-  const baseConfig = baseConfigModule.default || {};
-  const allVariables = { ...baseConfig.variables || {} };
-  const environments = baseConfig.environments || {};
-  for (const descriptor of Object.values(environments)) {
-    Object.assign(allVariables, descriptor?.variables || {});
-  }
-  Object.assign(allVariables, readModuleVariables(resultsDir));
-  if (moduleNames.size > 0) {
-    for (const [key, value] of Object.entries(allVariables)) {
-      if (key.toLowerCase().endsWith(".module") && String(value || "").trim()) {
-        moduleNames.add(String(value).trim());
-      }
-    }
-  }
-  const names = [...moduleNames].sort((a, b) => a.localeCompare(b));
-  if (names.length === 0) {
-    const source2 = `import baseConfig from ${JSON.stringify(configUrl)};
-export default baseConfig;
-`;
-    fs3.mkdirSync(path3.dirname(outputFile), { recursive: true });
-    fs3.writeFileSync(outputFile, source2, "utf8");
-    console.log(`No ${moduleLabel} labels found; preserved caller environments in ${outputFile}`);
-    return;
-  }
-  const usedIds = /* @__PURE__ */ new Set(["default"]);
-  const modules = names.map((name) => ({
-    id: generateEnvironmentId(name, usedIds),
-    name,
-    tokens: normalizeModuleTokens(name),
-    variables: {}
-  }));
-  const modulesByName = new Map(modules.map((m) => [m.name, m]));
-  const modulesByVariablePrefix = /* @__PURE__ */ new Map();
-  for (const [key, value] of Object.entries(allVariables)) {
-    const parts = parseVariableParts(key);
-    if (!parts || parts.name.toLowerCase() !== "module")
-      continue;
-    const module2 = modulesByName.get(String(value || "").trim());
-    if (!module2)
-      continue;
-    const previous = modulesByVariablePrefix.get(parts.prefix);
-    if (previous && previous !== module2) {
-      throw new Error(`Conflicting module declarations for variable prefix ${parts.prefix}`);
-    }
-    modulesByVariablePrefix.set(parts.prefix, module2);
-  }
-  const globalVariables = {};
-  for (const [key, value] of Object.entries(allVariables)) {
-    const parts = parseVariableParts(key);
-    const declaredModule = parts ? modulesByVariablePrefix.get(parts.prefix) : null;
-    const exactMatches = parts && !declaredModule ? modules.filter((candidate) => tokensEqual(candidate.tokens, parts.moduleTokens)) : [];
-    const suffixMatches = parts && !declaredModule && exactMatches.length === 0 ? modules.filter((candidate) => tokensEndWith(candidate.tokens, parts.moduleTokens) || tokensEndWith(parts.moduleTokens, candidate.tokens)) : [];
-    const matches = exactMatches.length > 0 ? exactMatches : suffixMatches;
-    const module2 = declaredModule || (matches.length === 1 ? matches[0] : null);
-    if (module2 && parts?.name)
-      module2.variables[parts.name] = String(value);
-    else
-      globalVariables[key] = String(value);
-  }
-  const serializedModules = modules.map(({ id, name, variables }) => ({ id, name, variables }));
-  const source = `import baseConfig from ${JSON.stringify(configUrl)};
-const moduleLabel = ${JSON.stringify(moduleLabel)};
-const modules = ${JSON.stringify(serializedModules, null, 2)};
-const environments = Object.fromEntries(modules.map(({ id, name, variables }) => [id, {
-  name,
-  variables,
-  matcher: ({ labels }) => Array.isArray(labels) && labels.some(
-    (label) => label?.name === moduleLabel && String(label?.value || "").trim() === name,
-  ),
-}]));
-export default {
-  ...baseConfig,
-  variables: ${JSON.stringify(globalVariables, null, 2)},
-  environments,
-};
-`;
-  fs3.mkdirSync(path3.dirname(outputFile), { recursive: true });
-  fs3.writeFileSync(outputFile, source, "utf8");
-  console.log(`Prepared ${modules.length} module environment(s) from ${moduleLabel}; ${unmatchedResults} result(s) use default environment.`);
-}
-
-// dist/commands/module-config.js
-async function runModuleConfig(options) {
-  await generateModuleConfig(options);
-}
-
-// dist/commands/pr-body.js
-var fs4 = __toESM(require("node:fs"), 1);
-
-// dist/renderer/markdown.js
-function buildReportLink(pagesUrl, forkPr, sourceRunId) {
-  if (!pagesUrl || forkPr)
-    return "";
-  if (!sourceRunId)
-    return pagesUrl;
-  try {
-    const url = new URL(pagesUrl);
-    url.searchParams.set("run", sourceRunId);
-    return url.toString();
-  } catch {
-    return `${pagesUrl}${pagesUrl.includes("?") ? "&" : "?"}run=${encodeURIComponent(sourceRunId)}`;
-  }
-}
-function formatSummaryLine(summary) {
-  const parts = [
-    `${summary.passed} / ${summary.total} tests passed`,
-    `${calculatePassRate(summary.passed, summary.total)} pass rate`
-  ];
-  if (summary.failed > 0)
-    parts.push(`${summary.failed} failed`);
-  if (summary.broken > 0)
-    parts.push(`${summary.broken} broken`);
-  if (summary.skipped > 0)
-    parts.push(`${summary.skipped} skipped`);
-  if (summary.unknown > 0)
-    parts.push(`${summary.unknown} unknown`);
-  return parts.join(" \xB7 ");
-}
-function getStatusInfo(total, failed, broken) {
-  if (total === 0)
-    return { emoji: "\u26AA", label: "no tests" };
-  if (failed + broken > 0)
-    return { emoji: "\u274C", label: "failures detected" };
-  return { emoji: "\u2705", label: "passed" };
-}
-function renderSummaryTable(summary, reportLink, hasUnknown) {
-  const lines = [];
-  const columns = hasUnknown ? "| Tests | Passed | Failed | Broken | Skipped | Unknown | Report |" : "| Tests | Passed | Failed | Broken | Skipped | Report |";
-  const separator = hasUnknown ? "| ---: | ---: | ---: | ---: | ---: | ---: | :--- |" : "| ---: | ---: | ---: | ---: | ---: | :--- |";
-  const reportCell = reportLink ? `[View report \u2197](${reportLink})` : "\u2014";
-  const row = (stats, report = "\u2014") => {
-    const values = [
-      stats.total,
-      stats.passed,
-      stats.failed,
-      stats.broken,
-      stats.skipped
-    ];
-    if (hasUnknown)
-      values.push(stats.unknown || 0);
-    values.push(report);
-    return `| ${values.join(" | ")} |`;
-  };
-  lines.push(columns, separator, row(summary, reportCell), "");
-  return lines;
-}
-function renderLayerDetails(aggregated, hasUnknown) {
-  const lines = [];
-  lines.push("<details>");
-  lines.push("<summary><strong>Tests by layer</strong></summary>");
-  lines.push("");
-  const emptyStats = {
-    total: 0,
-    passed: 0,
-    failed: 0,
-    broken: 0,
-    skipped: 0,
-    unknown: 0
-  };
-  lines.push(hasUnknown ? "| Layer | Tests | Passed | Failed | Broken | Skipped | Unknown |" : "| Layer | Tests | Passed | Failed | Broken | Skipped |");
-  lines.push(hasUnknown ? "| --- | ---: | ---: | ---: | ---: | ---: | ---: |" : "| --- | ---: | ---: | ---: | ---: | ---: |");
-  const epics = ["unit", "api", "ui", "end-to-end", "other"];
-  for (const epic of epics) {
-    const stats = aggregated.byEpic[epic] || emptyStats;
-    if (stats.total === 0)
-      continue;
-    const label = EPIC_DISPLAY[epic] || epic;
-    const values = [
-      label,
-      stats.total,
-      stats.passed,
-      stats.failed,
-      stats.broken,
-      stats.skipped
-    ];
-    if (hasUnknown)
-      values.push(stats.unknown || 0);
-    lines.push(`| ${values.join(" | ")} |`);
-  }
-  const total = aggregated.total;
-  const allValues = [
-    "All layers",
-    total.total,
-    total.passed,
-    total.failed,
-    total.broken,
-    total.skipped
-  ];
-  if (hasUnknown)
-    allValues.push(total.unknown);
-  lines.push(`| ${allValues.join(" | ")} |`);
-  lines.push("");
-  lines.push("</details>");
-  lines.push("");
-  return lines;
-}
-function renderFooter(forkPr, reportLink, actionVersion) {
-  const lines = [];
-  if (forkPr) {
-    lines.push("_Preview on GitHub Pages is only published for PRs from the same repository. Download the `allure-report` artifact from this workflow run._", "");
-  } else if (!reportLink) {
-    lines.push("_GitHub Pages URL not available for this run._", "");
-  }
-  lines.push(`<sub>Generated by <a href="${ACTION_REPOSITORY_URL}">quokkify/allure-report-action</a> \xB7 <a href="${ACTION_REPOSITORY_URL}/releases/latest">${displayActionVersion(actionVersion)}</a></sub>`, "");
-  return lines;
-}
-function displayActionVersion(version) {
-  const normalized = String(version || "").trim();
-  if (!normalized)
-    return "unversioned";
-  return normalized.startsWith("v") ? normalized : `v${normalized}`;
-}
-function renderPrComment(data) {
-  const { summary, aggregated, pagesUrl, forkPr, sourceRunId, actionVersion, commentMarker } = data;
-  const status = getStatusInfo(summary.total, summary.failed, summary.broken);
-  const reportLink = buildReportLink(pagesUrl, forkPr, sourceRunId);
-  const hasUnknown = summary.unknown > 0 || aggregated.total.unknown > 0;
-  const lines = [];
-  lines.push(`## ${status.emoji} Allure Report \u2014 ${status.label}`, "");
-  if (summary.total > 0) {
-    lines.push(formatSummaryLine(summary), "");
-  } else {
-    lines.push("No tests found \xB7 no pass rate", "");
-  }
-  lines.push(...renderSummaryTable(summary, reportLink, hasUnknown));
-  lines.push(...renderLayerDetails(aggregated, hasUnknown));
-  lines.push(...renderFooter(forkPr, reportLink, actionVersion));
-  lines.push(commentMarker);
-  return lines.join("\n");
-}
-
-// dist/report/summary.js
-function mergeSummary(widget, aggregated) {
-  if (!widget?.statistic)
-    return aggregated.total;
-  const stat = widget.statistic;
-  return {
-    total: stat.total ?? aggregated.total.total,
-    passed: stat.passed ?? 0,
-    failed: stat.failed ?? 0,
-    broken: stat.broken ?? 0,
-    skipped: stat.skipped ?? 0,
-    unknown: Math.max(stat.unknown ?? 0, aggregated.total.unknown)
-  };
-}
-
-// dist/commands/pr-body.js
-function runPrBody(options) {
-  const { resultsDir, reportDir, outputFile, pagesUrl, forkPr, sourceRunId, actionVersion, commentMarker } = options;
-  const aggregated = aggregateResults(resultsDir);
-  const widget = readWidgetSummary(reportDir);
-  const summary = mergeSummary(widget, aggregated);
-  const data = {
-    summary,
-    aggregated,
-    pagesUrl,
-    forkPr,
-    sourceRunId,
-    actionVersion,
-    commentMarker
-  };
-  const markdown = renderPrComment(data);
-  fs4.writeFileSync(outputFile, markdown, "utf8");
-  console.log(`Wrote PR body to ${outputFile}`);
-}
-
-// dist/allure/prepare-results.js
-var import_node_crypto = require("node:crypto");
-var fs5 = __toESM(require("node:fs"), 1);
-var path4 = __toESM(require("node:path"), 1);
-var SOURCE_SCAN_SKIP_DIRECTORIES = /* @__PURE__ */ new Set([
-  ".git",
-  ".gradle",
-  ".idea",
-  ".venv",
-  "allure-report",
-  "dist",
-  "node_modules",
-  "venv"
-]);
-var MAX_SOURCE_FILES = 1e5;
-var MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024;
-var MAX_SOURCE_FILE_BYTES = 256 * 1024 * 1024;
-var MAX_FRAGMENT_BYTES = 1024 * 1024;
-var MAX_FRAGMENT_VARIABLES2 = 1e4;
-var MAX_FRAGMENT_VARIABLE_BYTES2 = 4 * 1024 * 1024;
-var MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
-var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
-var MODULE_VARIABLES_METADATA2 = ".allure-module-variables.json";
-function parseModuleFragment(fragmentPath) {
-  const stat = fs5.lstatSync(fragmentPath);
-  if (!stat.isFile() || stat.isSymbolicLink()) {
-    throw new Error(`Module provenance must be a regular file: ${fragmentPath}`);
-  }
-  if (stat.size > MAX_FRAGMENT_BYTES) {
-    throw new Error(`Module provenance exceeds ${MAX_FRAGMENT_BYTES} bytes: ${fragmentPath}`);
-  }
-  const modules = /* @__PURE__ */ new Set();
-  const variables = /* @__PURE__ */ new Map();
-  for (const rawLine of fs5.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#") || !line.includes("="))
-      continue;
-    const index = line.indexOf("=");
-    const key = line.slice(0, index).trim();
-    const value = line.slice(index + 1).trim();
-    if (!key || key === "__proto__" || key.length > 512 || value.length > 8192 || /[\u0000-\u001f\u007f]/.test(key) || /[\u0000-\u001f\u007f]/.test(value)) {
-      throw new Error(`Invalid environment variable in ${fragmentPath}`);
-    }
-    const previous = variables.get(key);
-    if (previous !== void 0 && previous !== value) {
-      throw new Error(`Conflicting environment variable ${key} in ${fragmentPath}`);
-    }
-    variables.set(key, value);
-    if ((key === "Module" || key.endsWith(".Module")) && value)
-      modules.add(value);
-  }
-  if (modules.size !== 1) {
-    const detail = modules.size === 0 ? "none" : [...modules].sort().join(", ");
-    throw new Error(`Expected exactly one module value in ${fragmentPath}; found ${detail}`);
-  }
-  const moduleArray = [...modules];
-  return { moduleName: moduleArray[0], variables };
-}
-function findSourceResultDirectories(sourceRoot, resultsDir) {
-  const root = path4.resolve(sourceRoot);
-  const destination = path4.resolve(resultsDir);
-  if (!fs5.existsSync(root))
-    throw new Error(`Source artifacts directory not found: ${sourceRoot}`);
-  const rootStat = fs5.lstatSync(root);
-  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
-    throw new Error(`Source artifacts path must be a regular directory: ${sourceRoot}`);
-  }
-  const sources = [];
-  const stack = [root];
-  while (stack.length > 0) {
-    const directory = stack.pop();
-    if (directory === destination)
-      continue;
-    if (path4.basename(directory) === "allure-results") {
-      sources.push(directory);
-      continue;
-    }
-    for (const entry of fs5.readdirSync(directory, { withFileTypes: true })) {
-      const child = path4.join(directory, entry.name);
-      if (entry.isSymbolicLink())
-        throw new Error(`Symbolic links are not allowed: ${child}`);
-      if (!entry.isDirectory())
-        continue;
-      if (SOURCE_SCAN_SKIP_DIRECTORIES.has(entry.name))
-        continue;
-      stack.push(child);
-    }
-  }
-  return sources.sort();
-}
-function sha256(buffer) {
-  return (0, import_node_crypto.createHash)("sha256").update(buffer).digest("hex");
-}
-function attributedResultBuffer(file, moduleName, moduleLabel) {
-  let document;
-  try {
-    document = JSON.parse(fs5.readFileSync(file, "utf8"));
-  } catch (error) {
-    throw new Error(`Malformed Allure result JSON ${file}: ${error.message}`);
-  }
-  if (!document || typeof document !== "object" || Array.isArray(document)) {
-    throw new Error(`Allure result must be a JSON object: ${file}`);
-  }
-  if (document.labels !== void 0 && !Array.isArray(document.labels)) {
-    throw new Error(`Allure result labels must be an array: ${file}`);
-  }
-  const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
-  labels.push({ name: moduleLabel, value: moduleName });
-  document.labels = labels;
-  return Buffer.from(`${JSON.stringify(document)}
-`, "utf8");
-}
-function prepareAttributedResults(options) {
-  const { sourceRoot, resultsDir, moduleLabel, autoMode } = options;
-  if (!sourceRoot.trim())
-    throw new Error("--source-root must not be empty");
-  if (!moduleLabel.trim())
-    throw new Error("--module-label must not be empty in attributed mode");
-  const destination = path4.resolve(resultsDir);
-  const parent = path4.dirname(destination);
-  fs5.mkdirSync(parent, { recursive: true });
-  const temporary = fs5.mkdtempSync(path4.join(parent, `.${path4.basename(destination)}-prepare-`));
-  const backup = path4.join(parent, `.${path4.basename(destination)}-backup-${process.pid}-${Date.now()}`);
-  let destinationMoved = false;
-  let sourceDirectories = 0;
-  let sourceFiles = 0;
-  let sourceBytes = 0;
-  let attributedResults = 0;
-  let fragmentVariableBytes = 0;
-  const staged = /* @__PURE__ */ new Map();
-  const fragmentVariables = /* @__PURE__ */ new Map();
-  const stage = (name, data, mode, source) => {
-    const digest = sha256(data);
-    const previous = staged.get(name);
-    if (previous) {
-      if (previous.digest === digest)
-        return;
-      throw new Error(`Conflicting source files named ${name}: ${previous.source} and ${source}`);
-    }
-    fs5.writeFileSync(path4.join(temporary, name), data, { flag: "wx", mode });
-    staged.set(name, { digest, source });
-  };
-  try {
-    const sourceDirectoriesFound = findSourceResultDirectories(sourceRoot, resultsDir);
-    const withProvenance = sourceDirectoriesFound.filter((directory) => fs5.existsSync(path4.join(directory, "ci-env-fragment.properties")));
-    if (autoMode && withProvenance.length === 0) {
-      fs5.rmSync(temporary, { recursive: true, force: true });
-      console.log("No attributed source results detected; preserved legacy merged results");
-      return;
-    }
-    if (sourceDirectoriesFound.length === 0) {
-      throw new Error(`No source allure-results directories found under ${sourceRoot}`);
-    }
-    if (withProvenance.length !== sourceDirectoriesFound.length) {
-      throw new Error(`Partial module provenance: ${withProvenance.length} of ${sourceDirectoriesFound.length} source directories contain ci-env-fragment.properties`);
-    }
-    if (fs5.existsSync(destination)) {
-      const destinationStat = fs5.lstatSync(destination);
-      if (!destinationStat.isDirectory() || destinationStat.isSymbolicLink()) {
-        throw new Error(`Results destination must be a regular directory: ${resultsDir}`);
-      }
-      for (const name of PRESERVED_DESTINATION_METADATA) {
-        const file = path4.join(destination, name);
-        if (!fs5.existsSync(file))
-          continue;
-        const stat = fs5.lstatSync(file);
-        if (!stat.isFile() || stat.isSymbolicLink()) {
-          throw new Error(`Preserved metadata must be a regular file: ${file}`);
-        }
-        if (stat.size > MAX_PRESERVED_METADATA_BYTES) {
-          throw new Error(`Preserved metadata exceeds ${MAX_PRESERVED_METADATA_BYTES} bytes: ${file}`);
-        }
-        stage(name, fs5.readFileSync(file), stat.mode & 511, file);
-      }
-    }
-    for (const directory of sourceDirectoriesFound) {
-      sourceDirectories += 1;
-      const fragment = path4.join(directory, "ci-env-fragment.properties");
-      if (!fs5.existsSync(fragment)) {
-        throw new Error(`Missing module provenance: ${fragment}`);
-      }
-      const { moduleName, variables } = parseModuleFragment(fragment);
-      for (const [key, value] of variables) {
-        const previous = fragmentVariables.get(key);
-        if (previous !== void 0 && previous !== value) {
-          throw new Error(`Conflicting environment variable ${key} across source fragments`);
-        }
-        if (previous === void 0) {
-          fragmentVariableBytes += Buffer.byteLength(key) + Buffer.byteLength(value);
-          if (fragmentVariables.size >= MAX_FRAGMENT_VARIABLES2 || fragmentVariableBytes > MAX_FRAGMENT_VARIABLE_BYTES2) {
-            throw new Error("Module environment variables exceed count or byte limits");
-          }
-          fragmentVariables.set(key, value);
-        }
-      }
-      for (const entry of fs5.readdirSync(directory, { withFileTypes: true })) {
-        const file = path4.join(directory, entry.name);
-        if (entry.isSymbolicLink() || !entry.isFile()) {
-          throw new Error(`Only regular files are allowed in source results: ${file}`);
-        }
-        if (entry.name === "ci-env-fragment.properties")
-          continue;
-        if (entry.name === MODULE_VARIABLES_METADATA2) {
-          throw new Error(`Reserved source result filename is not allowed: ${file}`);
-        }
-        const stat = fs5.lstatSync(file);
-        if (stat.size > MAX_SOURCE_FILE_BYTES) {
-          throw new Error(`Source file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${file}`);
-        }
-        sourceFiles += 1;
-        sourceBytes += stat.size;
-        if (sourceFiles > MAX_SOURCE_FILES || sourceBytes > MAX_SOURCE_BYTES) {
-          throw new Error(`Source results exceed limits (${MAX_SOURCE_FILES} files / ${MAX_SOURCE_BYTES} bytes)`);
-        }
-        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, moduleLabel) : fs5.readFileSync(file);
-        if (entry.name.endsWith("-result.json"))
-          attributedResults += 1;
-        stage(entry.name, data, stat.mode & 511, file);
-      }
-    }
-    if (attributedResults === 0)
-      throw new Error("No Allure result JSON files found in source artifacts");
-    const environmentMetadata = Buffer.from(JSON.stringify(Object.fromEntries([...fragmentVariables].sort(([left], [right]) => left.localeCompare(right)))), "utf8");
-    if (environmentMetadata.length > MAX_FRAGMENT_VARIABLE_BYTES2) {
-      throw new Error("Module environment metadata exceeds byte limit");
-    }
-    stage(MODULE_VARIABLES_METADATA2, environmentMetadata, 384, "source fragments");
-    if (fs5.existsSync(destination)) {
-      fs5.renameSync(destination, backup);
-      destinationMoved = true;
-    }
-    fs5.renameSync(temporary, destination);
-    if (destinationMoved)
-      fs5.rmSync(backup, { recursive: true, force: true });
-  } catch (error) {
-    fs5.rmSync(temporary, { recursive: true, force: true });
-    if (destinationMoved && !fs5.existsSync(destination) && fs5.existsSync(backup)) {
-      fs5.renameSync(backup, destination);
-    }
-    throw error;
-  }
-  console.log(`Prepared ${attributedResults} attributed result(s) from ${sourceDirectories} source directories (${sourceFiles} files)`);
-}
-
-// dist/commands/prepare-results.js
-function runPrepareResults(options) {
-  prepareAttributedResults(options);
-}
-
-// dist/renderer/pyramid.js
-var fs6 = __toESM(require("node:fs"), 1);
-var path5 = __toESM(require("node:path"), 1);
-function pyramidMarkdownEpicColumn(layer) {
-  if (layer.id === "api")
-    return "`api` / `integration`";
-  if (layer.id === "ui_e2e")
-    return "`end-to-end` / `ui`";
-  return layer.epics.map((e) => `\`${e}\``).join(", ");
-}
-function pyramidAdvisoryNotes(unitShare, e2eShare, pyramidTotal) {
-  if (pyramidTotal === 0) {
-    return [
-      "- No Allure results in this directory \u2014 pyramid share advisory skipped (run tests or point `--results` at merged CI output)."
-    ];
-  }
-  const lines = [];
-  if (unitShare < PYRAMID_ADVISORY.unitShareMin) {
-    lines.push(`- **Unit share** ${(100 * unitShare).toFixed(1)}% is below the soft planning target (~${(100 * PYRAMID_ADVISORY.unitShareMin).toFixed(0)}%+). Consider adding or restoring fast unit tests before expanding API/E2E.`);
-  }
-  if (e2eShare > PYRAMID_ADVISORY.e2eShareMax) {
-    lines.push(`- **UI / E2E share** ${(100 * e2eShare).toFixed(1)}% exceeds the soft ceiling (~${(100 * PYRAMID_ADVISORY.e2eShareMax).toFixed(0)}%). Check whether some cases can move down to API or unit layers.`);
-  }
-  if (lines.length === 0) {
-    lines.push("- Pyramid layer shares sit within the **soft** planning band documented in `docs/testing/test-pyramid.md` (not a merge gate).");
-  }
-  return lines;
-}
+// dist/report/quality-gates.js
+var fs2 = __toESM(require("node:fs"), 1);
+var path2 = __toESM(require("node:path"), 1);
 function evaluatePyramidQualityGates(metrics) {
   const warnings = [];
   const blockingFailures = [];
@@ -24845,6 +24193,729 @@ function formatCountScaledPyramidDiagram(layers) {
   }
   return lines;
 }
+function writeQualityGatesJson(gates, metrics, outputPath) {
+  const payload = {
+    schemaVersion: 1,
+    generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    advisoryOnly: true,
+    exitCodePolicy: "always_zero",
+    gates,
+    metrics: {
+      pyramidTotal: metrics.pyramidTotal,
+      unitShare: metrics.unitShare,
+      apiShare: metrics.apiShare,
+      e2eShare: metrics.e2eShare,
+      otherEpicTotal: metrics.otherEpicTotal
+    }
+  };
+  fs2.mkdirSync(path2.dirname(outputPath), { recursive: true });
+  fs2.writeFileSync(outputPath, JSON.stringify(payload, null, 2), "utf8");
+  console.log(`Wrote ${outputPath}`);
+}
+function githubWorkflowEscape(s) {
+  return String(s).replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+}
+function emitGithubWarning(title, message) {
+  console.log(`::warning title=${githubWorkflowEscape(title)}::${githubWorkflowEscape(message)}`);
+}
+function appendJobSummary(markdown) {
+  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+  if (!summaryPath)
+    return;
+  fs2.appendFileSync(summaryPath, markdown, "utf8");
+}
+
+// dist/allure/parser.js
+var fs3 = __toESM(require("node:fs"), 1);
+var path3 = __toESM(require("node:path"), 1);
+function listResultFiles(resultsDir) {
+  if (!fs3.existsSync(resultsDir))
+    return [];
+  return fs3.readdirSync(resultsDir, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith("-result.json")).map((entry) => path3.join(resultsDir, entry.name));
+}
+function readJsonSafe(file) {
+  try {
+    return JSON.parse(fs3.readFileSync(file, "utf8"));
+  } catch {
+    return null;
+  }
+}
+function getLabelValue(labels, name) {
+  if (!Array.isArray(labels))
+    return "";
+  const label = labels.find((item) => item && item.name === name && item.value);
+  return label ? String(label.value).trim() : "";
+}
+function getEpicForResult(result) {
+  const rawEpic = getLabelValue(result.labels, "epic");
+  if (rawEpic && ["unit", "api", "ui", "end-to-end"].includes(rawEpic)) {
+    return rawEpic;
+  }
+  if (!Array.isArray(result.labels))
+    return "other";
+  const framework = result.labels?.find((l) => l && l.name === "framework");
+  if (framework && String(framework.value).toLowerCase() === "playwright") {
+    return "end-to-end";
+  }
+  return "other";
+}
+function calculatePassRate(passed, total) {
+  if (!total)
+    return "\u2014";
+  const pct = 100 * passed / total;
+  const rounded = Math.round(pct * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}%` : `${rounded}%`;
+}
+
+// dist/commands/badges.js
+function runBadges(options) {
+  const { resultsDir, reportDir } = options;
+  const results = aggregateResults(listResultFiles(resultsDir), (file) => readJsonSafe(file), getEpicForResult);
+  generateBadges(results, reportDir);
+}
+
+// dist/allure/config-generator.js
+var fs4 = __toESM(require("node:fs"), 1);
+var path4 = __toESM(require("node:path"), 1);
+var import_node_url = require("node:url");
+var MODULE_VARIABLES_METADATA = ".allure-module-variables.json";
+var MAX_FRAGMENT_VARIABLES = 1e4;
+var MAX_FRAGMENT_VARIABLE_BYTES = 4 * 1024 * 1024;
+function normalizeModuleTokens(value) {
+  return String(value || "").normalize("NFKD").toLowerCase().replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((token) => token && token !== "utils");
+}
+function parseVariableParts(key) {
+  const index = key.lastIndexOf(".");
+  if (index <= 0 || index === key.length - 1)
+    return null;
+  const prefix = key.slice(0, index).trim();
+  if (!prefix)
+    return null;
+  return {
+    prefix,
+    moduleTokens: normalizeModuleTokens(prefix),
+    name: key.slice(index + 1).trim()
+  };
+}
+function tokensEqual(left, right) {
+  return left.length === right.length && left.every((token, index) => token === right[index]);
+}
+function tokensEndWith(longer, shorter) {
+  if (shorter.length === 0 || longer.length < shorter.length)
+    return false;
+  const offset = longer.length - shorter.length;
+  return shorter.every((token, index) => longer[offset + index] === token);
+}
+function generateEnvironmentId(value, used) {
+  const base = String(value || "").normalize("NFKD").toLowerCase().replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 52) || "module";
+  let candidate = base;
+  let suffix = 2;
+  while (used.has(candidate)) {
+    candidate = `${base.slice(0, 52 - String(suffix).length - 1)}-${suffix}`;
+    suffix += 1;
+  }
+  used.add(candidate);
+  return candidate;
+}
+function readModuleVariables(resultsDir) {
+  const metadata = path4.join(resultsDir, MODULE_VARIABLES_METADATA);
+  if (!fs4.existsSync(metadata))
+    return {};
+  const stat = fs4.lstatSync(metadata);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_FRAGMENT_VARIABLE_BYTES) {
+    throw new Error(`Invalid module environment metadata: ${metadata}`);
+  }
+  let document;
+  try {
+    document = JSON.parse(fs4.readFileSync(metadata, "utf8"));
+  } catch {
+    throw new Error(`Malformed module environment metadata: ${metadata}`);
+  }
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new Error(`Invalid module environment metadata: ${metadata}`);
+  }
+  const entries = Object.entries(document);
+  if (entries.length > MAX_FRAGMENT_VARIABLES || entries.some(([key, value]) => !key || key === "__proto__" || key.length > 512 || typeof value !== "string" || value.length > 8192 || /[\u0000-\u001f\u007f]/.test(key) || /[\u0000-\u001f\u007f]/.test(value))) {
+    throw new Error(`Invalid module environment metadata: ${metadata}`);
+  }
+  return document;
+}
+async function generateModuleConfig(options) {
+  const { resultsDir, configFile, outputFile, moduleLabel } = options;
+  if (!moduleLabel.trim()) {
+    throw new Error("--module-label must not be empty");
+  }
+  const configPath = path4.resolve(configFile);
+  if (!fs4.existsSync(configPath)) {
+    throw new Error(`Allure config not found: ${configFile}`);
+  }
+  const moduleNames = /* @__PURE__ */ new Set();
+  let unmatchedResults = 0;
+  for (const file of listResultFiles(resultsDir)) {
+    const doc = readJsonSafe(file);
+    const moduleName = getLabelValue(doc?.labels, moduleLabel);
+    if (moduleName)
+      moduleNames.add(moduleName);
+    else
+      unmatchedResults += 1;
+  }
+  const configUrl = (0, import_node_url.pathToFileURL)(configPath).href;
+  const baseConfigModule = await import(configUrl);
+  const baseConfig = baseConfigModule.default || {};
+  const allVariables = { ...baseConfig.variables || {} };
+  const environments = baseConfig.environments || {};
+  for (const descriptor of Object.values(environments)) {
+    Object.assign(allVariables, descriptor?.variables || {});
+  }
+  Object.assign(allVariables, readModuleVariables(resultsDir));
+  if (moduleNames.size > 0) {
+    for (const [key, value] of Object.entries(allVariables)) {
+      if (key.toLowerCase().endsWith(".module") && String(value || "").trim()) {
+        moduleNames.add(String(value).trim());
+      }
+    }
+  }
+  const names = [...moduleNames].sort((a, b) => a.localeCompare(b));
+  if (names.length === 0) {
+    const source2 = `import baseConfig from ${JSON.stringify(configUrl)};
+export default baseConfig;
+`;
+    fs4.mkdirSync(path4.dirname(outputFile), { recursive: true });
+    fs4.writeFileSync(outputFile, source2, "utf8");
+    console.log(`No ${moduleLabel} labels found; preserved caller environments in ${outputFile}`);
+    return;
+  }
+  const usedIds = /* @__PURE__ */ new Set(["default"]);
+  const modules = names.map((name) => ({
+    id: generateEnvironmentId(name, usedIds),
+    name,
+    tokens: normalizeModuleTokens(name),
+    variables: {}
+  }));
+  const modulesByName = new Map(modules.map((m) => [m.name, m]));
+  const modulesByVariablePrefix = /* @__PURE__ */ new Map();
+  for (const [key, value] of Object.entries(allVariables)) {
+    const parts = parseVariableParts(key);
+    if (!parts || parts.name.toLowerCase() !== "module")
+      continue;
+    const module2 = modulesByName.get(String(value || "").trim());
+    if (!module2)
+      continue;
+    const previous = modulesByVariablePrefix.get(parts.prefix);
+    if (previous && previous !== module2) {
+      throw new Error(`Conflicting module declarations for variable prefix ${parts.prefix}`);
+    }
+    modulesByVariablePrefix.set(parts.prefix, module2);
+  }
+  const globalVariables = {};
+  for (const [key, value] of Object.entries(allVariables)) {
+    const parts = parseVariableParts(key);
+    const declaredModule = parts ? modulesByVariablePrefix.get(parts.prefix) : null;
+    const exactMatches = parts && !declaredModule ? modules.filter((candidate) => tokensEqual(candidate.tokens, parts.moduleTokens)) : [];
+    const suffixMatches = parts && !declaredModule && exactMatches.length === 0 ? modules.filter((candidate) => tokensEndWith(candidate.tokens, parts.moduleTokens) || tokensEndWith(parts.moduleTokens, candidate.tokens)) : [];
+    const matches = exactMatches.length > 0 ? exactMatches : suffixMatches;
+    const module2 = declaredModule || (matches.length === 1 ? matches[0] : null);
+    if (module2 && parts?.name)
+      module2.variables[parts.name] = String(value);
+    else
+      globalVariables[key] = String(value);
+  }
+  const serializedModules = modules.map(({ id, name, variables }) => ({ id, name, variables }));
+  const source = `import baseConfig from ${JSON.stringify(configUrl)};
+const moduleLabel = ${JSON.stringify(moduleLabel)};
+const modules = ${JSON.stringify(serializedModules, null, 2)};
+const environments = Object.fromEntries(modules.map(({ id, name, variables }) => [id, {
+  name,
+  variables,
+  matcher: ({ labels }) => Array.isArray(labels) && labels.some(
+    (label) => label?.name === moduleLabel && String(label?.value || "").trim() === name,
+  ),
+}]));
+export default {
+  ...baseConfig,
+  variables: ${JSON.stringify(globalVariables, null, 2)},
+  environments,
+};
+`;
+  fs4.mkdirSync(path4.dirname(outputFile), { recursive: true });
+  fs4.writeFileSync(outputFile, source, "utf8");
+  console.log(`Prepared ${modules.length} module environment(s) from ${moduleLabel}; ${unmatchedResults} result(s) use default environment.`);
+}
+
+// dist/commands/module-config.js
+async function runModuleConfig(options) {
+  await generateModuleConfig(options);
+}
+
+// dist/commands/pr-body.js
+var fs5 = __toESM(require("node:fs"), 1);
+
+// dist/renderer/markdown.js
+function buildReportLink(pagesUrl, forkPr, sourceRunId) {
+  if (!pagesUrl || forkPr)
+    return "";
+  if (!sourceRunId)
+    return pagesUrl;
+  try {
+    const url = new URL(pagesUrl);
+    url.searchParams.set("run", sourceRunId);
+    return url.toString();
+  } catch {
+    return `${pagesUrl}${pagesUrl.includes("?") ? "&" : "?"}run=${encodeURIComponent(sourceRunId)}`;
+  }
+}
+function formatSummaryLine(summary) {
+  const parts = [
+    `${summary.passed} / ${summary.total} tests passed`,
+    `${calculatePassRate(summary.passed, summary.total)} pass rate`
+  ];
+  if (summary.failed > 0)
+    parts.push(`${summary.failed} failed`);
+  if (summary.broken > 0)
+    parts.push(`${summary.broken} broken`);
+  if (summary.skipped > 0)
+    parts.push(`${summary.skipped} skipped`);
+  if (summary.unknown > 0)
+    parts.push(`${summary.unknown} unknown`);
+  return parts.join(" \xB7 ");
+}
+function getStatusInfo(total, failed, broken) {
+  if (total === 0)
+    return { emoji: "\u26AA", label: "no tests" };
+  if (failed + broken > 0)
+    return { emoji: "\u274C", label: "failures detected" };
+  return { emoji: "\u2705", label: "passed" };
+}
+function renderSummaryTable(summary, reportLink, hasUnknown) {
+  const lines = [];
+  const columns = hasUnknown ? "| Tests | Passed | Failed | Broken | Skipped | Unknown | Report |" : "| Tests | Passed | Failed | Broken | Skipped | Report |";
+  const separator = hasUnknown ? "| ---: | ---: | ---: | ---: | ---: | ---: | :--- |" : "| ---: | ---: | ---: | ---: | ---: | :--- |";
+  const reportCell = reportLink ? `[View report \u2197](${reportLink})` : "\u2014";
+  const row = (stats, report = "\u2014") => {
+    const values = [
+      stats.total,
+      stats.passed,
+      stats.failed,
+      stats.broken,
+      stats.skipped
+    ];
+    if (hasUnknown)
+      values.push(stats.unknown || 0);
+    values.push(report);
+    return `| ${values.join(" | ")} |`;
+  };
+  lines.push(columns, separator, row(summary, reportCell), "");
+  return lines;
+}
+function renderLayerDetails(aggregated, hasUnknown) {
+  const lines = [];
+  lines.push("<details>");
+  lines.push("<summary><strong>Tests by layer</strong></summary>");
+  lines.push("");
+  const emptyStats2 = {
+    total: 0,
+    passed: 0,
+    failed: 0,
+    broken: 0,
+    skipped: 0,
+    unknown: 0
+  };
+  lines.push(hasUnknown ? "| Layer | Tests | Passed | Failed | Broken | Skipped | Unknown |" : "| Layer | Tests | Passed | Failed | Broken | Skipped |");
+  lines.push(hasUnknown ? "| --- | ---: | ---: | ---: | ---: | ---: | ---: |" : "| --- | ---: | ---: | ---: | ---: | ---: |");
+  const epics = ["unit", "api", "ui", "end-to-end", "other"];
+  for (const epic of epics) {
+    const stats = aggregated.byEpic[epic] || emptyStats2;
+    if (stats.total === 0)
+      continue;
+    const label = EPIC_DISPLAY[epic] || epic;
+    const values = [
+      label,
+      stats.total,
+      stats.passed,
+      stats.failed,
+      stats.broken,
+      stats.skipped
+    ];
+    if (hasUnknown)
+      values.push(stats.unknown || 0);
+    lines.push(`| ${values.join(" | ")} |`);
+  }
+  const total = aggregated.total;
+  const allValues = [
+    "All layers",
+    total.total,
+    total.passed,
+    total.failed,
+    total.broken,
+    total.skipped
+  ];
+  if (hasUnknown)
+    allValues.push(total.unknown);
+  lines.push(`| ${allValues.join(" | ")} |`);
+  lines.push("");
+  lines.push("</details>");
+  lines.push("");
+  return lines;
+}
+function renderFooter(forkPr, reportLink, actionVersion) {
+  const lines = [];
+  if (forkPr) {
+    lines.push("_Preview on GitHub Pages is only published for PRs from the same repository. Download the `allure-report` artifact from this workflow run._", "");
+  } else if (!reportLink) {
+    lines.push("_GitHub Pages URL not available for this run._", "");
+  }
+  lines.push(`<sub>Generated by <a href="${ACTION_REPOSITORY_URL}">quokkify/allure-report-action</a> \xB7 <a href="${ACTION_REPOSITORY_URL}/releases/latest">${displayActionVersion(actionVersion)}</a></sub>`, "");
+  return lines;
+}
+function displayActionVersion(version) {
+  const normalized = String(version || "").trim();
+  if (!normalized)
+    return "unversioned";
+  return normalized.startsWith("v") ? normalized : `v${normalized}`;
+}
+function renderPrComment(data) {
+  const { summary, aggregated, pagesUrl, forkPr, sourceRunId, actionVersion, commentMarker } = data;
+  const status = getStatusInfo(summary.total, summary.failed, summary.broken);
+  const reportLink = buildReportLink(pagesUrl, forkPr, sourceRunId);
+  const hasUnknown = summary.unknown > 0 || aggregated.total.unknown > 0;
+  const lines = [];
+  lines.push(`## ${status.emoji} Allure Report \u2014 ${status.label}`, "");
+  if (summary.total > 0) {
+    lines.push(formatSummaryLine(summary), "");
+  } else {
+    lines.push("No tests found \xB7 no pass rate", "");
+  }
+  lines.push(...renderSummaryTable(summary, reportLink, hasUnknown));
+  lines.push(...renderLayerDetails(aggregated, hasUnknown));
+  lines.push(...renderFooter(forkPr, reportLink, actionVersion));
+  lines.push(commentMarker);
+  return lines.join("\n");
+}
+
+// dist/commands/pr-body.js
+async function runPrBody(options) {
+  const { resultsDir, reportDir, outputFile, pagesUrl, forkPr, sourceRunId, actionVersion, commentMarker } = options;
+  const aggregated = aggregateResults(listResultFiles(resultsDir), (file) => readJsonSafe(file), (result) => getEpicForResult(result));
+  const widget = await readWidgetSummary(reportDir);
+  const summary = mergeSummary(await widget, aggregated);
+  const data = {
+    summary,
+    aggregated,
+    pagesUrl,
+    forkPr,
+    sourceRunId,
+    actionVersion,
+    commentMarker
+  };
+  const markdown = renderPrComment(data);
+  fs5.writeFileSync(outputFile, markdown, "utf8");
+  console.log(`Wrote PR body to ${outputFile}`);
+}
+
+// dist/allure/prepare-results.js
+var import_node_crypto = require("node:crypto");
+var fs6 = __toESM(require("node:fs"), 1);
+var path5 = __toESM(require("node:path"), 1);
+var SOURCE_SCAN_SKIP_DIRECTORIES = /* @__PURE__ */ new Set([
+  ".git",
+  ".gradle",
+  ".idea",
+  ".venv",
+  "allure-report",
+  "dist",
+  "node_modules",
+  "venv"
+]);
+var MAX_SOURCE_FILES = 1e5;
+var MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024;
+var MAX_SOURCE_FILE_BYTES = 256 * 1024 * 1024;
+var MAX_FRAGMENT_BYTES = 1024 * 1024;
+var MAX_FRAGMENT_VARIABLES2 = 1e4;
+var MAX_FRAGMENT_VARIABLE_BYTES2 = 4 * 1024 * 1024;
+var MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
+var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
+var MODULE_VARIABLES_METADATA2 = ".allure-module-variables.json";
+function parseModuleFragment(fragmentPath) {
+  const stat = fs6.lstatSync(fragmentPath);
+  if (!stat.isFile() || stat.isSymbolicLink()) {
+    throw new Error(`Module provenance must be a regular file: ${fragmentPath}`);
+  }
+  if (stat.size > MAX_FRAGMENT_BYTES) {
+    throw new Error(`Module provenance exceeds ${MAX_FRAGMENT_BYTES} bytes: ${fragmentPath}`);
+  }
+  const modules = /* @__PURE__ */ new Set();
+  const variables = /* @__PURE__ */ new Map();
+  for (const rawLine of fs6.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#") || !line.includes("="))
+      continue;
+    const index = line.indexOf("=");
+    const key = line.slice(0, index).trim();
+    const value = line.slice(index + 1).trim();
+    if (!key || key === "__proto__" || key.length > 512 || value.length > 8192 || /[\u0000-\u001f\u007f]/.test(key) || /[\u0000-\u001f\u007f]/.test(value)) {
+      throw new Error(`Invalid environment variable in ${fragmentPath}`);
+    }
+    const previous = variables.get(key);
+    if (previous !== void 0 && previous !== value) {
+      throw new Error(`Conflicting environment variable ${key} in ${fragmentPath}`);
+    }
+    variables.set(key, value);
+    if ((key === "Module" || key.endsWith(".Module")) && value)
+      modules.add(value);
+  }
+  if (modules.size !== 1) {
+    const detail = modules.size === 0 ? "none" : [...modules].sort().join(", ");
+    throw new Error(`Expected exactly one module value in ${fragmentPath}; found ${detail}`);
+  }
+  const moduleArray = [...modules];
+  return { moduleName: moduleArray[0], variables };
+}
+function findSourceResultDirectories(sourceRoot, resultsDir) {
+  const root = path5.resolve(sourceRoot);
+  const destination = path5.resolve(resultsDir);
+  if (!fs6.existsSync(root))
+    throw new Error(`Source artifacts directory not found: ${sourceRoot}`);
+  const rootStat = fs6.lstatSync(root);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
+    throw new Error(`Source artifacts path must be a regular directory: ${sourceRoot}`);
+  }
+  const sources = [];
+  const stack = [root];
+  while (stack.length > 0) {
+    const directory = stack.pop();
+    if (directory === destination)
+      continue;
+    if (path5.basename(directory) === "allure-results") {
+      sources.push(directory);
+      continue;
+    }
+    for (const entry of fs6.readdirSync(directory, { withFileTypes: true })) {
+      const child = path5.join(directory, entry.name);
+      if (entry.isSymbolicLink())
+        throw new Error(`Symbolic links are not allowed: ${child}`);
+      if (!entry.isDirectory())
+        continue;
+      if (SOURCE_SCAN_SKIP_DIRECTORIES.has(entry.name))
+        continue;
+      stack.push(child);
+    }
+  }
+  return sources.sort();
+}
+function sha256(buffer) {
+  return (0, import_node_crypto.createHash)("sha256").update(buffer).digest("hex");
+}
+function attributedResultBuffer(file, moduleName, moduleLabel) {
+  let document;
+  try {
+    document = JSON.parse(fs6.readFileSync(file, "utf8"));
+  } catch (error) {
+    throw new Error(`Malformed Allure result JSON ${file}: ${error.message}`);
+  }
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new Error(`Allure result must be a JSON object: ${file}`);
+  }
+  if (document.labels !== void 0 && !Array.isArray(document.labels)) {
+    throw new Error(`Allure result labels must be an array: ${file}`);
+  }
+  const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
+  labels.push({ name: moduleLabel, value: moduleName });
+  document.labels = labels;
+  return Buffer.from(`${JSON.stringify(document)}
+`, "utf8");
+}
+function prepareAttributedResults(options) {
+  const { sourceRoot, resultsDir, moduleLabel, autoMode } = options;
+  if (!sourceRoot.trim())
+    throw new Error("--source-root must not be empty");
+  if (!moduleLabel.trim())
+    throw new Error("--module-label must not be empty in attributed mode");
+  const destination = path5.resolve(resultsDir);
+  const parent = path5.dirname(destination);
+  fs6.mkdirSync(parent, { recursive: true });
+  const temporary = fs6.mkdtempSync(path5.join(parent, `.${path5.basename(destination)}-prepare-`));
+  const backup = path5.join(parent, `.${path5.basename(destination)}-backup-${process.pid}-${Date.now()}`);
+  let destinationMoved = false;
+  let sourceDirectories = 0;
+  let sourceFiles = 0;
+  let sourceBytes = 0;
+  let attributedResults = 0;
+  let fragmentVariableBytes = 0;
+  const staged = /* @__PURE__ */ new Map();
+  const fragmentVariables = /* @__PURE__ */ new Map();
+  const stage = (name, data, mode, source) => {
+    const digest = sha256(data);
+    const previous = staged.get(name);
+    if (previous) {
+      if (previous.digest === digest)
+        return;
+      throw new Error(`Conflicting source files named ${name}: ${previous.source} and ${source}`);
+    }
+    fs6.writeFileSync(path5.join(temporary, name), data, { flag: "wx", mode });
+    staged.set(name, { digest, source });
+  };
+  try {
+    const sourceDirectoriesFound = findSourceResultDirectories(sourceRoot, resultsDir);
+    const withProvenance = sourceDirectoriesFound.filter((directory) => fs6.existsSync(path5.join(directory, "ci-env-fragment.properties")));
+    if (autoMode && withProvenance.length === 0) {
+      fs6.rmSync(temporary, { recursive: true, force: true });
+      console.log("No attributed source results detected; preserved legacy merged results");
+      return;
+    }
+    if (sourceDirectoriesFound.length === 0) {
+      throw new Error(`No source allure-results directories found under ${sourceRoot}`);
+    }
+    if (withProvenance.length !== sourceDirectoriesFound.length) {
+      throw new Error(`Partial module provenance: ${withProvenance.length} of ${sourceDirectoriesFound.length} source directories contain ci-env-fragment.properties`);
+    }
+    if (fs6.existsSync(destination)) {
+      const destinationStat = fs6.lstatSync(destination);
+      if (!destinationStat.isDirectory() || destinationStat.isSymbolicLink()) {
+        throw new Error(`Results destination must be a regular directory: ${resultsDir}`);
+      }
+      for (const name of PRESERVED_DESTINATION_METADATA) {
+        const file = path5.join(destination, name);
+        if (!fs6.existsSync(file))
+          continue;
+        const stat = fs6.lstatSync(file);
+        if (!stat.isFile() || stat.isSymbolicLink()) {
+          throw new Error(`Preserved metadata must be a regular file: ${file}`);
+        }
+        if (stat.size > MAX_PRESERVED_METADATA_BYTES) {
+          throw new Error(`Preserved metadata exceeds ${MAX_PRESERVED_METADATA_BYTES} bytes: ${file}`);
+        }
+        stage(name, fs6.readFileSync(file), stat.mode & 511, file);
+      }
+    }
+    for (const directory of sourceDirectoriesFound) {
+      sourceDirectories += 1;
+      const fragment = path5.join(directory, "ci-env-fragment.properties");
+      if (!fs6.existsSync(fragment)) {
+        throw new Error(`Missing module provenance: ${fragment}`);
+      }
+      const { moduleName, variables } = parseModuleFragment(fragment);
+      for (const [key, value] of variables) {
+        const previous = fragmentVariables.get(key);
+        if (previous !== void 0 && previous !== value) {
+          throw new Error(`Conflicting environment variable ${key} across source fragments`);
+        }
+        if (previous === void 0) {
+          fragmentVariableBytes += Buffer.byteLength(key) + Buffer.byteLength(value);
+          if (fragmentVariables.size >= MAX_FRAGMENT_VARIABLES2 || fragmentVariableBytes > MAX_FRAGMENT_VARIABLE_BYTES2) {
+            throw new Error("Module environment variables exceed count or byte limits");
+          }
+          fragmentVariables.set(key, value);
+        }
+      }
+      for (const entry of fs6.readdirSync(directory, { withFileTypes: true })) {
+        const file = path5.join(directory, entry.name);
+        if (entry.isSymbolicLink() || !entry.isFile()) {
+          throw new Error(`Only regular files are allowed in source results: ${file}`);
+        }
+        if (entry.name === "ci-env-fragment.properties")
+          continue;
+        if (entry.name === MODULE_VARIABLES_METADATA2) {
+          throw new Error(`Reserved source result filename is not allowed: ${file}`);
+        }
+        const stat = fs6.lstatSync(file);
+        if (stat.size > MAX_SOURCE_FILE_BYTES) {
+          throw new Error(`Source file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${file}`);
+        }
+        sourceFiles += 1;
+        sourceBytes += stat.size;
+        if (sourceFiles > MAX_SOURCE_FILES || sourceBytes > MAX_SOURCE_BYTES) {
+          throw new Error(`Source results exceed limits (${MAX_SOURCE_FILES} files / ${MAX_SOURCE_BYTES} bytes)`);
+        }
+        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, moduleLabel) : fs6.readFileSync(file);
+        if (entry.name.endsWith("-result.json"))
+          attributedResults += 1;
+        stage(entry.name, data, stat.mode & 511, file);
+      }
+    }
+    if (attributedResults === 0)
+      throw new Error("No Allure result JSON files found in source artifacts");
+    const environmentMetadata = Buffer.from(JSON.stringify(Object.fromEntries([...fragmentVariables].sort(([left], [right]) => left.localeCompare(right)))), "utf8");
+    if (environmentMetadata.length > MAX_FRAGMENT_VARIABLE_BYTES2) {
+      throw new Error("Module environment metadata exceeds byte limit");
+    }
+    stage(MODULE_VARIABLES_METADATA2, environmentMetadata, 384, "source fragments");
+    if (fs6.existsSync(destination)) {
+      fs6.renameSync(destination, backup);
+      destinationMoved = true;
+    }
+    fs6.renameSync(temporary, destination);
+    if (destinationMoved)
+      fs6.rmSync(backup, { recursive: true, force: true });
+  } catch (error) {
+    fs6.rmSync(temporary, { recursive: true, force: true });
+    if (destinationMoved && !fs6.existsSync(destination) && fs6.existsSync(backup)) {
+      fs6.renameSync(backup, destination);
+    }
+    throw error;
+  }
+  console.log(`Prepared ${attributedResults} attributed result(s) from ${sourceDirectories} source directories (${sourceFiles} files)`);
+}
+
+// dist/commands/prepare-results.js
+function runPrepareResults(options) {
+  prepareAttributedResults(options);
+}
+
+// dist/commands/pyramid-check.js
+function runPyramidCheck(options) {
+  const { resultsDir, outputJson } = options;
+  const aggregated = aggregateResults(listResultFiles(resultsDir), (file) => readJsonSafe(file), (result) => getEpicForResult(result));
+  const { pyramidTotal, unitShare, apiShare, e2eShare, otherEpicTotal } = aggregated;
+  const metrics = {
+    pyramidTotal,
+    unitShare,
+    apiShare,
+    e2eShare,
+    otherEpicTotal
+  };
+  const gates = evaluatePyramidQualityGates(metrics);
+  const titleBase = "Test pyramid (advisory)";
+  for (const warning2 of gates.warnings) {
+    emitGithubWarning(titleBase, `${warning2.id}: ${warning2.message}`);
+  }
+  const gateJsonPath = outputJson || "docs/testing/pyramid-quality-gates.json";
+  writeQualityGatesJson(gates, metrics, gateJsonPath);
+  const markdown = [];
+  markdown.push("### Quality gates \u2014 test pyramid (advisory, non-blocking)\n\n");
+  markdown.push(formatQualityGatesMarkdownSection(gates, metrics));
+  markdown.push("\n");
+  appendJobSummary(markdown.join(""));
+  console.log(`pyramid-check: ${gates.warnings.length} advisory warning(s), 0 blocking (exit 0).`);
+}
+
+// dist/renderer/pyramid.js
+var fs7 = __toESM(require("node:fs"), 1);
+var path6 = __toESM(require("node:path"), 1);
+function pyramidMarkdownEpicColumn(layer) {
+  if (layer.id === "api")
+    return "`api` / `integration`";
+  if (layer.id === "ui_e2e")
+    return "`end-to-end` / `ui`";
+  return layer.epics.map((e) => `\`${e}\``).join(", ");
+}
+function pyramidAdvisoryNotes(unitShare, e2eShare, pyramidTotal) {
+  if (pyramidTotal === 0) {
+    return [
+      "- No Allure results in this directory \u2014 pyramid share advisory skipped (run tests or point `--results` at merged CI output)."
+    ];
+  }
+  const lines = [];
+  if (unitShare < PYRAMID_ADVISORY.unitShareMin) {
+    lines.push(`- **Unit share** ${(100 * unitShare).toFixed(1)}% is below the soft planning target (~${(100 * PYRAMID_ADVISORY.unitShareMin).toFixed(0)}%+). Consider adding or restoring fast unit tests before expanding API/E2E.`);
+  }
+  if (e2eShare > PYRAMID_ADVISORY.e2eShareMax) {
+    lines.push(`- **UI / E2E share** ${(100 * e2eShare).toFixed(1)}% exceeds the soft ceiling (~${(100 * PYRAMID_ADVISORY.e2eShareMax).toFixed(0)}%). Check whether some cases can move down to API or unit layers.`);
+  }
+  if (lines.length === 0) {
+    lines.push("- Pyramid layer shares sit within the **soft** planning band documented in `docs/testing/test-pyramid.md` (not a merge gate).");
+  }
+  return lines;
+}
 function renderPyramidMarkdown(data) {
   const { aggregated, sourceRunId, headSha, policyPath, outputMd } = data;
   const { layers, pyramidTotal, unitShare, apiShare, e2eShare, otherEpicTotal } = aggregated;
@@ -24911,7 +24982,7 @@ function renderPyramidMarkdown(data) {
     otherEpicTotal
   }));
   if (policyPath && outputMd) {
-    const policyHref = path5.relative(path5.resolve(path5.dirname(outputMd)), path5.resolve(policyPath)).split(path5.sep).join("/");
+    const policyHref = path6.relative(path6.resolve(path6.dirname(outputMd)), path6.resolve(policyPath)).split(path6.sep).join("/");
     md.push(`Canonical policy: [\`${policyPath}\`](${policyHref}).`);
   }
   return md.join("\n");
@@ -24947,78 +25018,20 @@ function generatePyramidJson(data) {
   };
 }
 function writePyramidFiles(markdown, json, markdownPath, jsonPath) {
-  fs6.mkdirSync(path5.dirname(markdownPath), { recursive: true });
-  fs6.writeFileSync(markdownPath, markdown, "utf8");
+  fs7.mkdirSync(path6.dirname(markdownPath), { recursive: true });
+  fs7.writeFileSync(markdownPath, markdown, "utf8");
   console.log(`Wrote ${markdownPath}`);
   if (jsonPath) {
-    fs6.mkdirSync(path5.dirname(jsonPath), { recursive: true });
-    fs6.writeFileSync(jsonPath, JSON.stringify(json, null, 2), "utf8");
+    fs7.mkdirSync(path6.dirname(jsonPath), { recursive: true });
+    fs7.writeFileSync(jsonPath, JSON.stringify(json, null, 2), "utf8");
     console.log(`Wrote ${jsonPath}`);
   }
-}
-function writeQualityGatesJson(gates, metrics, outputPath) {
-  const payload = {
-    schemaVersion: 1,
-    generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-    advisoryOnly: true,
-    exitCodePolicy: "always_zero",
-    gates,
-    metrics: {
-      pyramidTotal: metrics.pyramidTotal,
-      unitShare: metrics.unitShare,
-      apiShare: metrics.apiShare,
-      e2eShare: metrics.e2eShare,
-      otherEpicTotal: metrics.otherEpicTotal
-    }
-  };
-  fs6.mkdirSync(path5.dirname(outputPath), { recursive: true });
-  fs6.writeFileSync(outputPath, JSON.stringify(payload, null, 2), "utf8");
-  console.log(`Wrote ${outputPath}`);
-}
-function githubWorkflowEscape(s) {
-  return String(s).replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
-}
-function emitGithubWarning(title, message) {
-  console.log(`::warning title=${githubWorkflowEscape(title)}::${githubWorkflowEscape(message)}`);
-}
-function appendJobSummary(markdown) {
-  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
-  if (!summaryPath)
-    return;
-  fs6.appendFileSync(summaryPath, markdown, "utf8");
-}
-
-// dist/commands/pyramid-check.js
-function runPyramidCheck(options) {
-  const { resultsDir, outputJson } = options;
-  const aggregated = aggregateResults(resultsDir);
-  const { pyramidTotal, unitShare, apiShare, e2eShare, otherEpicTotal } = aggregated;
-  const metrics = {
-    pyramidTotal,
-    unitShare,
-    apiShare,
-    e2eShare,
-    otherEpicTotal
-  };
-  const gates = evaluatePyramidQualityGates(metrics);
-  const titleBase = "Test pyramid (advisory)";
-  for (const warning2 of gates.warnings) {
-    emitGithubWarning(titleBase, `${warning2.id}: ${warning2.message}`);
-  }
-  const gateJsonPath = outputJson || "docs/testing/pyramid-quality-gates.json";
-  writeQualityGatesJson(gates, metrics, gateJsonPath);
-  const markdown = [];
-  markdown.push("### Quality gates \u2014 test pyramid (advisory, non-blocking)\n\n");
-  markdown.push(formatQualityGatesMarkdownSection(gates, metrics));
-  markdown.push("\n");
-  appendJobSummary(markdown.join(""));
-  console.log(`pyramid-check: ${gates.warnings.length} advisory warning(s), 0 blocking (exit 0).`);
 }
 
 // dist/commands/pyramid.js
 function runPyramid(options) {
   const { resultsDir, outputMd, outputJson, policyPath, sourceRunId, headSha } = options;
-  const aggregated = aggregateResults(resultsDir);
+  const aggregated = aggregateResults(listResultFiles(resultsDir), (file) => readJsonSafe(file), (result) => getEpicForResult(result));
   const data = {
     aggregated,
     sourceRunId,
@@ -26471,17 +26484,17 @@ function requestLog(octokit) {
     octokit.log.debug("request", options);
     const start = Date.now();
     const requestOptions = octokit.request.endpoint.parse(options);
-    const path6 = requestOptions.url.replace(options.baseUrl, "");
+    const path7 = requestOptions.url.replace(options.baseUrl, "");
     return request2(options).then((response) => {
       const requestId = response.headers["x-github-request-id"];
       octokit.log.info(
-        `${requestOptions.method} ${path6} - ${response.status} with id ${requestId} in ${Date.now() - start}ms`
+        `${requestOptions.method} ${path7} - ${response.status} with id ${requestId} in ${Date.now() - start}ms`
       );
       return response;
     }).catch((error) => {
       const requestId = error.response?.headers["x-github-request-id"] || "UNKNOWN";
       octokit.log.error(
-        `${requestOptions.method} ${path6} - ${error.status} with id ${requestId} in ${Date.now() - start}ms`
+        `${requestOptions.method} ${path7} - ${error.status} with id ${requestId} in ${Date.now() - start}ms`
       );
       throw error;
     });
@@ -29111,9 +29124,9 @@ async function publishPrComment(options) {
 }
 
 // dist/utils/fs.js
-var fs7 = __toESM(require("node:fs"), 1);
+var fs8 = __toESM(require("node:fs"), 1);
 function readFile(file) {
-  return fs7.readFileSync(file, "utf8");
+  return fs8.readFileSync(file, "utf8");
 }
 
 // dist/main.js
@@ -29129,8 +29142,8 @@ async function run() {
       let sourceRoot = config.sourceArtifactsDirectory;
       let autoMode = false;
       if (sourceRoot === "auto") {
-        const path6 = await import("node:path");
-        sourceRoot = path6.dirname(config.resultsDirectory);
+        const path7 = await import("node:path");
+        sourceRoot = path7.dirname(config.resultsDirectory);
         autoMode = true;
       }
       runPrepareResults({
@@ -29141,17 +29154,17 @@ async function run() {
       });
     }
     if (config.categoriesFile) {
-      const fs8 = await import("node:fs");
-      const path6 = await import("node:path");
-      fs8.cpSync(config.categoriesFile, path6.join(config.resultsDirectory, "categories.json"), {
+      const fs9 = await import("node:fs");
+      const path7 = await import("node:path");
+      fs9.cpSync(config.categoriesFile, path7.join(config.resultsDirectory, "categories.json"), {
         force: true
       });
     }
     let effectiveConfigFile = config.configFile;
     if (config.moduleEnvironmentLabel) {
       const tmp = await import("node:os");
-      const path6 = await import("node:path");
-      effectiveConfigFile = path6.join(tmp.tmpdir(), `allure-report-action-config-${Date.now()}.mjs`);
+      const path7 = await import("node:path");
+      effectiveConfigFile = path7.join(tmp.tmpdir(), `allure-report-action-config-${Date.now()}.mjs`);
       await runModuleConfig({
         resultsDir: config.resultsDirectory,
         configFile: config.configFile,

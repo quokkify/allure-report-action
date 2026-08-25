@@ -1,13 +1,18 @@
 /**
  * Pyramid command
  */
-import { aggregateResults } from '../allure/parser.js';
 import {
   renderPyramidMarkdown,
   generatePyramidJson,
   writePyramidFiles,
   PyramidData,
 } from '../renderer/pyramid.js';
+import {
+  aggregateResults,
+  listResultFiles,
+  readJsonSafe,
+  getEpicForResult,
+} from '../report/index.js';
 
 export interface PyramidCommandOptions {
   resultsDir: string;
@@ -24,7 +29,11 @@ export interface PyramidCommandOptions {
 export function runPyramid(options: PyramidCommandOptions): void {
   const { resultsDir, outputMd, outputJson, policyPath, sourceRunId, headSha } = options;
 
-  const aggregated = aggregateResults(resultsDir);
+  const aggregated = aggregateResults(
+    listResultFiles(resultsDir),
+    (file: string) => readJsonSafe(file),
+    result => getEpicForResult(result as any)
+  );
 
   const data: PyramidData = {
     aggregated,

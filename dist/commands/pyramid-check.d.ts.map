@@ -1,1 +1,1 @@
-{"version":3,"file":"pyramid-check.d.ts","sourceRoot":"","sources":["../../src/commands/pyramid-check.ts"],"names":[],"mappings":"AAaA,MAAM,WAAW,0BAA0B;IACzC,UAAU,EAAE,MAAM,CAAC;IACnB,UAAU,CAAC,EAAE,MAAM,CAAC;CACrB;AAED;;GAEG;AACH,wBAAgB,eAAe,CAAC,OAAO,EAAE,0BAA0B,GAAG,IAAI,CAkCzE"}
+{"version":3,"file":"pyramid-check.d.ts","sourceRoot":"","sources":["../../src/commands/pyramid-check.ts"],"names":[],"mappings":"AAkBA,MAAM,WAAW,0BAA0B;IACzC,UAAU,EAAE,MAAM,CAAC;IACnB,UAAU,CAAC,EAAE,MAAM,CAAC;CACrB;AAED;;GAEG;AACH,wBAAgB,eAAe,CAAC,OAAO,EAAE,0BAA0B,GAAG,IAAI,CAsCzE"}

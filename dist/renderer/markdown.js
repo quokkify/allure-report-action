@@ -1,8 +1,7 @@
 /**
  * Markdown renderer - generates PR comment markdown from domain model
  */
-import { EPIC_DISPLAY, ACTION_REPOSITORY_URL, } from '../allure/model.js';
-import { calculatePassRate } from '../allure/parser.js';
+import { EPIC_DISPLAY, ACTION_REPOSITORY_URL, calculatePassRate, } from '../report/index.js';
 /**
  * Builds the report link with optional run ID
  */

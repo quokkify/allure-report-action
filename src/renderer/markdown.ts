@@ -6,8 +6,8 @@ import {
   TestSummary,
   EPIC_DISPLAY,
   ACTION_REPOSITORY_URL,
-} from '../allure/model.js';
-import { calculatePassRate } from '../allure/parser.js';
+  calculatePassRate,
+} from '../report/index.js';
 
 export interface PrCommentData {
   summary: TestSummary;

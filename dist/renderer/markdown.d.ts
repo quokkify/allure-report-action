@@ -1,7 +1,7 @@
 /**
  * Markdown renderer - generates PR comment markdown from domain model
  */
-import { AggregatedResults, TestSummary } from '../allure/model.js';
+import { AggregatedResults, TestSummary } from '../report/index.js';
 export interface PrCommentData {
     summary: TestSummary;
     aggregated: AggregatedResults;

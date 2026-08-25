@@ -2,13 +2,9 @@
  * Tests for Pyramid renderer
  */
 import { describe, it, expect } from 'vitest';
-import {
-  renderPyramidMarkdown,
-  generatePyramidJson,
-  evaluatePyramidQualityGates,
-} from '../../src/renderer/pyramid.js';
-import { AggregatedResults, TestSummary, emptyStats } from '../../src/allure/model.js';
-
+import { renderPyramidMarkdown, generatePyramidJson } from '../../src/renderer/pyramid.js';
+import { evaluatePyramidQualityGates } from '../../src/report/quality-gates.js';
+import { AggregatedResults, TestSummary, emptyStats } from '../../src/report/model.js';
 describe('Pyramid Renderer', () => {
   const createMockAggregated = (overrides: Partial<AggregatedResults> = {}): AggregatedResults => {
     const base: AggregatedResults = {

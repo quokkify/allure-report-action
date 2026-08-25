@@ -3,8 +3,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { renderPrComment } from '../../src/renderer/markdown.js';
-import { AggregatedResults, TestSummary, emptyStats } from '../../src/allure/model.js';
-
+import { AggregatedResults, TestSummary, emptyStats } from '../../src/report/model.js';
 describe('Markdown Renderer', () => {
   const createMockAggregated = (overrides: Partial<AggregatedResults> = {}): AggregatedResults => {
     const base: AggregatedResults = {

@@ -5,10 +5,15 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { aggregateResults } from '../../src/allure/parser.js';
-import { readWidgetSummary, mergeSummary } from '../../src/report/summary.js';
+import { aggregateResults } from '../../src/report/aggregation.js';
+import {
+  listResultFiles,
+  readJsonSafe,
+  getEpicForResult,
+  readWidgetSummary,
+  mergeSummary,
+} from '../../src/report/index.js';
 import { renderPrComment } from '../../src/renderer/markdown.js';
-
 describe('PR Summary Edge Cases', () => {
   let tempDir: string;
   let resultsDir: string;
@@ -42,18 +47,19 @@ describe('PR Summary Edge Cases', () => {
       statistic: { total: 246, passed: 246, failed: 0, broken: 0, skipped: 0, unknown: 0 },
     });
 
-    const agg = aggregateResults(resultsDir);
+    const files = listResultFiles(resultsDir);
+    const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
     const widget = readWidgetSummary(reportDir);
     const summary = mergeSummary(widget, agg);
 
     const markdown = renderPrComment({
       summary,
       aggregated: agg,
-      pagesUrl: 'https://quokkify.github.io/q4j/allure/pr-535/',
+      pagesUrl: 'https://quokkify.github.io/q4j/allure/pr-535/?run=32841209876',
       forkPr: false,
       sourceRunId: '32841209876',
-      actionVersion: '0.2.3',
-      commentMarker: '<!-- fixture-marker -->',
+      actionVersion: '0.1.0',
+      commentMarker: '<!-- test-marker -->',
     });
 
     expect(markdown).toContain('246 / 246 tests passed · 100% pass rate');
@@ -94,7 +100,12 @@ describe('PR Summary Edge Cases', () => {
     for (const [name, values, heading, detail] of cases) {
       it(name, () => {
         const total = Object.values(values).reduce((a, b) => a + b, 0);
-        const statuses = ['passed', 'failed', 'unknown'];
+        const statuses: string[] = [];
+        if (values.passed) for (let i = 0; i < values.passed; i++) statuses.push('passed');
+        if (values.failed) for (let i = 0; i < values.failed; i++) statuses.push('failed');
+        if (values.broken) for (let i = 0; i < values.broken; i++) statuses.push('broken');
+        if (values.skipped) for (let i = 0; i < values.skipped; i++) statuses.push('skipped');
+        if (values.unknown) for (let i = 0; i < values.unknown; i++) statuses.push('unknown');
 
         for (let i = 0; i < total; i++) {
           writeResult(`${i}`, { status: statuses[i] });
@@ -102,7 +113,8 @@ describe('PR Summary Edge Cases', () => {
 
         writeWidgetSummary({ statistic: { total, ...values } });
 
-        const agg = aggregateResults(resultsDir);
+        const files = listResultFiles(resultsDir);
+        const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
         const widget = readWidgetSummary(reportDir);
         const summary = mergeSummary(widget, agg);
 
@@ -127,8 +139,8 @@ describe('PR Summary Edge Cases', () => {
     writeWidgetSummary({
       statistic: { total: 1, passed: 0, failed: 0, broken: 0, skipped: 0, unknown: 0 },
     });
-
-    const agg = aggregateResults(resultsDir);
+    const files = listResultFiles(resultsDir);
+    const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
     const widget = readWidgetSummary(reportDir);
     const summary = mergeSummary(widget, agg);
 

@@ -1,4 +1,4 @@
-import { AggregatedResults } from './model.js';
+import { AggregatedResults } from '../report/index.js';
 /**
  * Generates badges for total and each epic
  */

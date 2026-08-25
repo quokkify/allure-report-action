@@ -1,14 +1,14 @@
 /**
  * Pyramid check command
  */
-import { aggregateResults } from '../allure/parser.js';
-import { evaluatePyramidQualityGates, writeQualityGatesJson, emitGithubWarning, appendJobSummary, formatQualityGatesMarkdownSection, } from '../renderer/pyramid.js';
+import { listResultFiles, readJsonSafe, getEpicForResult, aggregateResults, } from '../report/index.js';
+import { evaluatePyramidQualityGates, writeQualityGatesJson, emitGithubWarning, appendJobSummary, formatQualityGatesMarkdownSection, } from '../report/quality-gates.js';
 /**
  * Executes pyramid-check command
  */
 export function runPyramidCheck(options) {
     const { resultsDir, outputJson } = options;
-    const aggregated = aggregateResults(resultsDir);
+    const aggregated = aggregateResults(listResultFiles(resultsDir), (file) => readJsonSafe(file), result => getEpicForResult(result));
     const { pyramidTotal, unitShare, apiShare, e2eShare, otherEpicTotal } = aggregated;
     const metrics = {
         pyramidTotal,

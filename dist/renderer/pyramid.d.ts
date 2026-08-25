@@ -1,4 +1,4 @@
-import { AggregatedResults, PYRAMID_ADVISORY } from '../allure/model.js';
+import { AggregatedResults, PYRAMID_ADVISORY } from '../report/index.js';
 export interface PyramidData {
     aggregated: AggregatedResults;
     sourceRunId?: string;
@@ -26,14 +26,10 @@ export interface QualityGates {
     advisoryOnly: boolean;
     thresholds: typeof PYRAMID_ADVISORY;
 }
-/**
- * Evaluates pyramid quality gates
- */
-export declare function evaluatePyramidQualityGates(metrics: PyramidMetrics): QualityGates;
-/**
- * Formats quality gates as markdown section
- */
-export declare function formatQualityGatesMarkdownSection(gates: QualityGates, metrics: PyramidMetrics): string;
+export interface QualityGateWarning {
+    id: string;
+    message: string;
+}
 /**
  * Renders pyramid markdown
  */
@@ -46,13 +42,4 @@ export declare function generatePyramidJson(data: PyramidData): object;
  * Writes pyramid files
  */
 export declare function writePyramidFiles(markdown: string, json: object, markdownPath: string, jsonPath: string): void;
-/**
- * Writes quality gates JSON
- */
-export declare function writeQualityGatesJson(gates: QualityGates, metrics: PyramidMetrics, outputPath: string): void;
-export declare function emitGithubWarning(title: string, message: string): void;
-/**
- * Appends to GitHub job summary
- */
-export declare function appendJobSummary(markdown: string): void;
 //# sourceMappingURL=pyramid.d.ts.map

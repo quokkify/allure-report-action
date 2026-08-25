@@ -10,9 +10,9 @@ import {
   readJsonSafe,
   getLabelValue,
   getEpicForResult,
-  aggregateResults,
   calculatePassRate,
 } from '../../src/allure/parser.js';
+import { aggregateResults } from '../../src/report/aggregation.js';
 
 describe('Allure Parser', () => {
   let tempDir: string;
@@ -166,7 +166,8 @@ describe('Allure Parser', () => {
         labels: [{ name: 'framework', value: 'playwright' }],
       });
 
-      const agg = aggregateResults(resultsDir);
+      const files = listResultFiles(resultsDir);
+      const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
 
       expect(agg.total.total).toBe(6);
       expect(agg.total.passed).toBe(5);
@@ -180,7 +181,8 @@ describe('Allure Parser', () => {
     });
 
     it('handles empty results directory', () => {
-      const agg = aggregateResults(resultsDir);
+      const files = listResultFiles(resultsDir);
+      const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
       expect(agg.total.total).toBe(0);
       expect(agg.resultCount).toBe(0);
     });

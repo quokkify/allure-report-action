@@ -11,5 +11,5 @@ export interface PrBodyCommandOptions {
 /**
  * Executes pr-body command
  */
-export declare function runPrBody(options: PrBodyCommandOptions): void;
+export declare function runPrBody(options: PrBodyCommandOptions): Promise<void>;
 //# sourceMappingURL=pr-body.d.ts.map

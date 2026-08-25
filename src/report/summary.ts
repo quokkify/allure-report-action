@@ -1,15 +1,26 @@
 /**
  * Report summary - reads and processes Allure widget summary
  */
-import { AggregatedResults, TestSummary } from '../allure/model.js';
-import { readWidgetSummary } from '../allure/parser.js';
+import { AggregatedResults, TestSummary } from './model.js';
 
 export interface WidgetSummary {
   statistic?: TestSummary;
 }
 
-// Re-export the parser's implementation
-export { readWidgetSummary };
+/**
+ * Reads widget summary from Allure report
+ */
+export async function readWidgetSummary(reportDir: string): Promise<WidgetSummary | null> {
+  try {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    return JSON.parse(
+      fs.readFileSync(path.join(reportDir, 'widgets', 'summary.json'), 'utf8')
+    ) as WidgetSummary;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Merges widget summary with aggregated results

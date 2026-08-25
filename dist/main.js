@@ -2,7 +2,6 @@
  * Main entry point for the GitHub Action
  */
 import * as core from '@actions/core';
-import { setActionVersion, ACTION_VERSION } from './allure/model.js';
 import { runBadges } from './commands/badges.js';
 import { runModuleConfig } from './commands/module-config.js';
 import { runPrBody } from './commands/pr-body.js';
@@ -11,6 +10,7 @@ import { runPyramidCheck } from './commands/pyramid-check.js';
 import { runPyramid } from './commands/pyramid.js';
 import { loadConfig } from './config/loader.js';
 import { publishPrComment } from './github/comment-publisher.js';
+import { setActionVersion, ACTION_VERSION } from './report/model.js';
 import { readFile } from './utils/fs.js';
 import { readFile as readVersionFile } from './utils/fs.js';
 async function run() {

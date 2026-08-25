@@ -2,18 +2,16 @@
  * PR body command
  */
 import * as fs from 'node:fs';
-import { aggregateResults } from '../allure/parser.js';
 import { renderPrComment } from '../renderer/markdown.js';
-import { readWidgetSummary } from '../report/summary.js';
-import { mergeSummary } from '../report/summary.js';
+import { aggregateResults, listResultFiles, readJsonSafe, getEpicForResult, readWidgetSummary, mergeSummary, } from '../report/index.js';
 /**
  * Executes pr-body command
  */
-export function runPrBody(options) {
+export async function runPrBody(options) {
     const { resultsDir, reportDir, outputFile, pagesUrl, forkPr, sourceRunId, actionVersion, commentMarker, } = options;
-    const aggregated = aggregateResults(resultsDir);
-    const widget = readWidgetSummary(reportDir);
-    const summary = mergeSummary(widget, aggregated);
+    const aggregated = aggregateResults(listResultFiles(resultsDir), (file) => readJsonSafe(file), result => getEpicForResult(result));
+    const widget = await readWidgetSummary(reportDir);
+    const summary = mergeSummary(await widget, aggregated);
     const data = {
         summary,
         aggregated,

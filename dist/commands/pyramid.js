@@ -1,14 +1,14 @@
 /**
  * Pyramid command
  */
-import { aggregateResults } from '../allure/parser.js';
 import { renderPyramidMarkdown, generatePyramidJson, writePyramidFiles, } from '../renderer/pyramid.js';
+import { aggregateResults, listResultFiles, readJsonSafe, getEpicForResult, } from '../report/index.js';
 /**
  * Executes pyramid command
  */
 export function runPyramid(options) {
     const { resultsDir, outputMd, outputJson, policyPath, sourceRunId, headSha } = options;
-    const aggregated = aggregateResults(resultsDir);
+    const aggregated = aggregateResults(listResultFiles(resultsDir), (file) => readJsonSafe(file), result => getEpicForResult(result));
     const data = {
         aggregated,
         sourceRunId,

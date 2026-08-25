@@ -4,7 +4,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { AggregatedResults, TestSummary } from './model.js';
+import { AggregatedResults, TestSummary } from '../report/index.js';
 
 /**
  * Shield JSON structure for shields.io

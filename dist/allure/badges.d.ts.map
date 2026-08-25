@@ -1,1 +1,1 @@
-{"version":3,"file":"badges.d.ts","sourceRoot":"","sources":["../../src/allure/badges.ts"],"names":[],"mappings":"AAMA,OAAO,EAAE,iBAAiB,EAAe,MAAM,YAAY,CAAC;AAgD5D;;GAEG;AACH,wBAAgB,cAAc,CAAC,OAAO,EAAE,iBAAiB,EAAE,SAAS,EAAE,MAAM,GAAG,IAAI,CAsBlF"}
+{"version":3,"file":"badges.d.ts","sourceRoot":"","sources":["../../src/allure/badges.ts"],"names":[],"mappings":"AAMA,OAAO,EAAE,iBAAiB,EAAe,MAAM,oBAAoB,CAAC;AAgDpE;;GAEG;AACH,wBAAgB,cAAc,CAAC,OAAO,EAAE,iBAAiB,EAAE,SAAS,EAAE,MAAM,GAAG,IAAI,CAsBlF"}
