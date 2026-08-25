@@ -696,7 +696,9 @@ function cmdPrBody(
   const failed = stat.failed ?? 0;
   const broken = stat.broken ?? 0;
   const skipped = stat.skipped ?? 0;
-  const unknown = stat.unknown ?? agg.total.unknown ?? 0;
+  // Result files are the source of truth for statuses that the generated
+  // widget can omit (for example, an unknown result reported as zero).
+  const unknown = Math.max(stat.unknown ?? 0, agg.total.unknown);
 
   const status = total === 0 ? "⚪" : failed + broken > 0 ? "❌" : "✅";
   const statusLabel = total === 0 ? "no tests" : failed + broken > 0 ? "failures detected" : "passed";

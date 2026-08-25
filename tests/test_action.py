@@ -1036,6 +1036,45 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 self.assertIn(heading, body)
                 self.assertIn(detail, body)
 
+    def test_pr_summary_does_not_drop_unknown_result_when_widget_reports_zero(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-unknown-mismatch-") as tmp:
+            root = Path(tmp)
+            results = root / "results"
+            widgets = root / "report/widgets"
+            results.mkdir()
+            widgets.mkdir(parents=True)
+            (results / "unknown-result.json").write_text(json.dumps({"status": "unknown"}))
+            (widgets / "summary.json").write_text(
+                json.dumps(
+                    {
+                        "statistic": {
+                            "total": 1,
+                            "passed": 0,
+                            "failed": 0,
+                            "broken": 0,
+                            "skipped": 0,
+                            "unknown": 0,
+                        }
+                    }
+                )
+            )
+            comment = root / "comment.md"
+            result = self.run_cli(
+                "pr-body",
+                "--results",
+                str(results),
+                "--report",
+                str(root / "report"),
+                "--output",
+                str(comment),
+                "--comment-marker",
+                "<!-- mismatch-marker -->",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            body = comment.read_text()
+            self.assertIn("0 / 1 tests passed · 0% pass rate · 1 unknown", body)
+            self.assertIn("| 1 | 0 | 0 | 0 | 0 | 1 | — |", body)
+
 
 if __name__ == "__main__":
     unittest.main()
