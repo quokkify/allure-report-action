@@ -1,9 +1,7 @@
 /**
  * GitHub comment publisher - handles PR comment creation/update
  */
-import { Octokit } from '@octokit/core';
-import { paginateRest } from '@octokit/plugin-paginate-rest';
-import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods';
+import { Octokit } from '@octokit/rest';
 
 export interface CommentPublisherOptions {
   githubToken: string;
@@ -13,13 +11,11 @@ export interface CommentPublisherOptions {
   body: string;
 }
 
-const MyOctokit = Octokit.plugin(paginateRest, restEndpointMethods);
-
 /**
  * Finds existing comment by marker and author
  */
 async function findExistingComment(
-  octokit: InstanceType<typeof MyOctokit>,
+  octokit: InstanceType<typeof Octokit>,
   owner: string,
   repo: string,
   issueNumber: number,
@@ -42,7 +38,7 @@ async function findExistingComment(
  * Resolves the expected author login, trying authenticated user first
  */
 async function resolveExpectedAuthor(
-  octokit: InstanceType<typeof MyOctokit>,
+  octokit: InstanceType<typeof Octokit>,
   configuredAuthor: string
 ): Promise<string> {
   let expectedAuthor = configuredAuthor.trim();
@@ -82,7 +78,7 @@ export async function publishPrComment(options: CommentPublisherOptions): Promis
     throw new Error('comment-marker must not be empty');
   }
 
-  const octokit = new MyOctokit({ auth: githubToken });
+  const octokit = new Octokit({ auth: githubToken });
 
   // Get repository info from context
   const { context } = await import('@actions/github');
