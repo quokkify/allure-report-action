@@ -951,7 +951,63 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 '<a href="https://github.com/quokkify/allure-report-action/releases/latest">v0.1.3</a></sub>',
                 body,
             )
+            self.assertIn("</details>\n\n<sub>", body)
+            self.assertNotIn("</details>\n\n\n<sub>", body)
             self.assertTrue(body.endswith(marker))
+
+    def test_pr_summary_246_passed_fixture_uses_single_footer_separator(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="allure-report-action-246-") as tmp:
+            root = Path(tmp)
+            results = root / "results"
+            widgets = root / "report/widgets"
+            results.mkdir()
+            widgets.mkdir(parents=True)
+            for index in range(246):
+                (results / f"{index}-result.json").write_text(
+                    json.dumps({"status": "passed", "labels": []})
+                )
+            (widgets / "summary.json").write_text(
+                json.dumps(
+                    {
+                        "statistic": {
+                            "total": 246,
+                            "passed": 246,
+                            "failed": 0,
+                            "broken": 0,
+                            "skipped": 0,
+                            "unknown": 0,
+                        }
+                    }
+                )
+            )
+            comment = root / "comment.md"
+            result = self.run_cli(
+                "pr-body",
+                "--results",
+                str(results),
+                "--report",
+                str(root / "report"),
+                "--output",
+                str(comment),
+                "--comment-marker",
+                "<!-- fixture-marker -->",
+                "--pages-url",
+                "https://quokkify.github.io/q4j/allure/pr-535/",
+                "--source-run-id",
+                "32841209876",
+                "--action-version",
+                "0.2.3",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            body = comment.read_text()
+            self.assertIn("246 / 246 tests passed · 100% pass rate", body)
+            self.assertIn(
+                "| 246 | 246 | 0 | 0 | 0 | [View report ↗](https://quokkify.github.io/q4j/allure/pr-535/?run=32841209876) |",
+                body,
+            )
+            self.assertIn("| No epic assigned | 246 | 246 | 0 | 0 | 0 |", body)
+            self.assertIn("</details>\n\n<sub>", body)
+            self.assertNotIn("</details>\n\n\n<sub>", body)
 
     def test_pr_summary_statuses_failure_zero_and_unknown_results(self) -> None:
         cases = [
