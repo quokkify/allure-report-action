@@ -1,7 +1,5 @@
 # allure-report-action
 
-Generated with `quokkify/project-toolkit` at `v2.12.1`. Run `copier update` to apply future template changes; Renovate updates workflow version references independently.
-
 Build an Allure 3 HTML report from an already-merged results directory, generate the existing outcome badges and optional test-pyramid files, optionally publish the report to a GitHub Pages subdirectory, and finally create or update one pull-request comment with total and passed test counts.
 
 Tests do **not** need Allure `epic` metadata. Results without a recognized `epic` remain in the overall totals. The preserved CSP fallback classifies Playwright results as `E2E`; other unclassified results appear under `No epic assigned` so the missing relationship is explicit.
@@ -22,7 +20,7 @@ steps:
       results-directory: artifacts/allure-results
       report-directory: allure-report
       config-file: scripts/allure/allurerc.mjs
-      allure-version: "3.14.2"
+      allure-version: "3.15.0"
       pr-number: ${{ github.event.pull_request.number }}
       comment-marker: "<!-- my-project-allure-ci -->"
 ```
@@ -87,7 +85,7 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 | `module-environment-label` | no | `module` | Result label used to create one environment per module; empty disables normalization. |
 | `source-artifacts-directory` | no | empty | Source root, `auto` for compatible wrapper detection, or empty for legacy pre-merged results. |
 | `categories-file` | no | empty | Optional caller-owned `categories.json`. |
-| `allure-version` | no | `3.14.2` | Exact Allure CLI version. |
+| `allure-version` | no | `3.15.0` | Exact Allure CLI version. |
 | `pr-number` | no | empty | PR to comment on; empty skips the API mutation. |
 | `comment-marker` | no | `<!-- project-toolkit-allure-ci -->` | Hidden marker for idempotent updates. Existing comments are updated only when they were created by the identity behind `github-token`. |
 | `comment-author-login` | no | `github-actions[bot]` | Expected author for installation-token comments. PAT/user-token logins are resolved automatically; custom GitHub App installation tokens must pass `<app-slug>[bot]`. |
@@ -97,17 +95,83 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 
 See [`action.yml`](action.yml) for the complete versioned input contract.
 
-## Development
+## Implementation
 
-Requirements: Node.js 24+, Python 3 with PyYAML, and Bash.
+The action is implemented in TypeScript and runs on Node.js 20+. The source code is in [`src/`](src/) and is bundled with esbuild into a single [`dist/index.js`](dist/index.js) for GitHub Actions execution.
 
-```bash
-node --check allure-ci.mjs
-python3 -m unittest discover -s tests -p 'test_*.py'
-bash tests/smoke.sh
+### Architecture
+
+```
+src/
+├── main.ts                    # Entry point (orchestration)
+├── config/                    # Configuration loading & validation
+├── allure/                    # Allure processing domain
+│   ├── model.ts               # Domain types (TestSummary, LayerSummary, AggregatedResults)
+│   ├── parser.ts              # Result parsing & aggregation
+│   ├── badges.ts              # Shields.io badge generation
+│   ├── config-generator.ts    # Module-scoped Allure config
+│   └── prepare-results.ts     # Provenance-aware result merging
+├── report/                    # Report summary processing
+├── renderer/                  # Pure rendering (domain → Markdown/JSON)
+│   ├── markdown.ts            # PR comment rendering
+│   └── pyramid.ts             # Test pyramid + quality gates
+├── github/                    # GitHub API integration
+│   └── comment-publisher.ts   # PR comment upsert (marker + author)
+├── utils/                     # Shared utilities
+└── commands/                  # CLI command wrappers
 ```
 
-The tests cover atomic provenance-aware merging, strict failure boundaries, legacy merged mode, and module environment generation. The smoke test generates a real Allure 3.14.2 HTML report from per-module source directories, verifies module-scoped environments and variables, and covers Playwright and unlabeled results without `epic` metadata.
+## Development
+
+Requirements: Node.js 20+ and npm.
+
+```bash
+# Install dependencies
+npm ci
+
+# Run all checks (format, lint, test, build)
+npm run all
+
+# Individual commands
+npm run format        # Format with Prettier
+npm run format:check  # Check formatting
+npm run lint          # Run ESLint
+npm run test          # Run Vitest tests
+npm run build         # TypeScript compile + esbuild bundle
+npm run test:watch    # Watch mode for tests
+```
+
+The test suite includes 83 tests covering:
+- Configuration loading and validation
+- Allure result parsing and aggregation
+- Module-scoped environment generation
+- Provenance-aware result merging (conflicts, deduplication, atomicity)
+- PR comment markdown rendering
+- Test pyramid markdown/JSON and quality gates
+- GitHub comment upsert logic (PAT, GITHUB_TOKEN, GitHub App tokens)
+- CLI command integration
+
+### Test structure
+
+```
+tests/
+├── allure/
+│   ├── parser.test.ts           # Result parsing & aggregation
+│   ├── config-generator.test.ts # Module config generation
+│   └── prepare-results.test.ts  # Provenance-aware merging
+├── renderer/
+│   ├── markdown.test.ts         # PR comment rendering
+│   └── pyramid.test.ts          # Pyramid & quality gates
+├── config/
+│   ├── loader.test.ts           # Config loading
+│   └── action-yml.test.ts       # action.yml metadata
+├── github/
+│   └── comment-publisher.test.ts # PR comment upsert logic
+├── report/
+│   └── pr-summary.test.ts       # PR summary edge cases
+└── commands/
+    └── index.test.ts            # CLI command integration
+```
 
 ## License
 
