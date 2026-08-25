@@ -78,7 +78,8 @@ describe('Config Loader', () => {
     vi.spyOn(core, 'getBooleanInput').mockImplementation((name: string) => {
       if (name === 'fork-pr') return true;
       if (name === 'pyramid-enabled') return true;
-      if (name === 'publish-pages') return true;
+      // publish-pages is false to test boolean parsing without fork PR interaction
+      if (name === 'publish-pages') return false;
       return false;
     });
     vi.spyOn(core, 'getInput').mockImplementation((name: string) => {
@@ -90,7 +91,7 @@ describe('Config Loader', () => {
 
     expect(config.forkPr).toBe(true);
     expect(config.pyramidEnabled).toBe(true);
-    expect(config.publishPages).toBe(true);
+    expect(config.publishPages).toBe(false);
   });
 
   it('parses numeric inputs correctly', () => {
@@ -163,7 +164,7 @@ describe('Config Loader', () => {
     );
   });
 
-  it('warns when publish-pages is true for fork PR', () => {
+  it('warns when publish-pages is true for fork PR and disables it', () => {
     setupDefaultMocks();
     vi.spyOn(core, 'getBooleanInput').mockImplementation((name: string) => {
       if (name === 'publish-pages') return true;
@@ -175,8 +176,9 @@ describe('Config Loader', () => {
       return 'default';
     });
 
-    loadConfig();
+    const config = loadConfig();
 
     expect(core.warning).toHaveBeenCalledWith('publish-pages is disabled for fork PRs');
+    expect(config.publishPages).toBe(false);
   });
 });

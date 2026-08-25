@@ -7,6 +7,7 @@ import {
   EPIC_DISPLAY,
   ACTION_REPOSITORY_URL,
 } from '../allure/model.js';
+import { calculatePassRate } from '../allure/parser.js';
 
 export interface PrCommentData {
   summary: TestSummary;
@@ -46,16 +47,6 @@ function formatSummaryLine(summary: TestSummary): string {
   if (summary.skipped > 0) parts.push(`${summary.skipped} skipped`);
   if (summary.unknown > 0) parts.push(`${summary.unknown} unknown`);
   return parts.join(' · ');
-}
-
-/**
- * Calculates pass rate percentage string
- */
-function calculatePassRate(passed: number, total: number): string {
-  if (!total) return '—';
-  const pct = (100 * passed) / total;
-  const rounded = Math.round(pct * 10) / 10;
-  return Number.isInteger(rounded) ? `${rounded}%` : `${rounded}%`;
 }
 
 /**

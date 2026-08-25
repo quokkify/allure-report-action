@@ -32,7 +32,7 @@ export function getNumberEnv(name: string, defaultValue = 0): number {
  * Checks if running in GitHub Actions
  */
 export function isGitHubActions(): boolean {
-  return !!process.env.GITHUB_ACTIONS;
+  return getBoolEnv('GITHUB_ACTIONS');
 }
 
 /**

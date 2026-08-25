@@ -61,9 +61,21 @@ async function run() {
                 moduleLabel: config.moduleEnvironmentLabel,
             });
         }
-        // Step 4: Run Allure generate (via npx)
-        // This is done by the composite action, but we can also support running it here
-        // For now, we assume the report is already generated or will be generated
+        // Step 4: Run Allure generate using the effective config file
+        const { spawnSync } = await import('node:child_process');
+        const allureGenerate = spawnSync('npx', [
+            '--yes',
+            `allure@${config.allureVersion}`,
+            'generate',
+            config.resultsDirectory,
+            '-o',
+            config.reportDirectory,
+            '--config',
+            effectiveConfigFile,
+        ], { stdio: 'inherit', shell: true });
+        if (allureGenerate.status !== 0) {
+            throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
+        }
         // Step 5: Generate badges
         runBadges({
             resultsDir: config.resultsDirectory,

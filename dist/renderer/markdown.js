@@ -2,6 +2,7 @@
  * Markdown renderer - generates PR comment markdown from domain model
  */
 import { EPIC_DISPLAY, ACTION_REPOSITORY_URL, } from '../allure/model.js';
+import { calculatePassRate } from '../allure/parser.js';
 /**
  * Builds the report link with optional run ID
  */
@@ -36,16 +37,6 @@ function formatSummaryLine(summary) {
     if (summary.unknown > 0)
         parts.push(`${summary.unknown} unknown`);
     return parts.join(' · ');
-}
-/**
- * Calculates pass rate percentage string
- */
-function calculatePassRate(passed, total) {
-    if (!total)
-        return '—';
-    const pct = (100 * passed) / total;
-    const rounded = Math.round(pct * 10) / 10;
-    return Number.isInteger(rounded) ? `${rounded}%` : `${rounded}%`;
 }
 /**
  * Determines status emoji and label

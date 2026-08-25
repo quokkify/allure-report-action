@@ -56,6 +56,7 @@ function validateConfig(config: ActionConfig): void {
 
   if (config.publishPages && config.forkPr) {
     core.warning('publish-pages is disabled for fork PRs');
+    config.publishPages = false;
   }
 
   if (config.publishPages && !config.pagesDestinationDirectory.trim()) {

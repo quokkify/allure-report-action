@@ -4,6 +4,7 @@ export interface PyramidData {
     sourceRunId?: string;
     headSha?: string;
     policyPath?: string;
+    outputMd?: string;
 }
 export interface PyramidMetrics {
     pyramidTotal: number;

@@ -1,11 +1,12 @@
+/**
+ * Report summary - reads and processes Allure widget summary
+ */
 import { AggregatedResults, TestSummary } from '../allure/model.js';
+import { readWidgetSummary } from '../allure/parser.js';
 export interface WidgetSummary {
     statistic?: TestSummary;
 }
-/**
- * Reads widget summary from Allure report
- */
-export declare function readWidgetSummary(reportDir: string): WidgetSummary | null;
+export { readWidgetSummary };
 /**
  * Merges widget summary with aggregated results
  * Widget summary is the source of truth for counts, but aggregated results

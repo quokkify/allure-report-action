@@ -14,6 +14,7 @@ export function runPyramid(options) {
         sourceRunId,
         headSha,
         policyPath,
+        outputMd,
     };
     const markdown = renderPyramidMarkdown(data);
     const json = generatePyramidJson(data);

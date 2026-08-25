@@ -178,7 +178,7 @@ var require_file_command = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.prepareKeyValueMessage = exports2.issueFileCommand = void 0;
     var crypto = __importStar(require("crypto"));
-    var fs9 = __importStar(require("fs"));
+    var fs8 = __importStar(require("fs"));
     var os = __importStar(require("os"));
     var utils_1 = require_utils();
     function issueFileCommand(command, message) {
@@ -186,10 +186,10 @@ var require_file_command = __commonJS({
       if (!filePath) {
         throw new Error(`Unable to find environment variable for file command ${command}`);
       }
-      if (!fs9.existsSync(filePath)) {
+      if (!fs8.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
       }
-      fs9.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os.EOL}`, {
+      fs8.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os.EOL}`, {
         encoding: "utf8"
       });
     }
@@ -992,14 +992,14 @@ var require_util = __commonJS({
         }
         const port = url.port != null ? url.port : url.protocol === "https:" ? 443 : 80;
         let origin = url.origin != null ? url.origin : `${url.protocol}//${url.hostname}:${port}`;
-        let path7 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
+        let path6 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
         if (origin.endsWith("/")) {
           origin = origin.substring(0, origin.length - 1);
         }
-        if (path7 && !path7.startsWith("/")) {
-          path7 = `/${path7}`;
+        if (path6 && !path6.startsWith("/")) {
+          path6 = `/${path6}`;
         }
-        url = new URL(origin + path7);
+        url = new URL(origin + path6);
       }
       return url;
     }
@@ -2613,20 +2613,20 @@ var require_parseParams = __commonJS({
 var require_basename = __commonJS({
   "node_modules/@fastify/busboy/lib/utils/basename.js"(exports2, module2) {
     "use strict";
-    module2.exports = function basename2(path7) {
-      if (typeof path7 !== "string") {
+    module2.exports = function basename2(path6) {
+      if (typeof path6 !== "string") {
         return "";
       }
-      for (var i = path7.length - 1; i >= 0; --i) {
-        switch (path7.charCodeAt(i)) {
+      for (var i = path6.length - 1; i >= 0; --i) {
+        switch (path6.charCodeAt(i)) {
           case 47:
           // '/'
           case 92:
-            path7 = path7.slice(i + 1);
-            return path7 === ".." || path7 === "." ? "" : path7;
+            path6 = path6.slice(i + 1);
+            return path6 === ".." || path6 === "." ? "" : path6;
         }
       }
-      return path7 === ".." || path7 === "." ? "" : path7;
+      return path6 === ".." || path6 === "." ? "" : path6;
     };
   }
 });
@@ -5656,7 +5656,7 @@ var require_request = __commonJS({
     }
     var Request = class _Request {
       constructor(origin, {
-        path: path7,
+        path: path6,
         method,
         body,
         headers,
@@ -5670,11 +5670,11 @@ var require_request = __commonJS({
         throwOnError,
         expectContinue
       }, handler2) {
-        if (typeof path7 !== "string") {
+        if (typeof path6 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path7[0] !== "/" && !(path7.startsWith("http://") || path7.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path6[0] !== "/" && !(path6.startsWith("http://") || path6.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.exec(path7) !== null) {
+        } else if (invalidPathRegex.exec(path6) !== null) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -5737,7 +5737,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? util.buildURL(path7, query) : path7;
+        this.path = query ? util.buildURL(path6, query) : path6;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -6745,9 +6745,9 @@ var require_RedirectHandler = __commonJS({
           return this.handler.onHeaders(statusCode, headers, resume, statusText);
         }
         const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path7 = search ? `${pathname}${search}` : pathname;
+        const path6 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path7;
+        this.opts.path = path6;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -7987,7 +7987,7 @@ var require_client = __commonJS({
         writeH2(client, client[kHTTP2Session], request3);
         return;
       }
-      const { body, method, path: path7, host, upgrade, headers, blocking, reset } = request3;
+      const { body, method, path: path6, host, upgrade, headers, blocking, reset } = request3;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
         body.read(0);
@@ -8037,7 +8037,7 @@ var require_client = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path7} HTTP/1.1\r
+      let header = `${method} ${path6} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -8100,7 +8100,7 @@ upgrade: ${upgrade}\r
       return true;
     }
     function writeH2(client, session, request3) {
-      const { body, method, path: path7, host, upgrade, expectContinue, signal, headers: reqHeaders } = request3;
+      const { body, method, path: path6, host, upgrade, expectContinue, signal, headers: reqHeaders } = request3;
       let headers;
       if (typeof reqHeaders === "string") headers = Request[kHTTP2CopyHeaders](reqHeaders.trim());
       else headers = reqHeaders;
@@ -8143,7 +8143,7 @@ upgrade: ${upgrade}\r
         });
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path7;
+      headers[HTTP2_HEADER_PATH] = path6;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -10383,20 +10383,20 @@ var require_mock_utils = __commonJS({
       }
       return true;
     }
-    function safeUrl(path7) {
-      if (typeof path7 !== "string") {
-        return path7;
+    function safeUrl(path6) {
+      if (typeof path6 !== "string") {
+        return path6;
       }
-      const pathSegments = path7.split("?");
+      const pathSegments = path6.split("?");
       if (pathSegments.length !== 2) {
-        return path7;
+        return path6;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path7, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path7);
+    function matchKey(mockDispatch2, { path: path6, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path6);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -10414,7 +10414,7 @@ var require_mock_utils = __commonJS({
     function getMockDispatch(mockDispatches, key) {
       const basePath = key.query ? buildURL(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path7 }) => matchValue(safeUrl(path7), resolvedPath));
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path6 }) => matchValue(safeUrl(path6), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
@@ -10451,9 +10451,9 @@ var require_mock_utils = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path7, method, body, headers, query } = opts;
+      const { path: path6, method, body, headers, query } = opts;
       return {
-        path: path7,
+        path: path6,
         method,
         body,
         headers,
@@ -10902,10 +10902,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path7, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path6, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path7,
+            Path: path6,
             "Status code": statusCode,
             Persistent: persist ? "\u2705" : "\u274C",
             Invocations: timesInvoked,
@@ -15525,8 +15525,8 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path7) {
-      for (const char of path7) {
+    function validateCookiePath(path6) {
+      for (const char of path6) {
         const code = char.charCodeAt(0);
         if (code < 33 || char === ";") {
           throw new Error("Invalid cookie path");
@@ -17206,11 +17206,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path7 = opts.path;
+          let path6 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path7 = `/${path7}`;
+            path6 = `/${path6}`;
           }
-          url = new URL(util.parseOrigin(url).origin + path7);
+          url = new URL(util.parseOrigin(url).origin + path6);
         } else {
           if (!opts) {
             opts = typeof url === "object" ? url : {};
@@ -18433,7 +18433,7 @@ var require_path_utils = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.toPlatformPath = exports2.toWin32Path = exports2.toPosixPath = void 0;
-    var path7 = __importStar(require("path"));
+    var path6 = __importStar(require("path"));
     function toPosixPath(pth) {
       return pth.replace(/[\\]/g, "/");
     }
@@ -18443,7 +18443,7 @@ var require_path_utils = __commonJS({
     }
     exports2.toWin32Path = toWin32Path;
     function toPlatformPath(pth) {
-      return pth.replace(/[/\\]/g, path7.sep);
+      return pth.replace(/[/\\]/g, path6.sep);
     }
     exports2.toPlatformPath = toPlatformPath;
   }
@@ -18506,12 +18506,12 @@ var require_io_util = __commonJS({
     var _a;
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getCmdPath = exports2.tryGetExecutablePath = exports2.isRooted = exports2.isDirectory = exports2.exists = exports2.READONLY = exports2.UV_FS_O_EXLOCK = exports2.IS_WINDOWS = exports2.unlink = exports2.symlink = exports2.stat = exports2.rmdir = exports2.rm = exports2.rename = exports2.readlink = exports2.readdir = exports2.open = exports2.mkdir = exports2.lstat = exports2.copyFile = exports2.chmod = void 0;
-    var fs9 = __importStar(require("fs"));
-    var path7 = __importStar(require("path"));
-    _a = fs9.promises, exports2.chmod = _a.chmod, exports2.copyFile = _a.copyFile, exports2.lstat = _a.lstat, exports2.mkdir = _a.mkdir, exports2.open = _a.open, exports2.readdir = _a.readdir, exports2.readlink = _a.readlink, exports2.rename = _a.rename, exports2.rm = _a.rm, exports2.rmdir = _a.rmdir, exports2.stat = _a.stat, exports2.symlink = _a.symlink, exports2.unlink = _a.unlink;
+    var fs8 = __importStar(require("fs"));
+    var path6 = __importStar(require("path"));
+    _a = fs8.promises, exports2.chmod = _a.chmod, exports2.copyFile = _a.copyFile, exports2.lstat = _a.lstat, exports2.mkdir = _a.mkdir, exports2.open = _a.open, exports2.readdir = _a.readdir, exports2.readlink = _a.readlink, exports2.rename = _a.rename, exports2.rm = _a.rm, exports2.rmdir = _a.rmdir, exports2.stat = _a.stat, exports2.symlink = _a.symlink, exports2.unlink = _a.unlink;
     exports2.IS_WINDOWS = process.platform === "win32";
     exports2.UV_FS_O_EXLOCK = 268435456;
-    exports2.READONLY = fs9.constants.O_RDONLY;
+    exports2.READONLY = fs8.constants.O_RDONLY;
     function exists(fsPath) {
       return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -18556,7 +18556,7 @@ var require_io_util = __commonJS({
         }
         if (stats && stats.isFile()) {
           if (exports2.IS_WINDOWS) {
-            const upperExt = path7.extname(filePath).toUpperCase();
+            const upperExt = path6.extname(filePath).toUpperCase();
             if (extensions.some((validExt) => validExt.toUpperCase() === upperExt)) {
               return filePath;
             }
@@ -18580,11 +18580,11 @@ var require_io_util = __commonJS({
           if (stats && stats.isFile()) {
             if (exports2.IS_WINDOWS) {
               try {
-                const directory = path7.dirname(filePath);
-                const upperName = path7.basename(filePath).toUpperCase();
+                const directory = path6.dirname(filePath);
+                const upperName = path6.basename(filePath).toUpperCase();
                 for (const actualName of yield exports2.readdir(directory)) {
                   if (upperName === actualName.toUpperCase()) {
-                    filePath = path7.join(directory, actualName);
+                    filePath = path6.join(directory, actualName);
                     break;
                   }
                 }
@@ -18679,7 +18679,7 @@ var require_io = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.findInPath = exports2.which = exports2.mkdirP = exports2.rmRF = exports2.mv = exports2.cp = void 0;
     var assert_1 = require("assert");
-    var path7 = __importStar(require("path"));
+    var path6 = __importStar(require("path"));
     var ioUtil = __importStar(require_io_util());
     function cp(source, dest, options = {}) {
       return __awaiter(this, void 0, void 0, function* () {
@@ -18688,7 +18688,7 @@ var require_io = __commonJS({
         if (destStat && destStat.isFile() && !force) {
           return;
         }
-        const newDest = destStat && destStat.isDirectory() && copySourceDirectory ? path7.join(dest, path7.basename(source)) : dest;
+        const newDest = destStat && destStat.isDirectory() && copySourceDirectory ? path6.join(dest, path6.basename(source)) : dest;
         if (!(yield ioUtil.exists(source))) {
           throw new Error(`no such file or directory: ${source}`);
         }
@@ -18700,7 +18700,7 @@ var require_io = __commonJS({
             yield cpDirRecursive(source, newDest, 0, force);
           }
         } else {
-          if (path7.relative(source, newDest) === "") {
+          if (path6.relative(source, newDest) === "") {
             throw new Error(`'${newDest}' and '${source}' are the same file`);
           }
           yield copyFile(source, newDest, force);
@@ -18713,7 +18713,7 @@ var require_io = __commonJS({
         if (yield ioUtil.exists(dest)) {
           let destExists = true;
           if (yield ioUtil.isDirectory(dest)) {
-            dest = path7.join(dest, path7.basename(source));
+            dest = path6.join(dest, path6.basename(source));
             destExists = yield ioUtil.exists(dest);
           }
           if (destExists) {
@@ -18724,7 +18724,7 @@ var require_io = __commonJS({
             }
           }
         }
-        yield mkdirP(path7.dirname(dest));
+        yield mkdirP(path6.dirname(dest));
         yield ioUtil.rename(source, dest);
       });
     }
@@ -18787,7 +18787,7 @@ var require_io = __commonJS({
         }
         const extensions = [];
         if (ioUtil.IS_WINDOWS && process.env["PATHEXT"]) {
-          for (const extension of process.env["PATHEXT"].split(path7.delimiter)) {
+          for (const extension of process.env["PATHEXT"].split(path6.delimiter)) {
             if (extension) {
               extensions.push(extension);
             }
@@ -18800,12 +18800,12 @@ var require_io = __commonJS({
           }
           return [];
         }
-        if (tool.includes(path7.sep)) {
+        if (tool.includes(path6.sep)) {
           return [];
         }
         const directories = [];
         if (process.env.PATH) {
-          for (const p of process.env.PATH.split(path7.delimiter)) {
+          for (const p of process.env.PATH.split(path6.delimiter)) {
             if (p) {
               directories.push(p);
             }
@@ -18813,7 +18813,7 @@ var require_io = __commonJS({
         }
         const matches = [];
         for (const directory of directories) {
-          const filePath = yield ioUtil.tryGetExecutablePath(path7.join(directory, tool), extensions);
+          const filePath = yield ioUtil.tryGetExecutablePath(path6.join(directory, tool), extensions);
           if (filePath) {
             matches.push(filePath);
           }
@@ -18929,7 +18929,7 @@ var require_toolrunner = __commonJS({
     var os = __importStar(require("os"));
     var events = __importStar(require("events"));
     var child = __importStar(require("child_process"));
-    var path7 = __importStar(require("path"));
+    var path6 = __importStar(require("path"));
     var io = __importStar(require_io());
     var ioUtil = __importStar(require_io_util());
     var timers_1 = require("timers");
@@ -19144,7 +19144,7 @@ var require_toolrunner = __commonJS({
       exec() {
         return __awaiter(this, void 0, void 0, function* () {
           if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) {
-            this.toolPath = path7.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+            this.toolPath = path6.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
           }
           this.toolPath = yield io.which(this.toolPath, true);
           return new Promise((resolve4, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -19644,7 +19644,7 @@ var require_core = __commonJS({
     var file_command_1 = require_file_command();
     var utils_1 = require_utils();
     var os = __importStar(require("os"));
-    var path7 = __importStar(require("path"));
+    var path6 = __importStar(require("path"));
     var oidc_utils_1 = require_oidc_utils();
     var ExitCode;
     (function(ExitCode2) {
@@ -19672,7 +19672,7 @@ var require_core = __commonJS({
       } else {
         (0, command_1.issueCommand)("add-path", {}, inputPath);
       }
-      process.env["PATH"] = `${inputPath}${path7.delimiter}${process.env["PATH"]}`;
+      process.env["PATH"] = `${inputPath}${path6.delimiter}${process.env["PATH"]}`;
     }
     exports2.addPath = addPath;
     function getInput2(name, options) {
@@ -19924,8 +19924,8 @@ var require_context = __commonJS({
           if ((0, fs_1.existsSync)(process.env.GITHUB_EVENT_PATH)) {
             this.payload = JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: "utf8" }));
           } else {
-            const path7 = process.env.GITHUB_EVENT_PATH;
-            process.stdout.write(`GITHUB_EVENT_PATH ${path7} does not exist${os_1.EOL}`);
+            const path6 = process.env.GITHUB_EVENT_PATH;
+            process.stdout.write(`GITHUB_EVENT_PATH ${path6} does not exist${os_1.EOL}`);
           }
         }
         this.eventName = process.env.GITHUB_EVENT_NAME;
@@ -24218,6 +24218,16 @@ function sumEpicStats(epics, byEpic) {
   }
   return sum;
 }
+function readWidgetSummary(reportDir) {
+  return readJsonSafe(path2.join(reportDir, "widgets", "summary.json"));
+}
+function calculatePassRate(passed, total) {
+  if (!total)
+    return "\u2014";
+  const pct = 100 * passed / total;
+  const rounded = Math.round(pct * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}%` : `${rounded}%`;
+}
 
 // dist/commands/badges.js
 function runBadges(options) {
@@ -24400,7 +24410,7 @@ async function runModuleConfig(options) {
 }
 
 // dist/commands/pr-body.js
-var fs5 = __toESM(require("node:fs"), 1);
+var fs4 = __toESM(require("node:fs"), 1);
 
 // dist/renderer/markdown.js
 function buildReportLink(pagesUrl, forkPr, sourceRunId) {
@@ -24430,13 +24440,6 @@ function formatSummaryLine(summary) {
   if (summary.unknown > 0)
     parts.push(`${summary.unknown} unknown`);
   return parts.join(" \xB7 ");
-}
-function calculatePassRate(passed, total) {
-  if (!total)
-    return "\u2014";
-  const pct = 100 * passed / total;
-  const rounded = Math.round(pct * 10) / 10;
-  return Number.isInteger(rounded) ? `${rounded}%` : `${rounded}%`;
 }
 function getStatusInfo(total, failed, broken) {
   if (total === 0)
@@ -24552,15 +24555,6 @@ function renderPrComment(data) {
 }
 
 // dist/report/summary.js
-var fs4 = __toESM(require("node:fs"), 1);
-var path4 = __toESM(require("node:path"), 1);
-function readWidgetSummary(reportDir) {
-  try {
-    return JSON.parse(fs4.readFileSync(path4.join(reportDir, "widgets", "summary.json"), "utf8"));
-  } catch {
-    return null;
-  }
-}
 function mergeSummary(widget, aggregated) {
   if (!widget?.statistic)
     return aggregated.total;
@@ -24591,14 +24585,14 @@ function runPrBody(options) {
     commentMarker
   };
   const markdown = renderPrComment(data);
-  fs5.writeFileSync(outputFile, markdown, "utf8");
+  fs4.writeFileSync(outputFile, markdown, "utf8");
   console.log(`Wrote PR body to ${outputFile}`);
 }
 
 // dist/allure/prepare-results.js
 var import_node_crypto = require("node:crypto");
-var fs6 = __toESM(require("node:fs"), 1);
-var path5 = __toESM(require("node:path"), 1);
+var fs5 = __toESM(require("node:fs"), 1);
+var path4 = __toESM(require("node:path"), 1);
 var SOURCE_SCAN_SKIP_DIRECTORIES = /* @__PURE__ */ new Set([
   ".git",
   ".gradle",
@@ -24619,7 +24613,7 @@ var MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
 var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
 var MODULE_VARIABLES_METADATA2 = ".allure-module-variables.json";
 function parseModuleFragment(fragmentPath) {
-  const stat = fs6.lstatSync(fragmentPath);
+  const stat = fs5.lstatSync(fragmentPath);
   if (!stat.isFile() || stat.isSymbolicLink()) {
     throw new Error(`Module provenance must be a regular file: ${fragmentPath}`);
   }
@@ -24628,7 +24622,7 @@ function parseModuleFragment(fragmentPath) {
   }
   const modules = /* @__PURE__ */ new Set();
   const variables = /* @__PURE__ */ new Map();
-  for (const rawLine of fs6.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
+  for (const rawLine of fs5.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith("#") || !line.includes("="))
       continue;
@@ -24654,11 +24648,11 @@ function parseModuleFragment(fragmentPath) {
   return { moduleName: moduleArray[0], variables };
 }
 function findSourceResultDirectories(sourceRoot, resultsDir) {
-  const root = path5.resolve(sourceRoot);
-  const destination = path5.resolve(resultsDir);
-  if (!fs6.existsSync(root))
+  const root = path4.resolve(sourceRoot);
+  const destination = path4.resolve(resultsDir);
+  if (!fs5.existsSync(root))
     throw new Error(`Source artifacts directory not found: ${sourceRoot}`);
-  const rootStat = fs6.lstatSync(root);
+  const rootStat = fs5.lstatSync(root);
   if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
     throw new Error(`Source artifacts path must be a regular directory: ${sourceRoot}`);
   }
@@ -24668,12 +24662,12 @@ function findSourceResultDirectories(sourceRoot, resultsDir) {
     const directory = stack.pop();
     if (directory === destination)
       continue;
-    if (path5.basename(directory) === "allure-results") {
+    if (path4.basename(directory) === "allure-results") {
       sources.push(directory);
       continue;
     }
-    for (const entry of fs6.readdirSync(directory, { withFileTypes: true })) {
-      const child = path5.join(directory, entry.name);
+    for (const entry of fs5.readdirSync(directory, { withFileTypes: true })) {
+      const child = path4.join(directory, entry.name);
       if (entry.isSymbolicLink())
         throw new Error(`Symbolic links are not allowed: ${child}`);
       if (!entry.isDirectory())
@@ -24691,7 +24685,7 @@ function sha256(buffer) {
 function attributedResultBuffer(file, moduleName, moduleLabel) {
   let document;
   try {
-    document = JSON.parse(fs6.readFileSync(file, "utf8"));
+    document = JSON.parse(fs5.readFileSync(file, "utf8"));
   } catch (error) {
     throw new Error(`Malformed Allure result JSON ${file}: ${error.message}`);
   }
@@ -24713,11 +24707,11 @@ function prepareAttributedResults(options) {
     throw new Error("--source-root must not be empty");
   if (!moduleLabel.trim())
     throw new Error("--module-label must not be empty in attributed mode");
-  const destination = path5.resolve(resultsDir);
-  const parent = path5.dirname(destination);
-  fs6.mkdirSync(parent, { recursive: true });
-  const temporary = fs6.mkdtempSync(path5.join(parent, `.${path5.basename(destination)}-prepare-`));
-  const backup = path5.join(parent, `.${path5.basename(destination)}-backup-${process.pid}-${Date.now()}`);
+  const destination = path4.resolve(resultsDir);
+  const parent = path4.dirname(destination);
+  fs5.mkdirSync(parent, { recursive: true });
+  const temporary = fs5.mkdtempSync(path4.join(parent, `.${path4.basename(destination)}-prepare-`));
+  const backup = path4.join(parent, `.${path4.basename(destination)}-backup-${process.pid}-${Date.now()}`);
   let destinationMoved = false;
   let sourceDirectories = 0;
   let sourceFiles = 0;
@@ -24734,14 +24728,14 @@ function prepareAttributedResults(options) {
         return;
       throw new Error(`Conflicting source files named ${name}: ${previous.source} and ${source}`);
     }
-    fs6.writeFileSync(path5.join(temporary, name), data, { flag: "wx", mode });
+    fs5.writeFileSync(path4.join(temporary, name), data, { flag: "wx", mode });
     staged.set(name, { digest, source });
   };
   try {
     const sourceDirectoriesFound = findSourceResultDirectories(sourceRoot, resultsDir);
-    const withProvenance = sourceDirectoriesFound.filter((directory) => fs6.existsSync(path5.join(directory, "ci-env-fragment.properties")));
+    const withProvenance = sourceDirectoriesFound.filter((directory) => fs5.existsSync(path4.join(directory, "ci-env-fragment.properties")));
     if (autoMode && withProvenance.length === 0) {
-      fs6.rmSync(temporary, { recursive: true, force: true });
+      fs5.rmSync(temporary, { recursive: true, force: true });
       console.log("No attributed source results detected; preserved legacy merged results");
       return;
     }
@@ -24751,29 +24745,29 @@ function prepareAttributedResults(options) {
     if (withProvenance.length !== sourceDirectoriesFound.length) {
       throw new Error(`Partial module provenance: ${withProvenance.length} of ${sourceDirectoriesFound.length} source directories contain ci-env-fragment.properties`);
     }
-    if (fs6.existsSync(destination)) {
-      const destinationStat = fs6.lstatSync(destination);
+    if (fs5.existsSync(destination)) {
+      const destinationStat = fs5.lstatSync(destination);
       if (!destinationStat.isDirectory() || destinationStat.isSymbolicLink()) {
         throw new Error(`Results destination must be a regular directory: ${resultsDir}`);
       }
       for (const name of PRESERVED_DESTINATION_METADATA) {
-        const file = path5.join(destination, name);
-        if (!fs6.existsSync(file))
+        const file = path4.join(destination, name);
+        if (!fs5.existsSync(file))
           continue;
-        const stat = fs6.lstatSync(file);
+        const stat = fs5.lstatSync(file);
         if (!stat.isFile() || stat.isSymbolicLink()) {
           throw new Error(`Preserved metadata must be a regular file: ${file}`);
         }
         if (stat.size > MAX_PRESERVED_METADATA_BYTES) {
           throw new Error(`Preserved metadata exceeds ${MAX_PRESERVED_METADATA_BYTES} bytes: ${file}`);
         }
-        stage(name, fs6.readFileSync(file), stat.mode & 511, file);
+        stage(name, fs5.readFileSync(file), stat.mode & 511, file);
       }
     }
     for (const directory of sourceDirectoriesFound) {
       sourceDirectories += 1;
-      const fragment = path5.join(directory, "ci-env-fragment.properties");
-      if (!fs6.existsSync(fragment)) {
+      const fragment = path4.join(directory, "ci-env-fragment.properties");
+      if (!fs5.existsSync(fragment)) {
         throw new Error(`Missing module provenance: ${fragment}`);
       }
       const { moduleName, variables } = parseModuleFragment(fragment);
@@ -24790,8 +24784,8 @@ function prepareAttributedResults(options) {
           fragmentVariables.set(key, value);
         }
       }
-      for (const entry of fs6.readdirSync(directory, { withFileTypes: true })) {
-        const file = path5.join(directory, entry.name);
+      for (const entry of fs5.readdirSync(directory, { withFileTypes: true })) {
+        const file = path4.join(directory, entry.name);
         if (entry.isSymbolicLink() || !entry.isFile()) {
           throw new Error(`Only regular files are allowed in source results: ${file}`);
         }
@@ -24800,7 +24794,7 @@ function prepareAttributedResults(options) {
         if (entry.name === MODULE_VARIABLES_METADATA2) {
           throw new Error(`Reserved source result filename is not allowed: ${file}`);
         }
-        const stat = fs6.lstatSync(file);
+        const stat = fs5.lstatSync(file);
         if (stat.size > MAX_SOURCE_FILE_BYTES) {
           throw new Error(`Source file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${file}`);
         }
@@ -24809,7 +24803,7 @@ function prepareAttributedResults(options) {
         if (sourceFiles > MAX_SOURCE_FILES || sourceBytes > MAX_SOURCE_BYTES) {
           throw new Error(`Source results exceed limits (${MAX_SOURCE_FILES} files / ${MAX_SOURCE_BYTES} bytes)`);
         }
-        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, moduleLabel) : fs6.readFileSync(file);
+        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, moduleLabel) : fs5.readFileSync(file);
         if (entry.name.endsWith("-result.json"))
           attributedResults += 1;
         stage(entry.name, data, stat.mode & 511, file);
@@ -24822,17 +24816,17 @@ function prepareAttributedResults(options) {
       throw new Error("Module environment metadata exceeds byte limit");
     }
     stage(MODULE_VARIABLES_METADATA2, environmentMetadata, 384, "source fragments");
-    if (fs6.existsSync(destination)) {
-      fs6.renameSync(destination, backup);
+    if (fs5.existsSync(destination)) {
+      fs5.renameSync(destination, backup);
       destinationMoved = true;
     }
-    fs6.renameSync(temporary, destination);
+    fs5.renameSync(temporary, destination);
     if (destinationMoved)
-      fs6.rmSync(backup, { recursive: true, force: true });
+      fs5.rmSync(backup, { recursive: true, force: true });
   } catch (error) {
-    fs6.rmSync(temporary, { recursive: true, force: true });
-    if (destinationMoved && !fs6.existsSync(destination) && fs6.existsSync(backup)) {
-      fs6.renameSync(backup, destination);
+    fs5.rmSync(temporary, { recursive: true, force: true });
+    if (destinationMoved && !fs5.existsSync(destination) && fs5.existsSync(backup)) {
+      fs5.renameSync(backup, destination);
     }
     throw error;
   }
@@ -24845,8 +24839,8 @@ function runPrepareResults(options) {
 }
 
 // dist/renderer/pyramid.js
-var fs7 = __toESM(require("node:fs"), 1);
-var path6 = __toESM(require("node:path"), 1);
+var fs6 = __toESM(require("node:fs"), 1);
+var path5 = __toESM(require("node:path"), 1);
 function pyramidMarkdownEpicColumn(layer) {
   if (layer.id === "api")
     return "`api` / `integration`";
@@ -24948,7 +24942,7 @@ function formatCountScaledPyramidDiagram(layers) {
   return lines;
 }
 function renderPyramidMarkdown(data) {
-  const { aggregated, sourceRunId, headSha, policyPath } = data;
+  const { aggregated, sourceRunId, headSha, policyPath, outputMd } = data;
   const { layers, pyramidTotal, unitShare, apiShare, e2eShare, otherEpicTotal } = aggregated;
   const gates = evaluatePyramidQualityGates({
     pyramidTotal,
@@ -25012,8 +25006,8 @@ function renderPyramidMarkdown(data) {
     e2eShare,
     otherEpicTotal
   }));
-  if (policyPath) {
-    const policyHref = path6.relative(path6.resolve(path6.dirname("")), path6.resolve(policyPath)).split(path6.sep).join("/");
+  if (policyPath && outputMd) {
+    const policyHref = path5.relative(path5.resolve(path5.dirname(outputMd)), path5.resolve(policyPath)).split(path5.sep).join("/");
     md.push(`Canonical policy: [\`${policyPath}\`](${policyHref}).`);
   }
   return md.join("\n");
@@ -25049,12 +25043,12 @@ function generatePyramidJson(data) {
   };
 }
 function writePyramidFiles(markdown, json, markdownPath, jsonPath) {
-  fs7.mkdirSync(path6.dirname(markdownPath), { recursive: true });
-  fs7.writeFileSync(markdownPath, markdown, "utf8");
+  fs6.mkdirSync(path5.dirname(markdownPath), { recursive: true });
+  fs6.writeFileSync(markdownPath, markdown, "utf8");
   console.log(`Wrote ${markdownPath}`);
   if (jsonPath) {
-    fs7.mkdirSync(path6.dirname(jsonPath), { recursive: true });
-    fs7.writeFileSync(jsonPath, JSON.stringify(json, null, 2), "utf8");
+    fs6.mkdirSync(path5.dirname(jsonPath), { recursive: true });
+    fs6.writeFileSync(jsonPath, JSON.stringify(json, null, 2), "utf8");
     console.log(`Wrote ${jsonPath}`);
   }
 }
@@ -25073,8 +25067,8 @@ function writeQualityGatesJson(gates, metrics, outputPath) {
       otherEpicTotal: metrics.otherEpicTotal
     }
   };
-  fs7.mkdirSync(path6.dirname(outputPath), { recursive: true });
-  fs7.writeFileSync(outputPath, JSON.stringify(payload, null, 2), "utf8");
+  fs6.mkdirSync(path5.dirname(outputPath), { recursive: true });
+  fs6.writeFileSync(outputPath, JSON.stringify(payload, null, 2), "utf8");
   console.log(`Wrote ${outputPath}`);
 }
 function githubWorkflowEscape(s) {
@@ -25087,7 +25081,7 @@ function appendJobSummary(markdown) {
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (!summaryPath)
     return;
-  fs7.appendFileSync(summaryPath, markdown, "utf8");
+  fs6.appendFileSync(summaryPath, markdown, "utf8");
 }
 
 // dist/commands/pyramid-check.js
@@ -25125,7 +25119,8 @@ function runPyramid(options) {
     aggregated,
     sourceRunId,
     headSha,
-    policyPath
+    policyPath,
+    outputMd
   };
   const markdown = renderPyramidMarkdown(data);
   const json = generatePyramidJson(data);
@@ -25174,6 +25169,7 @@ function validateConfig(config) {
   }
   if (config.publishPages && config.forkPr) {
     core.warning("publish-pages is disabled for fork PRs");
+    config.publishPages = false;
   }
   if (config.publishPages && !config.pagesDestinationDirectory.trim()) {
     throw new Error("pages-destination-directory is required when publish-pages is true");
@@ -29281,9 +29277,9 @@ async function publishPrComment(options) {
 }
 
 // dist/utils/fs.js
-var fs8 = __toESM(require("node:fs"), 1);
+var fs7 = __toESM(require("node:fs"), 1);
 function readFile(file) {
-  return fs8.readFileSync(file, "utf8");
+  return fs7.readFileSync(file, "utf8");
 }
 
 // dist/main.js
@@ -29299,8 +29295,8 @@ async function run() {
       let sourceRoot = config.sourceArtifactsDirectory;
       let autoMode = false;
       if (sourceRoot === "auto") {
-        const path7 = await import("node:path");
-        sourceRoot = path7.dirname(config.resultsDirectory);
+        const path6 = await import("node:path");
+        sourceRoot = path6.dirname(config.resultsDirectory);
         autoMode = true;
       }
       runPrepareResults({
@@ -29311,23 +29307,37 @@ async function run() {
       });
     }
     if (config.categoriesFile) {
-      const fs9 = await import("node:fs");
-      const path7 = await import("node:path");
-      fs9.cpSync(config.categoriesFile, path7.join(config.resultsDirectory, "categories.json"), {
+      const fs8 = await import("node:fs");
+      const path6 = await import("node:path");
+      fs8.cpSync(config.categoriesFile, path6.join(config.resultsDirectory, "categories.json"), {
         force: true
       });
     }
     let effectiveConfigFile = config.configFile;
     if (config.moduleEnvironmentLabel) {
       const tmp = await import("node:os");
-      const path7 = await import("node:path");
-      effectiveConfigFile = path7.join(tmp.tmpdir(), `allure-report-action-config-${Date.now()}.mjs`);
+      const path6 = await import("node:path");
+      effectiveConfigFile = path6.join(tmp.tmpdir(), `allure-report-action-config-${Date.now()}.mjs`);
       await runModuleConfig({
         resultsDir: config.resultsDirectory,
         configFile: config.configFile,
         outputFile: effectiveConfigFile,
         moduleLabel: config.moduleEnvironmentLabel
       });
+    }
+    const { spawnSync } = await import("node:child_process");
+    const allureGenerate = spawnSync("npx", [
+      "--yes",
+      `allure@${config.allureVersion}`,
+      "generate",
+      config.resultsDirectory,
+      "-o",
+      config.reportDirectory,
+      "--config",
+      effectiveConfigFile
+    ], { stdio: "inherit", shell: true });
+    if (allureGenerate.status !== 0) {
+      throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
     }
     runBadges({
       resultsDir: config.resultsDirectory,

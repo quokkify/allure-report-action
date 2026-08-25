@@ -125,7 +125,7 @@ function formatCountScaledPyramidDiagram(layers) {
  * Renders pyramid markdown
  */
 export function renderPyramidMarkdown(data) {
-    const { aggregated, sourceRunId, headSha, policyPath } = data;
+    const { aggregated, sourceRunId, headSha, policyPath, outputMd } = data;
     const { layers, pyramidTotal, unitShare, apiShare, e2eShare, otherEpicTotal } = aggregated;
     const gates = evaluatePyramidQualityGates({
         pyramidTotal,
@@ -190,9 +190,9 @@ export function renderPyramidMarkdown(data) {
         e2eShare,
         otherEpicTotal,
     }));
-    if (policyPath) {
+    if (policyPath && outputMd) {
         const policyHref = path
-            .relative(path.resolve(path.dirname('')), path.resolve(policyPath))
+            .relative(path.resolve(path.dirname(outputMd)), path.resolve(policyPath))
             .split(path.sep)
             .join('/');
         md.push(`Canonical policy: [\`${policyPath}\`](${policyHref}).`);

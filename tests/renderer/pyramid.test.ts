@@ -57,6 +57,7 @@ describe('Pyramid Renderer', () => {
         sourceRunId: '12345',
         headSha: 'abcdef123456',
         policyPath: 'docs/testing/test-pyramid.md',
+        outputMd: 'docs/testing/pyramid-snapshot.md',
       });
 
       expect(markdown).toContain('# Test pyramid snapshot');

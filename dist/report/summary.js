@@ -1,19 +1,6 @@
-/**
- * Report summary - reads and processes Allure widget summary
- */
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-/**
- * Reads widget summary from Allure report
- */
-export function readWidgetSummary(reportDir) {
-    try {
-        return JSON.parse(fs.readFileSync(path.join(reportDir, 'widgets', 'summary.json'), 'utf8'));
-    }
-    catch {
-        return null;
-    }
-}
+import { readWidgetSummary } from '../allure/parser.js';
+// Re-export the parser's implementation
+export { readWidgetSummary };
 /**
  * Merges widget summary with aggregated results
  * Widget summary is the source of truth for counts, but aggregated results

@@ -30,7 +30,7 @@ export function getNumberEnv(name, defaultValue = 0) {
  * Checks if running in GitHub Actions
  */
 export function isGitHubActions() {
-    return !!process.env.GITHUB_ACTIONS;
+    return getBoolEnv('GITHUB_ACTIONS');
 }
 /**
  * Gets GitHub Actions step summary path

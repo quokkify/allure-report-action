@@ -31,6 +31,7 @@ export function runPyramid(options: PyramidCommandOptions): void {
     sourceRunId,
     headSha,
     policyPath,
+    outputMd,
   };
 
   const markdown = renderPyramidMarkdown(data);

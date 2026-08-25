@@ -97,27 +97,42 @@ describe('Allure Parser', () => {
 
   describe('getEpicForResult', () => {
     it('returns epic from label when recognized', () => {
-      const result = { labels: [{ name: 'epic', value: 'unit' }] };
+      const result = {
+        uuid: '1',
+        name: 'test',
+        status: 'passed',
+        labels: [{ name: 'epic', value: 'unit' }],
+      };
       expect(getEpicForResult(result)).toBe('unit');
     });
 
     it("returns 'other' for unrecognized epic", () => {
-      const result = { labels: [{ name: 'epic', value: 'custom' }] };
+      const result = {
+        uuid: '1',
+        name: 'test',
+        status: 'passed',
+        labels: [{ name: 'epic', value: 'custom' }],
+      };
       expect(getEpicForResult(result)).toBe('other');
     });
 
     it("returns 'end-to-end' for Playwright framework", () => {
-      const result = { labels: [{ name: 'framework', value: 'playwright' }] };
+      const result = {
+        uuid: '1',
+        name: 'test',
+        status: 'passed',
+        labels: [{ name: 'framework', value: 'playwright' }],
+      };
       expect(getEpicForResult(result)).toBe('end-to-end');
     });
 
     it("returns 'other' when no labels", () => {
-      const result = { labels: [] };
+      const result = { uuid: '1', name: 'test', status: 'passed', labels: [] };
       expect(getEpicForResult(result)).toBe('other');
     });
 
     it("returns 'other' when labels is undefined", () => {
-      const result = {};
+      const result = { uuid: '1', name: 'test', status: 'passed' };
       expect(getEpicForResult(result)).toBe('other');
     });
   });
