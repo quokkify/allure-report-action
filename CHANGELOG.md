@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/quokkify/allure-report-action/compare/v0.2.3...v0.3.0) (2026-08-25)
+
+
+### Features
+
+* compact allure report comment ([c0e9591](https://github.com/quokkify/allure-report-action/commit/c0e9591858d70514de98cbe293f3d7b319b379e2))
+
 ## [0.2.3](https://github.com/quokkify/allure-report-action/compare/v0.2.2...v0.2.3) (2026-08-11)
 
 
