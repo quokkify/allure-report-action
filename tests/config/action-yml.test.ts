@@ -11,7 +11,7 @@ describe('Action.yml Metadata', () => {
 
   it('uses node20 runner instead of composite', () => {
     expect(actionYml).toContain('runs:\n  using: node20');
-    expect(actionYml).toContain('main: dist/index.js');
+    expect(actionYml).toContain('main: dist/index.cjs');
     expect(actionYml).not.toContain('using: composite');
   });
 

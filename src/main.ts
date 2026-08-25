@@ -72,8 +72,10 @@ async function run(): Promise<void> {
 
     // Step 4: Run Allure generate using the effective config file
     const { spawnSync } = await import('node:child_process');
+    const isWin = process.platform === 'win32';
+    const npxCmd = isWin ? 'npx.cmd' : 'npx';
     const allureGenerate = spawnSync(
-      'npx',
+      npxCmd,
       [
         '--yes',
         `allure@${config.allureVersion}`,
@@ -84,7 +86,7 @@ async function run(): Promise<void> {
         '--config',
         effectiveConfigFile,
       ],
-      { stdio: 'inherit', shell: true }
+      { stdio: 'inherit' }
     );
     if (allureGenerate.status !== 0) {
       throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);

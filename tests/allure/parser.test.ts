@@ -141,27 +141,32 @@ describe('Allure Parser', () => {
     it('aggregates results by epic', () => {
       writeResult('unit1', {
         uuid: '1',
+        name: 'unit test 1',
         status: 'passed',
         labels: [{ name: 'epic', value: 'unit' }],
       });
       writeResult('unit2', {
         uuid: '2',
+        name: 'unit test 2',
         status: 'passed',
         labels: [{ name: 'epic', value: 'unit' }],
       });
       writeResult('api1', {
         uuid: '3',
+        name: 'api test 1',
         status: 'failed',
         labels: [{ name: 'epic', value: 'api' }],
       });
       writeResult('e2e1', {
         uuid: '4',
+        name: 'e2e test 1',
         status: 'passed',
         labels: [{ name: 'epic', value: 'end-to-end' }],
       });
-      writeResult('plain', { uuid: '5', status: 'passed' }); // no epic
+      writeResult('plain', { uuid: '5', name: 'plain test', status: 'passed' }); // no epic
       writeResult('playwright', {
         uuid: '6',
+        name: 'playwright test',
         status: 'passed',
         labels: [{ name: 'framework', value: 'playwright' }],
       });

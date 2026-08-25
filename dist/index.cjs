@@ -29173,7 +29173,9 @@ async function run() {
       });
     }
     const { spawnSync } = await import("node:child_process");
-    const allureGenerate = spawnSync("npx", [
+    const isWin = process.platform === "win32";
+    const npxCmd = isWin ? "npx.cmd" : "npx";
+    const allureGenerate = spawnSync(npxCmd, [
       "--yes",
       `allure@${config.allureVersion}`,
       "generate",
@@ -29182,7 +29184,7 @@ async function run() {
       config.reportDirectory,
       "--config",
       effectiveConfigFile
-    ], { stdio: "inherit", shell: true });
+    ], { stdio: "inherit" });
     if (allureGenerate.status !== 0) {
       throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
     }

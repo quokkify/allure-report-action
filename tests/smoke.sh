@@ -70,8 +70,7 @@ PY
   node "$ROOT/dist/cli.cjs" prepare-results \
     --source-root source-results \
     --results results \
-    --module-label module \
-    --auto false
+    --module-label module
   node "$ROOT/dist/cli.cjs" module-config \
     --results results \
     --config "$ROOT/tests/allurerc.mjs" \

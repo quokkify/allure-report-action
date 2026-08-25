@@ -39,7 +39,7 @@ describe('PR Summary Edge Cases', () => {
     fs.writeFileSync(path.join(reportDir, 'widgets', 'summary.json'), JSON.stringify(data));
   };
 
-  it('246 passed fixture uses single footer separator', () => {
+  it('246 passed fixture uses single footer separator', async () => {
     for (let i = 0; i < 246; i++) {
       writeResult(`${i}`, { status: 'passed', labels: [] });
     }
@@ -49,7 +49,7 @@ describe('PR Summary Edge Cases', () => {
 
     const files = listResultFiles(resultsDir);
     const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
-    const widget = readWidgetSummary(reportDir);
+    const widget = await readWidgetSummary(reportDir);
     const summary = mergeSummary(widget, agg);
 
     const markdown = renderPrComment({
@@ -98,7 +98,7 @@ describe('PR Summary Edge Cases', () => {
     ];
 
     for (const [name, values, heading, detail] of cases) {
-      it(name, () => {
+      it(name, async () => {
         const total = Object.values(values).reduce((a, b) => a + b, 0);
         const statuses: string[] = [];
         if (values.passed) for (let i = 0; i < values.passed; i++) statuses.push('passed');
@@ -115,7 +115,7 @@ describe('PR Summary Edge Cases', () => {
 
         const files = listResultFiles(resultsDir);
         const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
-        const widget = readWidgetSummary(reportDir);
+        const widget = await readWidgetSummary(reportDir);
         const summary = mergeSummary(widget, agg);
 
         const markdown = renderPrComment({
@@ -134,14 +134,14 @@ describe('PR Summary Edge Cases', () => {
     }
   });
 
-  it('does not drop unknown result when widget reports zero', () => {
+  it('does not drop unknown result when widget reports zero', async () => {
     writeResult('unknown', { status: 'unknown' });
     writeWidgetSummary({
       statistic: { total: 1, passed: 0, failed: 0, broken: 0, skipped: 0, unknown: 0 },
     });
     const files = listResultFiles(resultsDir);
     const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
-    const widget = readWidgetSummary(reportDir);
+    const widget = await readWidgetSummary(reportDir);
     const summary = mergeSummary(widget, agg);
 
     const markdown = renderPrComment({
