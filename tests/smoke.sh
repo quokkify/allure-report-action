@@ -67,19 +67,19 @@ PY
 
 (
   cd "$TMP"
-  node "$ROOT/dist/index.js" prepare-results \
+  node "$ROOT/dist/cli.cjs" prepare-results \
     --source-root source-results \
     --results results \
     --module-label module \
     --auto false
-  node "$ROOT/dist/index.js" module-config \
+  node "$ROOT/dist/cli.cjs" module-config \
     --results results \
     --config "$ROOT/tests/allurerc.mjs" \
     --output effective-allurerc.mjs \
     --module-label module
   npx --yes allure@3.14.2 generate results -o report --config effective-allurerc.mjs
-  node "$ROOT/dist/index.js" badges --results results --out report
-  node "$ROOT/dist/index.js" pr-body \
+  node "$ROOT/dist/cli.cjs" badges --results results --out report
+  node "$ROOT/dist/cli.cjs" pr-body \
     --results results \
     --report report \
     --output comment.md \
@@ -89,11 +89,11 @@ PY
     --action-version 0.1.3 \
     --comment-marker '<!-- allure-report-action-smoke -->'
   PYRAMID_SOURCE_RUN_ID=123 PYRAMID_HEAD_SHA=0123456789abcdef \
-    node "$ROOT/dist/index.js" pyramid \
+    node "$ROOT/dist/cli.cjs" pyramid \
       --results results \
       --output pyramid.md \
       --json pyramid.json
-  node "$ROOT/dist/index.js" pyramid-check \
+  node "$ROOT/dist/cli.cjs" pyramid-check \
     --results results \
     --json pyramid-gates.json
 )

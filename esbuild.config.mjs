@@ -5,13 +5,30 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Build main action entry point
 await build({
   entryPoints: ["dist/main.js"],
   bundle: true,
   platform: "node",
   target: "node22",
   format: "cjs",
-  outfile: "dist/index.js",
+  outfile: "dist/index.cjs",
+  external: [],
+  sourcemap: true,
+  sourcesContent: false,
+  banner: {
+    js: "#!/usr/bin/env node",
+  },
+});
+
+// Build CLI entry point
+await build({
+  entryPoints: ["dist/cli.js"],
+  bundle: true,
+  platform: "node",
+  target: "node22",
+  format: "cjs",
+  outfile: "dist/cli.cjs",
   external: [],
   sourcemap: true,
   sourcesContent: false,
@@ -30,4 +47,4 @@ if (existsSync("version.txt")) {
   copyFileSync("version.txt", "dist/version.txt");
 }
 
-console.log("Build complete: dist/index.js");
+console.log("Build complete: dist/index.cjs, dist/cli.cjs");
