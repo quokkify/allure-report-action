@@ -1,2 +1,3 @@
-# Ignore whitespace in dist (bundled files from node_modules)
+# Ignore whitespace in dist (bundled files) and node_modules
 dist/** -whitespace
+node_modules/** -whitespace
