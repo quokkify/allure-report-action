@@ -766,8 +766,8 @@ function cmdPrBody(
     lines.push(`| ${values.join(" | ")} |`);
   }
   const t = agg.total;
-  const allValues = ["**All layers**", `**${t.total}**`, `**${t.passed}**`, `**${t.failed}**`, `**${t.broken}**`, `**${t.skipped}**`];
-  if (hasUnknown) allValues.push(`**${t.unknown}**`);
+  const allValues = ["All layers", t.total, t.passed, t.failed, t.broken, t.skipped];
+  if (hasUnknown) allValues.push(t.unknown);
   lines.push(`| ${allValues.join(" | ")} |`);
   lines.push("");
   lines.push("</details>");

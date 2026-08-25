@@ -1006,6 +1006,8 @@ async function runCase({ userLogin, userStatus, authorLogin = 'github-actions[bo
                 body,
             )
             self.assertIn("| No epic assigned | 246 | 246 | 0 | 0 | 0 |", body)
+            self.assertIn("| All layers | 246 | 246 | 0 | 0 | 0 |", body)
+            self.assertNotIn("| **All layers** | **246** | **246** | **0** | **0** | **0** |", body)
             self.assertIn("</details>\n\n<sub>", body)
             self.assertNotIn("</details>\n\n\n<sub>", body)
 
