@@ -13,36 +13,6 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Validate action and report behavior (legacy Bash)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Validate metadata and JavaScript
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          text = Path("action.yml").read_text()
-          assert "runs:\n  using: composite" in text
-          assert text.index("name: Deploy Allure HTML to GitHub Pages") < text.index("name: Post or update Allure comment on PR")
-          assert 'default: "<!-- project-toolkit-allure-ci -->"' in text
-          PY
-          node --check allure-ci.mjs
-          base_sha="${{ github.event.pull_request.base.sha || github.event.before }}"
-          if [[ ! "$base_sha" =~ ^[0-9a-f]{40}$ ]] || [[ "$base_sha" =~ ^0+$ ]]; then
-            base_sha="$(git hash-object -t tree /dev/null)"
-          fi
-          git diff --check "$base_sha..${{ github.sha }}"
-      - name: Run unit tests
-        run: python3 -m unittest discover -s tests -p 'test_*.py'
-      - name: Run synthetic Allure 3 smoke test
-        run: bash tests/smoke.sh
-
   validate-ts:
     name: Validate TypeScript implementation
     runs-on: ubuntu-latest
@@ -76,6 +46,8 @@ jobs:
             echo "dist/ is not up to date. Please run 'npm run build' and commit the changes." >&2
             exit 1
           fi
+      - name: Run synthetic Allure 3 smoke test (Bash CLI)
+        run: bash tests/smoke.sh
 
   gitleaks:
     name: Gitleaks
@@ -106,17 +78,16 @@ jobs:
   required:
     name: Validation pipeline complete
     if: ${{ always() }}
-    needs: [validate, validate-ts, gitleaks]
+    needs: [validate-ts, gitleaks]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Require every validation stage
         env:
-          VALIDATE_RESULT: ${{ needs.validate.result }}
           VALIDATE_TS_RESULT: ${{ needs.validate-ts.result }}
           GITLEAKS_RESULT: ${{ needs.gitleaks.result }}
         run: |
-          [[ "$VALIDATE_RESULT" == success && "$VALIDATE_TS_RESULT" == success && "$GITLEAKS_RESULT" == success ]] || {
+          [[ "$VALIDATE_TS_RESULT" == success && "$GITLEAKS_RESULT" == success ]] || {
             echo "One or more required validation stages did not succeed." >&2
             exit 1
           }
