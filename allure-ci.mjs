@@ -696,86 +696,93 @@ function cmdPrBody(
   const failed = stat.failed ?? 0;
   const broken = stat.broken ?? 0;
   const skipped = stat.skipped ?? 0;
-  const unknown = stat.unknown ?? agg.total.unknown ?? 0;
+  // Result files are the source of truth for statuses that the generated
+  // widget can omit (for example, an unknown result reported as zero).
+  const unknown = Math.max(stat.unknown ?? 0, agg.total.unknown);
 
-  const lines = [];
-  lines.push("## Allure report summary");
-  lines.push("");
+  const status = total === 0 ? "⚪" : failed + broken > 0 ? "❌" : "✅";
+  const statusLabel = total === 0 ? "no tests" : failed + broken > 0 ? "failures detected" : "passed";
+  const lines = [`## ${status} Allure Report — ${statusLabel}`, ""];
   if (total > 0) {
-    const rate = passRatePercent({ passed, total });
-    const problems = failed + broken;
-    const parts = [`**${total}** tests`, `**${passed}** passed`, `${rate} pass rate`];
-    if (problems > 0) parts.push(`**${problems}** failed/broken`);
-    if (skipped > 0) parts.push(`**${skipped}** skipped`);
-    if (unknown > 0) parts.push(`**${unknown}** unknown`);
-    lines.push(parts.join(" · "));
-    lines.push("");
+    const parts = [`${passed} / ${total} tests passed`, `${passRatePercent({ passed, total })} pass rate`];
+    if (failed > 0) parts.push(`${failed} failed`);
+    if (broken > 0) parts.push(`${broken} broken`);
+    if (skipped > 0) parts.push(`${skipped} skipped`);
+    if (unknown > 0) parts.push(`${unknown} unknown`);
+    lines.push(parts.join(" · "), "");
+  } else {
+    lines.push("No tests found · no pass rate", "");
   }
 
-  lines.push("### Outcomes (all suites)");
-  lines.push("");
-  lines.push("| Outcome | Count |");
-  lines.push("| --- | --: |");
-  lines.push(`| Passed | ${passed} |`);
-  lines.push(`| Failed | ${failed} |`);
-  lines.push(`| Broken | ${broken} |`);
-  lines.push(`| Skipped | ${skipped} |`);
-  if (unknown > 0) {
-    lines.push(`| Unknown | ${unknown} |`);
-  }
-  lines.push(`| **Total** | **${total}** |`);
-  if (total > 0) {
-    lines.push(`| Pass rate (passed / total) | **${passRatePercent({ passed, total })}** |`);
-  }
-  lines.push("");
+  const reportLink = (() => {
+    if (!pagesUrl || forkPr === "true") return "";
+    if (!sourceRunId) return pagesUrl;
+    try {
+      const url = new URL(pagesUrl);
+      url.searchParams.set("run", sourceRunId);
+      return url.toString();
+    } catch {
+      return `${pagesUrl}${pagesUrl.includes("?") ? "&" : "?"}run=${encodeURIComponent(sourceRunId)}`;
+    }
+  })();
+  const reportCell = reportLink ? `[View report ↗](${reportLink})` : "—";
+  const hasUnknown = unknown > 0 || agg.total.unknown > 0;
+  const columns = hasUnknown
+    ? "| Tests | Passed | Failed | Broken | Skipped | Unknown | Report |"
+    : "| Tests | Passed | Failed | Broken | Skipped | Report |";
+  const separator = hasUnknown
+    ? "| ---: | ---: | ---: | ---: | ---: | ---: | :--- |"
+    : "| ---: | ---: | ---: | ---: | ---: | :--- |";
+  const row = (stats, report = "—") => {
+    const values = [stats.total, stats.passed, stats.failed, stats.broken, stats.skipped];
+    if (hasUnknown) values.push(stats.unknown || 0);
+    values.push(report);
+    return `| ${values.join(" | ")} |`;
+  };
+
+  lines.push(columns, separator, row({ total, passed, failed, broken, skipped, unknown }, reportCell), "");
 
   lines.push("<details>");
-  lines.push("<summary><strong>By layer</strong> (Allure <code>epic</code> label)</summary>");
+  lines.push("<summary><strong>Tests by layer</strong></summary>");
   lines.push("");
-  lines.push("| Layer | Tests | Passed | Failed | Broken | Skipped | Pass rate |");
-  lines.push("| --- | --: | --: | --: | --: | --: | --: |");
+  lines.push(
+    hasUnknown
+      ? "| Layer | Tests | Passed | Failed | Broken | Skipped | Unknown |"
+      : "| Layer | Tests | Passed | Failed | Broken | Skipped |",
+  );
+  lines.push(hasUnknown ? "| --- | ---: | ---: | ---: | ---: | ---: | ---: |" : "| --- | ---: | ---: | ---: | ---: | ---: |");
 
-  const empty = { total: 0, passed: 0, failed: 0, broken: 0, skipped: 0 };
+  const empty = { total: 0, passed: 0, failed: 0, broken: 0, skipped: 0, unknown: 0 };
   for (const epic of EPICS) {
     const s = agg.byEpic[epic] || empty;
     if (s.total === 0) continue;
     const label = EPIC_DISPLAY[epic] || epic;
-    lines.push(
-      `| ${label} | ${s.total} | ${s.passed} | ${s.failed} | ${s.broken} | ${s.skipped} | ${passRatePercent(s)} |`,
-    );
+    const values = [label, s.total, s.passed, s.failed, s.broken, s.skipped];
+    if (hasUnknown) values.push(s.unknown || 0);
+    lines.push(`| ${values.join(" | ")} |`);
   }
   const other = agg.byEpic.other;
   if (other && other.total > 0) {
-    lines.push(
-      `| ${EPIC_DISPLAY.other} | ${other.total} | ${other.passed} | ${other.failed} | ${other.broken} | ${other.skipped} | ${passRatePercent(other)} |`,
-    );
+    const values = [EPIC_DISPLAY.other, other.total, other.passed, other.failed, other.broken, other.skipped];
+    if (hasUnknown) values.push(other.unknown || 0);
+    lines.push(`| ${values.join(" | ")} |`);
   }
   const t = agg.total;
-  lines.push(
-    `| **All layers** | **${t.total}** | **${t.passed}** | **${t.failed}** | **${t.broken}** | **${t.skipped}** | ${passRatePercent(t)} |`,
-  );
+  const allValues = ["All layers", t.total, t.passed, t.failed, t.broken, t.skipped];
+  if (hasUnknown) allValues.push(t.unknown);
+  lines.push(`| ${allValues.join(" | ")} |`);
   lines.push("");
   lines.push("</details>");
   lines.push("");
-  if (pagesUrl && forkPr !== "true") {
-    lines.push(`**[View full report on GitHub Pages](${pagesUrl})**`);
-    if (sourceRunId) {
-      lines.push("");
-      lines.push(
-        `_This link includes a cache-busting query (\`run=${sourceRunId}\`) so the browser loads the latest deploy for this PR Pipeline run._`,
-      );
-    }
-  } else if (forkPr === "true") {
+  if (forkPr === "true") {
     lines.push(
       "_Preview on GitHub Pages is only published for PRs from the same repository. Download the `allure-report` artifact from this workflow run._",
+      "",
     );
-  } else {
-    lines.push("_GitHub Pages URL not available for this run._");
+  } else if (!reportLink) {
+    lines.push("_GitHub Pages URL not available for this run._", "");
   }
-  lines.push("");
-  lines.push(
-    `_Generated by [quokkify/allure-report-action](${ACTION_REPOSITORY_URL}) \`${displayActionVersion(actionVersion)}\` · [Latest release](${ACTION_REPOSITORY_URL}/releases/latest)._`,
-  );
+  lines.push(`<sub>Generated by <a href="${ACTION_REPOSITORY_URL}">quokkify/allure-report-action</a> · <a href="${ACTION_REPOSITORY_URL}/releases/latest">${displayActionVersion(actionVersion)}</a></sub>`);
   lines.push("");
   lines.push(commentMarker);
 
