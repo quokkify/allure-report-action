@@ -1,7 +1,7 @@
 /**
  * GitHub comment publisher - handles PR comment creation/update
  */
-import { Octokit } from "@octokit/rest";
+import { Octokit } from '@octokit/rest';
 /**
  * Finds existing comment by marker and author
  */
@@ -12,7 +12,7 @@ async function findExistingComment(octokit, owner, repo, issueNumber, marker, ex
         issue_number: issueNumber,
         per_page: 100,
     });
-    return (comments.find(c => c.user?.login === expectedAuthor && (c.body || "").includes(marker)) ?? null);
+    return (comments.find(c => c.user?.login === expectedAuthor && (c.body || '').includes(marker)) ?? null);
 }
 /**
  * Resolves the expected author login, trying authenticated user first
@@ -32,7 +32,7 @@ async function resolveExpectedAuthor(octokit, configuredAuthor) {
         }
     }
     if (!expectedAuthor) {
-        throw new Error("comment-author-login is required when github-token does not support GET /user");
+        throw new Error('comment-author-login is required when github-token does not support GET /user');
     }
     return expectedAuthor;
 }
@@ -42,15 +42,15 @@ async function resolveExpectedAuthor(octokit, configuredAuthor) {
 export async function publishPrComment(options) {
     const { githubToken, prNumber, commentMarker, commentAuthorLogin, body } = options;
     if (!prNumber) {
-        console.log("No PR number; skip Allure PR comment.");
+        console.log('No PR number; skip Allure PR comment.');
         return;
     }
     if (!commentMarker.trim()) {
-        throw new Error("comment-marker must not be empty");
+        throw new Error('comment-marker must not be empty');
     }
     const octokit = new Octokit({ auth: githubToken });
     // Get repository info from context
-    const { context } = await import("@actions/github");
+    const { context } = await import('@actions/github');
     const { owner, repo } = context.repo;
     const expectedAuthor = await resolveExpectedAuthor(octokit, commentAuthorLogin);
     const existing = await findExistingComment(octokit, owner, repo, prNumber, commentMarker, expectedAuthor);
@@ -70,7 +70,7 @@ export async function publishPrComment(options) {
             issue_number: prNumber,
             body,
         });
-        console.log("Created new PR comment");
+        console.log('Created new PR comment');
     }
 }
 //# sourceMappingURL=comment-publisher.js.map
