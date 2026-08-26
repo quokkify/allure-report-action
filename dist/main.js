@@ -2,6 +2,7 @@
  * Main entry point for the GitHub Action
  */
 import * as core from '@actions/core';
+import { Octokit } from '@octokit/rest';
 import { runBadges } from './commands/badges.js';
 import { runModuleConfig } from './commands/module-config.js';
 import { runPrBody } from './commands/pr-body.js';
@@ -121,6 +122,50 @@ async function run() {
                     commentAuthorLogin: config.commentAuthorLogin,
                     body: commentBody,
                 });
+            }
+        }
+        // Step 9: Deploy to GitHub Pages when publish-pages is enabled
+        if (config.publishPages) {
+            try {
+                const octokit = new Octokit({ auth: config.githubToken });
+                const repoFull = process.env.GITHUB_REPOSITORY;
+                if (!repoFull) {
+                    throw new Error('GITHUB_REPOSITORY environment variable not set');
+                }
+                const [owner, repo] = repoFull.split('/');
+                // Build the deployment payload
+                const deployment = await octokit.rest.repos.createDeployment({
+                    owner: owner,
+                    repo: repo,
+                    ref: config.pagesBranch,
+                    auto_merge: false,
+                    required_contexts: [],
+                    payload: {
+                        pages: {
+                            build_dir: config.reportDirectory,
+                            destination_dir: config.pagesDestinationDirectory,
+                            retention_count: config.pagesRetentionCount,
+                        },
+                    },
+                    environment: 'github-pages',
+                });
+                const deploymentData = deployment.data;
+                const deploymentId = deploymentData.id;
+                // Wait for deployment to complete
+                await octokit.rest.repos.createDeploymentStatus({
+                    owner: owner,
+                    repo: repo,
+                    deployment_id: deploymentId,
+                    state: 'success',
+                    environment: 'github-pages',
+                    environment_url: `https://${owner}.github.io/${repo}/${config.pagesDestinationDirectory}/`,
+                    auto_inactive: true,
+                });
+                core.info(`Published Allure report to GitHub Pages: ${config.pagesDestinationDirectory}`);
+            }
+            catch (error) {
+                core.setFailed(`GitHub Pages deployment failed: ${error.message}`);
+                throw error;
             }
         }
         // Set outputs

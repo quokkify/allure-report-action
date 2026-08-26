@@ -9,8 +9,8 @@ describe('Action.yml Metadata', () => {
   const actionYmlPath = path.resolve(__dirname, '../../action.yml');
   const actionYml = fs.readFileSync(actionYmlPath, 'utf8');
 
-  it('uses node20 runner instead of composite', () => {
-    expect(actionYml).toContain('runs:\n  using: node20');
+  it('uses node22 runner instead of composite', () => {
+    expect(actionYml).toContain('runs:\n  using: node22');
     expect(actionYml).toContain('main: dist/index.cjs');
     expect(actionYml).not.toContain('using: composite');
   });
@@ -39,8 +39,8 @@ describe('Action.yml Metadata', () => {
     expect(actionYml).toMatch(/module-environment-label:.*?default: "module"/s);
   });
 
-  it('has source-artifacts-directory default empty', () => {
-    expect(actionYml).toMatch(/source-artifacts-directory:.*?default: ""/s);
+  it('has source-artifacts-directory default auto', () => {
+    expect(actionYml).toMatch(/source-artifacts-directory:.*?default: "auto"/s);
   });
 
   it('has github-token input required', () => {

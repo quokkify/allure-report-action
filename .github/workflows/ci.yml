@@ -11,6 +11,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   validate-ts:
@@ -36,11 +37,18 @@ jobs:
         run: npm run lint
       - name: Run Prettier
         run: npm run format:check
-      - name: Run Vitest tests
+      - name: Run Vitest tests & generate Allure report
         run: npm run test
+      - name: Publish Allure report to PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          results-directory: allure-results
+          config-file: tests/allurerc.mjs
+          pr-number: ${{ github.event.pull_request.number }}
+          comment-marker: "<!-- allure-report-action-ci -->"
       - name: Build TypeScript action
-        run: npm run build
-      - name: Verify dist is up to date
         run: |
           if ! git diff --quiet dist/; then
             echo "dist/ is not up to date. Please run 'npm run build' and commit the changes." >&2
