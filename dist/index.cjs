@@ -17582,12 +17582,12 @@ var require_lib = __commonJS({
             throw new Error("Client has already been disposed.");
           }
           const parsedUrl = new URL(requestUrl);
-          let info2 = this._prepareRequest(verb, parsedUrl, headers);
+          let info = this._prepareRequest(verb, parsedUrl, headers);
           const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb) ? this._maxRetries + 1 : 1;
           let numTries = 0;
           let response;
           do {
-            response = yield this.requestRaw(info2, data);
+            response = yield this.requestRaw(info, data);
             if (response && response.message && response.message.statusCode === HttpCodes.Unauthorized) {
               let authenticationHandler;
               for (const handler2 of this.handlers) {
@@ -17597,7 +17597,7 @@ var require_lib = __commonJS({
                 }
               }
               if (authenticationHandler) {
-                return authenticationHandler.handleAuthentication(this, info2, data);
+                return authenticationHandler.handleAuthentication(this, info, data);
               } else {
                 return response;
               }
@@ -17620,8 +17620,8 @@ var require_lib = __commonJS({
                   }
                 }
               }
-              info2 = this._prepareRequest(verb, parsedRedirectUrl, headers);
-              response = yield this.requestRaw(info2, data);
+              info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+              response = yield this.requestRaw(info, data);
               redirectsRemaining--;
             }
             if (!response.message.statusCode || !HttpResponseRetryCodes.includes(response.message.statusCode)) {
@@ -17650,7 +17650,7 @@ var require_lib = __commonJS({
        * @param info
        * @param data
        */
-      requestRaw(info2, data) {
+      requestRaw(info, data) {
         return __awaiter(this, void 0, void 0, function* () {
           return new Promise((resolve4, reject) => {
             function callbackForResult(err, res) {
@@ -17662,7 +17662,7 @@ var require_lib = __commonJS({
                 resolve4(res);
               }
             }
-            this.requestRawWithCallback(info2, data, callbackForResult);
+            this.requestRawWithCallback(info, data, callbackForResult);
           });
         });
       }
@@ -17672,12 +17672,12 @@ var require_lib = __commonJS({
        * @param data
        * @param onResult
        */
-      requestRawWithCallback(info2, data, onResult) {
+      requestRawWithCallback(info, data, onResult) {
         if (typeof data === "string") {
-          if (!info2.options.headers) {
-            info2.options.headers = {};
+          if (!info.options.headers) {
+            info.options.headers = {};
           }
-          info2.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
+          info.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
         }
         let callbackCalled = false;
         function handleResult(err, res) {
@@ -17686,7 +17686,7 @@ var require_lib = __commonJS({
             onResult(err, res);
           }
         }
-        const req = info2.httpModule.request(info2.options, (msg) => {
+        const req = info.httpModule.request(info.options, (msg) => {
           const res = new HttpClientResponse(msg);
           handleResult(void 0, res);
         });
@@ -17698,7 +17698,7 @@ var require_lib = __commonJS({
           if (socket) {
             socket.end();
           }
-          handleResult(new Error(`Request timeout: ${info2.options.path}`));
+          handleResult(new Error(`Request timeout: ${info.options.path}`));
         });
         req.on("error", function(err) {
           handleResult(err);
@@ -17734,27 +17734,27 @@ var require_lib = __commonJS({
         return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
       }
       _prepareRequest(method, requestUrl, headers) {
-        const info2 = {};
-        info2.parsedUrl = requestUrl;
-        const usingSsl = info2.parsedUrl.protocol === "https:";
-        info2.httpModule = usingSsl ? https : http;
+        const info = {};
+        info.parsedUrl = requestUrl;
+        const usingSsl = info.parsedUrl.protocol === "https:";
+        info.httpModule = usingSsl ? https : http;
         const defaultPort = usingSsl ? 443 : 80;
-        info2.options = {};
-        info2.options.host = info2.parsedUrl.hostname;
-        info2.options.port = info2.parsedUrl.port ? parseInt(info2.parsedUrl.port) : defaultPort;
-        info2.options.path = (info2.parsedUrl.pathname || "") + (info2.parsedUrl.search || "");
-        info2.options.method = method;
-        info2.options.headers = this._mergeHeaders(headers);
+        info.options = {};
+        info.options.host = info.parsedUrl.hostname;
+        info.options.port = info.parsedUrl.port ? parseInt(info.parsedUrl.port) : defaultPort;
+        info.options.path = (info.parsedUrl.pathname || "") + (info.parsedUrl.search || "");
+        info.options.method = method;
+        info.options.headers = this._mergeHeaders(headers);
         if (this.userAgent != null) {
-          info2.options.headers["user-agent"] = this.userAgent;
+          info.options.headers["user-agent"] = this.userAgent;
         }
-        info2.options.agent = this._getAgent(info2.parsedUrl);
+        info.options.agent = this._getAgent(info.parsedUrl);
         if (this.handlers) {
           for (const handler2 of this.handlers) {
-            handler2.prepareRequest(info2.options);
+            handler2.prepareRequest(info.options);
           }
         }
-        return info2;
+        return info;
       }
       _mergeHeaders(headers) {
         if (this.requestOptions && this.requestOptions.headers) {
@@ -19736,18 +19736,18 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       (0, command_1.issueCommand)("error", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
     exports2.error = error;
-    function warning3(message, properties = {}) {
+    function warning2(message, properties = {}) {
       (0, command_1.issueCommand)("warning", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
-    exports2.warning = warning3;
+    exports2.warning = warning2;
     function notice(message, properties = {}) {
       (0, command_1.issueCommand)("notice", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
     exports2.notice = notice;
-    function info2(message) {
+    function info(message) {
       process.stdout.write(message + os.EOL);
     }
-    exports2.info = info2;
+    exports2.info = info;
     function startGroup(name) {
       (0, command_1.issue)("group", name);
     }
@@ -24875,8 +24875,8 @@ function runPyramidCheck(options) {
   };
   const gates = evaluatePyramidQualityGates(metrics);
   const titleBase = "Test pyramid (advisory)";
-  for (const warning3 of gates.warnings) {
-    emitGithubWarning(titleBase, `${warning3.id}: ${warning3.message}`);
+  for (const warning2 of gates.warnings) {
+    emitGithubWarning(titleBase, `${warning2.id}: ${warning2.message}`);
   }
   const gateJsonPath = outputJson || "docs/testing/pyramid-quality-gates.json";
   writeQualityGatesJson(gates, metrics, gateJsonPath);
@@ -29227,80 +29227,6 @@ async function run() {
           commentAuthorLogin: config.commentAuthorLogin,
           body: commentBody
         });
-      }
-    }
-    if (config.publishPages) {
-      try {
-        const repoFull = process.env.GITHUB_REPOSITORY;
-        if (!repoFull) {
-          throw new Error("GITHUB_REPOSITORY environment variable not set");
-        }
-        const [owner, repo] = repoFull.split("/");
-        const pagesBranch = config.pagesBranch;
-        const destinationDir = config.pagesDestinationDirectory;
-        const retentionCount = config.pagesRetentionCount;
-        const tmp = await import("node:os");
-        const path7 = await import("node:path");
-        const fs9 = await import("node:fs");
-        const { spawnSync: spawnSync2 } = await import("node:child_process");
-        const deployDir = path7.join(tmp.tmpdir(), `gh-pages-deploy-${Date.now()}`);
-        fs9.mkdirSync(deployDir, { recursive: true });
-        fs9.cpSync(config.reportDirectory, path7.join(deployDir, destinationDir), {
-          recursive: true
-        });
-        process.chdir(deployDir);
-        spawnSync2("git", ["init"], { stdio: "inherit" });
-        spawnSync2("git", ["config", "user.name", "github-actions[bot]"], { stdio: "inherit" });
-        spawnSync2("git", ["config", "user.email", "github-actions[bot]@users.noreply.github.com"], {
-          stdio: "inherit"
-        });
-        spawnSync2("git", ["checkout", "-b", pagesBranch], { stdio: "inherit" });
-        spawnSync2("git", ["add", "."], { stdio: "inherit" });
-        spawnSync2("git", ["commit", "-m", `Deploy Allure report for PR #${config.prNumber}`], {
-          stdio: "inherit"
-        });
-        const pushUrl = `https://x-access-token:${config.githubToken}@github.com/${repoFull}.git`;
-        const pushResult = spawnSync2("git", ["push", "--force", pushUrl, pagesBranch], {
-          stdio: "inherit"
-        });
-        if (pushResult.status !== 0) {
-          throw new Error("Failed to push to gh-pages branch");
-        }
-        if (retentionCount > 0) {
-          try {
-            const listResult = spawnSync2("git", ["ls-tree", "-d", "-r", "--name-only", pagesBranch], {
-              stdio: "pipe",
-              encoding: "utf8"
-            });
-            if (listResult.status === 0) {
-              const dirs = listResult.stdout.trim().split("\n").filter((d) => d.startsWith("allure-report-pr-")).sort((a, b) => {
-                const aNum = parseInt(a.replace("allure-report-pr-", ""), 10);
-                const bNum = parseInt(b.replace("allure-report-pr-", ""), 10);
-                return bNum - aNum;
-              });
-              if (dirs.length > retentionCount) {
-                const toDelete = dirs.slice(retentionCount);
-                for (const dir of toDelete) {
-                  spawnSync2("git", ["rm", "-rf", dir], { stdio: "inherit", cwd: deployDir });
-                }
-                if (toDelete.length > 0) {
-                  spawnSync2("git", ["commit", "-m", `Prune old PR reports (keep ${retentionCount})`], { stdio: "inherit", cwd: deployDir });
-                  spawnSync2("git", ["push", "--force", pushUrl, pagesBranch], {
-                    stdio: "inherit",
-                    cwd: deployDir
-                  });
-                }
-              }
-            }
-          } catch (e) {
-            core2.warning(`Retention pruning failed: ${e.message}`);
-          }
-        }
-        const pagesUrl = `https://${owner}.github.io/${repo}/${destinationDir}/`;
-        core2.info(`Published Allure report to GitHub Pages: ${pagesUrl}`);
-      } catch (error) {
-        core2.setFailed(`GitHub Pages deployment failed: ${error.message}`);
-        throw error;
       }
     }
     core2.setOutput("report-directory", config.reportDirectory);

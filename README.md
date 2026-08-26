@@ -97,7 +97,7 @@ See [`action.yml`](action.yml) for the complete versioned input contract.
 
 ## Implementation
 
-The action is implemented in TypeScript and runs on Node.js 20+. The source code is in [`src/`](src/) and is bundled with esbuild into a single [`dist/index.js`](dist/index.js) for GitHub Actions execution.
+The action is implemented in TypeScript and runs on Node.js 24+. The source code is in [`src/`](src/) and is bundled with esbuild into a single [`dist/index.cjs`](dist/index.cjs) for the runtime step.
 
 ### Architecture
 
@@ -123,7 +123,7 @@ src/
 
 ## Development
 
-Requirements: Node.js 20+ and npm.
+Requirements: Node.js 24+ and npm.
 
 ```bash
 # Install dependencies

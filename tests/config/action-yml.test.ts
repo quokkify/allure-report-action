@@ -9,10 +9,53 @@ describe('Action.yml Metadata', () => {
   const actionYmlPath = path.resolve(__dirname, '../../action.yml');
   const actionYml = fs.readFileSync(actionYmlPath, 'utf8');
 
-  it('uses node24 runner instead of composite', () => {
-    expect(actionYml).toContain('runs:\n  using: node24');
-    expect(actionYml).toContain('main: dist/index.cjs');
-    expect(actionYml).not.toContain('using: composite');
+  it('delegates runtime and Pages publication through composite steps', () => {
+    expect(actionYml).toContain('using: composite');
+    expect(actionYml).toContain('run: node "${GITHUB_ACTION_PATH}/dist/index.cjs"');
+    expect(actionYml).toContain(
+      'quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b # v0.1.1'
+    );
+    expect(actionYml).toContain(
+      "if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}"
+    );
+    expect(actionYml).not.toContain('using: node24');
+  });
+
+  it('forwards every runtime input through INPUT_* environment variables', () => {
+    for (const input of [
+      'github-token',
+      'results-directory',
+      'report-directory',
+      'config-file',
+      'module-environment-label',
+      'source-artifacts-directory',
+      'categories-file',
+      'allure-version',
+      'pr-number',
+      'pages-url',
+      'fork-pr',
+      'source-run-id',
+      'comment-file',
+      'comment-marker',
+      'comment-author-login',
+      'pyramid-enabled',
+      'pyramid-markdown-file',
+      'pyramid-json-file',
+      'pyramid-gates-json-file',
+      'pyramid-source-run-id',
+      'pyramid-head-sha',
+      'pyramid-policy-path',
+      'pyramid-artifact-name',
+      'pyramid-retention-days',
+      'publish-pages',
+      'pages-destination-directory',
+      'pages-branch',
+      'pages-retention-count',
+    ]) {
+      expect(actionYml).toContain(
+        `INPUT_${input.replaceAll('-', '_').toUpperCase()}: \${{ inputs.${input} }}`
+      );
+    }
   });
 
   it('has required github-token input', () => {

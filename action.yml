@@ -128,5 +128,46 @@ outputs:
     description: Generated PR comment Markdown file
     value: ${{ inputs.comment-file }}
 runs:
-  using: node24
-  main: dist/index.cjs
+  using: composite
+  steps:
+    - name: Generate report and PR comment
+      shell: bash
+      env:
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_RESULTS_DIRECTORY: ${{ inputs.results-directory }}
+        INPUT_REPORT_DIRECTORY: ${{ inputs.report-directory }}
+        INPUT_CONFIG_FILE: ${{ inputs.config-file }}
+        INPUT_MODULE_ENVIRONMENT_LABEL: ${{ inputs.module-environment-label }}
+        INPUT_SOURCE_ARTIFACTS_DIRECTORY: ${{ inputs.source-artifacts-directory }}
+        INPUT_CATEGORIES_FILE: ${{ inputs.categories-file }}
+        INPUT_ALLURE_VERSION: ${{ inputs.allure-version }}
+        INPUT_PR_NUMBER: ${{ inputs.pr-number }}
+        INPUT_PAGES_URL: ${{ inputs.pages-url }}
+        INPUT_FORK_PR: ${{ inputs.fork-pr }}
+        INPUT_SOURCE_RUN_ID: ${{ inputs.source-run-id }}
+        INPUT_COMMENT_FILE: ${{ inputs.comment-file }}
+        INPUT_COMMENT_MARKER: ${{ inputs.comment-marker }}
+        INPUT_COMMENT_AUTHOR_LOGIN: ${{ inputs.comment-author-login }}
+        INPUT_PYRAMID_ENABLED: ${{ inputs.pyramid-enabled }}
+        INPUT_PYRAMID_MARKDOWN_FILE: ${{ inputs.pyramid-markdown-file }}
+        INPUT_PYRAMID_JSON_FILE: ${{ inputs.pyramid-json-file }}
+        INPUT_PYRAMID_GATES_JSON_FILE: ${{ inputs.pyramid-gates-json-file }}
+        INPUT_PYRAMID_SOURCE_RUN_ID: ${{ inputs.pyramid-source-run-id }}
+        INPUT_PYRAMID_HEAD_SHA: ${{ inputs.pyramid-head-sha }}
+        INPUT_PYRAMID_POLICY_PATH: ${{ inputs.pyramid-policy-path }}
+        INPUT_PYRAMID_ARTIFACT_NAME: ${{ inputs.pyramid-artifact-name }}
+        INPUT_PYRAMID_RETENTION_DAYS: ${{ inputs.pyramid-retention-days }}
+        INPUT_PUBLISH_PAGES: ${{ inputs.publish-pages }}
+        INPUT_PAGES_DESTINATION_DIRECTORY: ${{ inputs.pages-destination-directory }}
+        INPUT_PAGES_BRANCH: ${{ inputs.pages-branch }}
+        INPUT_PAGES_RETENTION_COUNT: ${{ inputs.pages-retention-count }}
+      run: node "${GITHUB_ACTION_PATH}/dist/index.cjs"
+    - name: Publish report to GitHub Pages
+      if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}
+      uses: quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b # v0.1.1
+      with:
+        token: ${{ inputs.github-token }}
+        publish-dir: ${{ inputs.report-directory }}
+        destination-dir: ${{ inputs.pages-destination-directory }}
+        branch: ${{ inputs.pages-branch }}
+        retention-count: ${{ inputs.pages-retention-count }}
