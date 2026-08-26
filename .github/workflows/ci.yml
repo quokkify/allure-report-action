@@ -52,6 +52,10 @@ jobs:
           comment-file: ${{ github.workspace }}/allure-pr-comment.md
           pr-number: ${{ github.event.pull_request.number }}
           comment-marker: "<!-- allure-report-action-ci -->"
+          publish-pages: true
+          pages-destination-directory: allure-report-pr-${{ github.event.pull_request.number }}
+          pages-branch: gh-pages
+          pages-retention-count: 5
       - name: Run synthetic Allure 3 smoke test (Bash CLI)
         run: bash tests/smoke.sh
 
