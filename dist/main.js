@@ -142,18 +142,26 @@ async function run() {
                 const deployDir = path.join(tmp.tmpdir(), `gh-pages-deploy-${Date.now()}`);
                 fs.mkdirSync(deployDir, { recursive: true });
                 // Copy report to deploy directory
-                fs.cpSync(config.reportDirectory, path.join(deployDir, destinationDir), { recursive: true });
+                fs.cpSync(config.reportDirectory, path.join(deployDir, destinationDir), {
+                    recursive: true,
+                });
                 // Initialize git repo and push to gh-pages
                 process.chdir(deployDir);
                 spawnSync('git', ['init'], { stdio: 'inherit' });
                 spawnSync('git', ['config', 'user.name', 'github-actions[bot]'], { stdio: 'inherit' });
-                spawnSync('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com'], { stdio: 'inherit' });
+                spawnSync('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com'], {
+                    stdio: 'inherit',
+                });
                 spawnSync('git', ['checkout', '-b', pagesBranch], { stdio: 'inherit' });
                 spawnSync('git', ['add', '.'], { stdio: 'inherit' });
-                spawnSync('git', ['commit', '-m', `Deploy Allure report for PR #${config.prNumber}`], { stdio: 'inherit' });
+                spawnSync('git', ['commit', '-m', `Deploy Allure report for PR #${config.prNumber}`], {
+                    stdio: 'inherit',
+                });
                 // Push to gh-pages with force
                 const pushUrl = `https://x-access-token:${config.githubToken}@github.com/${repoFull}.git`;
-                const pushResult = spawnSync('git', ['push', '--force', pushUrl, pagesBranch], { stdio: 'inherit' });
+                const pushResult = spawnSync('git', ['push', '--force', pushUrl, pagesBranch], {
+                    stdio: 'inherit',
+                });
                 if (pushResult.status !== 0) {
                     throw new Error('Failed to push to gh-pages branch');
                 }
@@ -165,7 +173,9 @@ async function run() {
                             encoding: 'utf8',
                         });
                         if (listResult.status === 0) {
-                            const dirs = listResult.stdout.trim().split('\n')
+                            const dirs = listResult.stdout
+                                .trim()
+                                .split('\n')
                                 .filter(d => d.startsWith('allure-report-pr-'))
                                 .sort((a, b) => {
                                 const aNum = parseInt(a.replace('allure-report-pr-', ''), 10);
@@ -179,7 +189,10 @@ async function run() {
                                 }
                                 if (toDelete.length > 0) {
                                     spawnSync('git', ['commit', '-m', `Prune old PR reports (keep ${retentionCount})`], { stdio: 'inherit', cwd: deployDir });
-                                    spawnSync('git', ['push', '--force', pushUrl, pagesBranch], { stdio: 'inherit', cwd: deployDir });
+                                    spawnSync('git', ['push', '--force', pushUrl, pagesBranch], {
+                                        stdio: 'inherit',
+                                        cwd: deployDir,
+                                    });
                                 }
                             }
                         }

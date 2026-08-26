@@ -29245,16 +29245,24 @@ async function run() {
         const { spawnSync: spawnSync2 } = await import("node:child_process");
         const deployDir = path7.join(tmp.tmpdir(), `gh-pages-deploy-${Date.now()}`);
         fs9.mkdirSync(deployDir, { recursive: true });
-        fs9.cpSync(config.reportDirectory, path7.join(deployDir, destinationDir), { recursive: true });
+        fs9.cpSync(config.reportDirectory, path7.join(deployDir, destinationDir), {
+          recursive: true
+        });
         process.chdir(deployDir);
         spawnSync2("git", ["init"], { stdio: "inherit" });
         spawnSync2("git", ["config", "user.name", "github-actions[bot]"], { stdio: "inherit" });
-        spawnSync2("git", ["config", "user.email", "github-actions[bot]@users.noreply.github.com"], { stdio: "inherit" });
+        spawnSync2("git", ["config", "user.email", "github-actions[bot]@users.noreply.github.com"], {
+          stdio: "inherit"
+        });
         spawnSync2("git", ["checkout", "-b", pagesBranch], { stdio: "inherit" });
         spawnSync2("git", ["add", "."], { stdio: "inherit" });
-        spawnSync2("git", ["commit", "-m", `Deploy Allure report for PR #${config.prNumber}`], { stdio: "inherit" });
+        spawnSync2("git", ["commit", "-m", `Deploy Allure report for PR #${config.prNumber}`], {
+          stdio: "inherit"
+        });
         const pushUrl = `https://x-access-token:${config.githubToken}@github.com/${repoFull}.git`;
-        const pushResult = spawnSync2("git", ["push", "--force", pushUrl, pagesBranch], { stdio: "inherit" });
+        const pushResult = spawnSync2("git", ["push", "--force", pushUrl, pagesBranch], {
+          stdio: "inherit"
+        });
         if (pushResult.status !== 0) {
           throw new Error("Failed to push to gh-pages branch");
         }
@@ -29277,7 +29285,10 @@ async function run() {
                 }
                 if (toDelete.length > 0) {
                   spawnSync2("git", ["commit", "-m", `Prune old PR reports (keep ${retentionCount})`], { stdio: "inherit", cwd: deployDir });
-                  spawnSync2("git", ["push", "--force", pushUrl, pagesBranch], { stdio: "inherit", cwd: deployDir });
+                  spawnSync2("git", ["push", "--force", pushUrl, pagesBranch], {
+                    stdio: "inherit",
+                    cwd: deployDir
+                  });
                 }
               }
             }
