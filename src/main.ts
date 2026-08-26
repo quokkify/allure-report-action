@@ -2,7 +2,6 @@
  * Main entry point for the GitHub Action
  */
 import * as core from '@actions/core';
-import { Octokit } from '@octokit/rest';
 
 import { runBadges } from './commands/badges.js';
 import { runModuleConfig } from './commands/module-config.js';
@@ -146,45 +145,77 @@ async function run(): Promise<void> {
     // Step 9: Deploy to GitHub Pages when publish-pages is enabled
     if (config.publishPages) {
       try {
-        const octokit = new Octokit({ auth: config.githubToken });
         const repoFull = process.env.GITHUB_REPOSITORY;
         if (!repoFull) {
           throw new Error('GITHUB_REPOSITORY environment variable not set');
         }
         const [owner, repo] = repoFull.split('/');
+        const pagesBranch = config.pagesBranch;
+        const destinationDir = config.pagesDestinationDirectory;
+        const retentionCount = config.pagesRetentionCount;
 
-        // Build the deployment payload
-        const deployment = await octokit.rest.repos.createDeployment({
-          owner: owner!,
-          repo: repo!,
-          ref: config.pagesBranch,
-          auto_merge: false,
-          required_contexts: [],
-          payload: {
-            pages: {
-              build_dir: config.reportDirectory,
-              destination_dir: config.pagesDestinationDirectory,
-              retention_count: config.pagesRetentionCount,
-            },
-          },
-          environment: 'github-pages',
-        });
+        // Create a temporary directory for the gh-pages deployment
+        const tmp = await import('node:os');
+        const path = await import('node:path');
+        const fs = await import('node:fs');
+        const { spawnSync } = await import('node:child_process');
 
-        const deploymentData = deployment.data as { id: number; node_id: string };
-        const deploymentId = deploymentData.id;
+        const deployDir = path.join(tmp.tmpdir(), `gh-pages-deploy-${Date.now()}`);
+        fs.mkdirSync(deployDir, { recursive: true });
 
-        // Wait for deployment to complete
-        await octokit.rest.repos.createDeploymentStatus({
-          owner: owner!,
-          repo: repo!,
-          deployment_id: deploymentId,
-          state: 'success',
-          environment: 'github-pages',
-          environment_url: `https://${owner}.github.io/${repo}/${config.pagesDestinationDirectory}/`,
-          auto_inactive: true,
-        });
+        // Copy report to deploy directory
+        fs.cpSync(config.reportDirectory, path.join(deployDir, destinationDir), { recursive: true });
 
-        core.info(`Published Allure report to GitHub Pages: ${config.pagesDestinationDirectory}`);
+        // Initialize git repo and push to gh-pages
+        process.chdir(deployDir);
+        spawnSync('git', ['init'], { stdio: 'inherit' });
+        spawnSync('git', ['config', 'user.name', 'github-actions[bot]'], { stdio: 'inherit' });
+        spawnSync('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com'], { stdio: 'inherit' });
+        spawnSync('git', ['checkout', '-b', pagesBranch], { stdio: 'inherit' });
+        spawnSync('git', ['add', '.'], { stdio: 'inherit' });
+        spawnSync('git', ['commit', '-m', `Deploy Allure report for PR #${config.prNumber}`], { stdio: 'inherit' });
+
+        // Push to gh-pages with force
+        const pushUrl = `https://x-access-token:${config.githubToken}@github.com/${repoFull}.git`;
+        const pushResult = spawnSync('git', ['push', '--force', pushUrl, pagesBranch], { stdio: 'inherit' });
+
+        if (pushResult.status !== 0) {
+          throw new Error('Failed to push to gh-pages branch');
+        }
+
+        // Retention pruning - list all pr-* directories and keep only N newest
+        if (retentionCount > 0) {
+          try {
+            const listResult = spawnSync('git', ['ls-tree', '-d', '-r', '--name-only', pagesBranch], {
+              stdio: 'pipe',
+              encoding: 'utf8',
+            });
+            if (listResult.status === 0) {
+              const dirs = listResult.stdout.trim().split('\n')
+                .filter(d => d.startsWith('allure-report-pr-'))
+                .sort((a, b) => {
+                  const aNum = parseInt(a.replace('allure-report-pr-', ''), 10);
+                  const bNum = parseInt(b.replace('allure-report-pr-', ''), 10);
+                  return bNum - aNum; // newest first
+                });
+              if (dirs.length > retentionCount) {
+                const toDelete = dirs.slice(retentionCount);
+                for (const dir of toDelete) {
+                  spawnSync('git', ['rm', '-rf', dir], { stdio: 'inherit', cwd: deployDir });
+                }
+                if (toDelete.length > 0) {
+                  spawnSync('git', ['commit', '-m', `Prune old PR reports (keep ${retentionCount})`], { stdio: 'inherit', cwd: deployDir });
+                  spawnSync('git', ['push', '--force', pushUrl, pagesBranch], { stdio: 'inherit', cwd: deployDir });
+                }
+              }
+            }
+          } catch (e) {
+            core.warning(`Retention pruning failed: ${(e as Error).message}`);
+          }
+        }
+
+        const pagesUrl = `https://${owner}.github.io/${repo}/${destinationDir}/`;
+        core.info(`Published Allure report to GitHub Pages: ${pagesUrl}`);
       } catch (error) {
         core.setFailed(`GitHub Pages deployment failed: ${(error as Error).message}`);
         throw error;
