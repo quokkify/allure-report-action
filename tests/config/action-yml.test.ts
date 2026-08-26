@@ -52,9 +52,7 @@ describe('Action.yml Metadata', () => {
       'pages-branch',
       'pages-retention-count',
     ]) {
-      expect(actionYml).toContain(
-        `INPUT_${input.replaceAll('-', '_').toUpperCase()}: \${{ inputs.${input} }}`
-      );
+      expect(actionYml).toContain(`INPUT_${input.toUpperCase()}: \${{ inputs.${input} }}`);
     }
   });
 

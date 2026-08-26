@@ -133,34 +133,34 @@ runs:
     - name: Generate report and PR comment
       shell: bash
       env:
-        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
-        INPUT_RESULTS_DIRECTORY: ${{ inputs.results-directory }}
-        INPUT_REPORT_DIRECTORY: ${{ inputs.report-directory }}
-        INPUT_CONFIG_FILE: ${{ inputs.config-file }}
-        INPUT_MODULE_ENVIRONMENT_LABEL: ${{ inputs.module-environment-label }}
-        INPUT_SOURCE_ARTIFACTS_DIRECTORY: ${{ inputs.source-artifacts-directory }}
-        INPUT_CATEGORIES_FILE: ${{ inputs.categories-file }}
-        INPUT_ALLURE_VERSION: ${{ inputs.allure-version }}
-        INPUT_PR_NUMBER: ${{ inputs.pr-number }}
-        INPUT_PAGES_URL: ${{ inputs.pages-url }}
-        INPUT_FORK_PR: ${{ inputs.fork-pr }}
-        INPUT_SOURCE_RUN_ID: ${{ inputs.source-run-id }}
-        INPUT_COMMENT_FILE: ${{ inputs.comment-file }}
-        INPUT_COMMENT_MARKER: ${{ inputs.comment-marker }}
-        INPUT_COMMENT_AUTHOR_LOGIN: ${{ inputs.comment-author-login }}
-        INPUT_PYRAMID_ENABLED: ${{ inputs.pyramid-enabled }}
-        INPUT_PYRAMID_MARKDOWN_FILE: ${{ inputs.pyramid-markdown-file }}
-        INPUT_PYRAMID_JSON_FILE: ${{ inputs.pyramid-json-file }}
-        INPUT_PYRAMID_GATES_JSON_FILE: ${{ inputs.pyramid-gates-json-file }}
-        INPUT_PYRAMID_SOURCE_RUN_ID: ${{ inputs.pyramid-source-run-id }}
-        INPUT_PYRAMID_HEAD_SHA: ${{ inputs.pyramid-head-sha }}
-        INPUT_PYRAMID_POLICY_PATH: ${{ inputs.pyramid-policy-path }}
-        INPUT_PYRAMID_ARTIFACT_NAME: ${{ inputs.pyramid-artifact-name }}
-        INPUT_PYRAMID_RETENTION_DAYS: ${{ inputs.pyramid-retention-days }}
-        INPUT_PUBLISH_PAGES: ${{ inputs.publish-pages }}
-        INPUT_PAGES_DESTINATION_DIRECTORY: ${{ inputs.pages-destination-directory }}
-        INPUT_PAGES_BRANCH: ${{ inputs.pages-branch }}
-        INPUT_PAGES_RETENTION_COUNT: ${{ inputs.pages-retention-count }}
+        INPUT_GITHUB-TOKEN: ${{ inputs.github-token }}
+        INPUT_RESULTS-DIRECTORY: ${{ inputs.results-directory }}
+        INPUT_REPORT-DIRECTORY: ${{ inputs.report-directory }}
+        INPUT_CONFIG-FILE: ${{ inputs.config-file }}
+        INPUT_MODULE-ENVIRONMENT-LABEL: ${{ inputs.module-environment-label }}
+        INPUT_SOURCE-ARTIFACTS-DIRECTORY: ${{ inputs.source-artifacts-directory }}
+        INPUT_CATEGORIES-FILE: ${{ inputs.categories-file }}
+        INPUT_ALLURE-VERSION: ${{ inputs.allure-version }}
+        INPUT_PR-NUMBER: ${{ inputs.pr-number }}
+        INPUT_PAGES-URL: ${{ inputs.pages-url }}
+        INPUT_FORK-PR: ${{ inputs.fork-pr }}
+        INPUT_SOURCE-RUN-ID: ${{ inputs.source-run-id }}
+        INPUT_COMMENT-FILE: ${{ inputs.comment-file }}
+        INPUT_COMMENT-MARKER: ${{ inputs.comment-marker }}
+        INPUT_COMMENT-AUTHOR-LOGIN: ${{ inputs.comment-author-login }}
+        INPUT_PYRAMID-ENABLED: ${{ inputs.pyramid-enabled }}
+        INPUT_PYRAMID-MARKDOWN-FILE: ${{ inputs.pyramid-markdown-file }}
+        INPUT_PYRAMID-JSON-FILE: ${{ inputs.pyramid-json-file }}
+        INPUT_PYRAMID-GATES-JSON-FILE: ${{ inputs.pyramid-gates-json-file }}
+        INPUT_PYRAMID-SOURCE-RUN-ID: ${{ inputs.pyramid-source-run-id }}
+        INPUT_PYRAMID-HEAD-SHA: ${{ inputs.pyramid-head-sha }}
+        INPUT_PYRAMID-POLICY-PATH: ${{ inputs.pyramid-policy-path }}
+        INPUT_PYRAMID-ARTIFACT-NAME: ${{ inputs.pyramid-artifact-name }}
+        INPUT_PYRAMID-RETENTION-DAYS: ${{ inputs.pyramid-retention-days }}
+        INPUT_PUBLISH-PAGES: ${{ inputs.publish-pages }}
+        INPUT_PAGES-DESTINATION-DIRECTORY: ${{ inputs.pages-destination-directory }}
+        INPUT_PAGES-BRANCH: ${{ inputs.pages-branch }}
+        INPUT_PAGES-RETENTION-COUNT: ${{ inputs.pages-retention-count }}
       run: node "${GITHUB_ACTION_PATH}/dist/index.cjs"
     - name: Publish report to GitHub Pages
       if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}
