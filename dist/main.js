@@ -85,7 +85,7 @@ async function run() {
             reportDir: config.reportDirectory,
         });
         // Step 6: Generate PR comment
-        runPrBody({
+        await runPrBody({
             resultsDir: config.resultsDirectory,
             reportDir: config.reportDirectory,
             outputFile: config.commentFile,

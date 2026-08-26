@@ -29192,7 +29192,7 @@ async function run() {
       resultsDir: config.resultsDirectory,
       reportDir: config.reportDirectory
     });
-    runPrBody({
+    await runPrBody({
       resultsDir: config.resultsDirectory,
       reportDir: config.reportDirectory,
       outputFile: config.commentFile,
