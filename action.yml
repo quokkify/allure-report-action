@@ -162,6 +162,15 @@ runs:
         INPUT_PAGES-BRANCH: ${{ inputs.pages-branch }}
         INPUT_PAGES-RETENTION-COUNT: ${{ inputs.pages-retention-count }}
       run: node "${GITHUB_ACTION_PATH}/dist/index.cjs"
+    - name: Publish report to GitHub Pages
+      if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}
+      uses: quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b # v0.1.1
+      with:
+        token: ${{ inputs.github-token }}
+        publish-dir: ${{ inputs.report-directory }}
+        destination-dir: ${{ inputs.pages-destination-directory }}
+        branch: ${{ inputs.pages-branch }}
+        retention-count: ${{ inputs.pages-retention-count }}
     - name: Upload test-pyramid snapshot
       if: ${{ inputs.pyramid-enabled == 'true' }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -172,12 +181,3 @@ runs:
           ${{ inputs.pyramid-json-file }}
           ${{ inputs.pyramid-gates-json-file }}
         retention-days: ${{ inputs.pyramid-retention-days }}
-    - name: Publish report to GitHub Pages
-      if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}
-      uses: quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b # v0.1.1
-      with:
-        token: ${{ inputs.github-token }}
-        publish-dir: ${{ inputs.report-directory }}
-        destination-dir: ${{ inputs.pages-destination-directory }}
-        branch: ${{ inputs.pages-branch }}
-        retention-count: ${{ inputs.pages-retention-count }}

@@ -21,6 +21,20 @@ describe('Action.yml Metadata', () => {
     expect(actionYml).not.toContain('using: node24');
   });
 
+  it('executes runtime, Pages publication, then pyramid upload in order', () => {
+    const runtimeStep = actionYml.indexOf('run: node "${GITHUB_ACTION_PATH}/dist/index.cjs"');
+    const pagesStep = actionYml.indexOf(
+      'uses: quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b'
+    );
+    const uploadStep = actionYml.indexOf(
+      'uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+    );
+
+    expect(runtimeStep).toBeGreaterThanOrEqual(0);
+    expect(pagesStep).toBeGreaterThan(runtimeStep);
+    expect(uploadStep).toBeGreaterThan(pagesStep);
+  });
+
   it('uploads all pyramid outputs with the configured artifact contract', () => {
     expect(actionYml).toContain(
       'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7'
