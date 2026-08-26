@@ -83,7 +83,7 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 | `report-directory` | no | `allure-report` | Generated HTML report directory. |
 | `config-file` | yes | — | Caller-owned Allure 3 configuration file. |
 | `module-environment-label` | no | `module` | Result label used to create one environment per module; empty disables normalization. |
-| `source-artifacts-directory` | no | empty | Source root, `auto` for compatible wrapper detection, or empty for legacy pre-merged results. |
+| `source-artifacts-directory` | no | `auto` | Source root, `auto` for compatible wrapper detection, or empty for legacy pre-merged results. |
 | `categories-file` | no | empty | Optional caller-owned `categories.json`. |
 | `allure-version` | no | `3.15.0` | Exact Allure CLI version. |
 | `pr-number` | no | empty | PR to comment on; empty skips the API mutation. |
@@ -141,7 +141,7 @@ npm run build         # TypeScript compile + esbuild bundle
 npm run test:watch    # Watch mode for tests
 ```
 
-The test suite includes 83 tests covering:
+The test suite includes 86 tests covering:
 - Configuration loading and validation
 - Allure result parsing and aggregation
 - Module-scoped environment generation

@@ -1,6 +1,7 @@
 /**
  * Main entry point for the GitHub Action
  */
+import path from 'node:path';
 import * as core from '@actions/core';
 import { runBadges } from './commands/badges.js';
 import { runModuleConfig } from './commands/module-config.js';
@@ -17,7 +18,8 @@ async function run() {
     try {
         // Load action version
         try {
-            const version = readVersionFile('version.txt').trim();
+            const actionPath = process.env.GITHUB_ACTION_PATH || process.cwd();
+            const version = readVersionFile(path.join(actionPath, 'version.txt')).trim();
             setActionVersion(version);
         }
         catch {

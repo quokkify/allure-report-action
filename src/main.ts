@@ -1,6 +1,8 @@
 /**
  * Main entry point for the GitHub Action
  */
+import path from 'node:path';
+
 import * as core from '@actions/core';
 
 import { runBadges } from './commands/badges.js';
@@ -19,7 +21,8 @@ async function run(): Promise<void> {
   try {
     // Load action version
     try {
-      const version = readVersionFile('version.txt').trim();
+      const actionPath = process.env.GITHUB_ACTION_PATH || process.cwd();
+      const version = readVersionFile(path.join(actionPath, 'version.txt')).trim();
       setActionVersion(version);
     } catch {
       // version.txt might not be available in development

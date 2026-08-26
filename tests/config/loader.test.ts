@@ -5,6 +5,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as core from '@actions/core';
 import { loadConfig } from '../../src/config/loader.js';
 
+vi.mock('@actions/core', () => ({
+  getInput: vi.fn(),
+  getBooleanInput: vi.fn(),
+  warning: vi.fn(),
+}));
+
 describe('Config Loader', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -15,7 +21,7 @@ describe('Config Loader', () => {
   });
 
   const setupDefaultMocks = () => {
-    vi.spyOn(core, 'getInput').mockImplementation((name: string) => {
+    vi.mocked(core.getInput).mockImplementation((name: string) => {
       const defaults: Record<string, string> = {
         'github-token': 'test-token',
         'results-directory': 'artifacts/allure-results',
@@ -48,7 +54,7 @@ describe('Config Loader', () => {
       };
       return defaults[name] || '';
     });
-    vi.spyOn(core, 'getBooleanInput').mockImplementation((name: string) => {
+    vi.mocked(core.getBooleanInput).mockImplementation((name: string) => {
       const booleans: Record<string, boolean> = {
         'fork-pr': false,
         'pyramid-enabled': false,
@@ -56,7 +62,7 @@ describe('Config Loader', () => {
       };
       return booleans[name] ?? false;
     });
-    vi.spyOn(core, 'warning').mockImplementation(() => {});
+    vi.mocked(core.warning).mockImplementation(() => {});
   };
 
   it('loads all required and optional inputs with defaults', () => {
@@ -73,16 +79,27 @@ describe('Config Loader', () => {
     expect(config.commentAuthorLogin).toBe('github-actions[bot]');
   });
 
+  it('preserves an explicit empty module label to disable normalization', () => {
+    setupDefaultMocks();
+    vi.mocked(core.getInput).mockImplementation((name: string) => {
+      if (name === 'module-environment-label') return '';
+      if (name === 'comment-marker') return '<!-- marker -->';
+      return name === 'github-token' ? 'test-token' : 'value';
+    });
+
+    expect(loadConfig().moduleEnvironmentLabel).toBe('');
+  });
+
   it('parses boolean inputs correctly', () => {
     setupDefaultMocks();
-    vi.spyOn(core, 'getBooleanInput').mockImplementation((name: string) => {
+    vi.mocked(core.getBooleanInput).mockImplementation((name: string) => {
       if (name === 'fork-pr') return true;
       if (name === 'pyramid-enabled') return true;
       // publish-pages is false to test boolean parsing without fork PR interaction
       if (name === 'publish-pages') return false;
       return false;
     });
-    vi.spyOn(core, 'getInput').mockImplementation((name: string) => {
+    vi.mocked(core.getInput).mockImplementation((name: string) => {
       if (name === 'pages-destination-directory') return 'allure/pr-1';
       return 'default';
     });
@@ -96,7 +113,7 @@ describe('Config Loader', () => {
 
   it('parses numeric inputs correctly', () => {
     setupDefaultMocks();
-    vi.spyOn(core, 'getInput').mockImplementation((name: string) => {
+    vi.mocked(core.getInput).mockImplementation((name: string) => {
       if (name === 'pyramid-retention-days') return '14';
       if (name === 'pages-retention-count') return '5';
       return 'default';
@@ -110,7 +127,7 @@ describe('Config Loader', () => {
 
   it('throws error for empty comment marker', () => {
     vi.restoreAllMocks();
-    vi.spyOn(core, 'getInput').mockImplementation((name: string) => {
+    vi.mocked(core.getInput).mockImplementation((name: string) => {
       const defaults: Record<string, string> = {
         'github-token': 'test-token',
         'results-directory': 'artifacts/allure-results',
@@ -143,8 +160,8 @@ describe('Config Loader', () => {
       };
       return defaults[name];
     });
-    vi.spyOn(core, 'getBooleanInput').mockImplementation(() => false);
-    vi.spyOn(core, 'warning').mockImplementation(() => {});
+    vi.mocked(core.getBooleanInput).mockImplementation(() => false);
+    vi.mocked(core.warning).mockImplementation(() => {});
 
     expect(() => loadConfig()).toThrow('comment-marker must not be empty');
   });
@@ -154,7 +171,7 @@ describe('Config Loader', () => {
     vi.spyOn(core, 'getBooleanInput').mockImplementation(
       (name: string) => name === 'publish-pages'
     );
-    vi.spyOn(core, 'getInput').mockImplementation((name: string) => {
+    vi.mocked(core.getInput).mockImplementation((name: string) => {
       if (name === 'pages-destination-directory') return '';
       return 'default';
     });
@@ -166,12 +183,12 @@ describe('Config Loader', () => {
 
   it('warns when publish-pages is true for fork PR and disables it', () => {
     setupDefaultMocks();
-    vi.spyOn(core, 'getBooleanInput').mockImplementation((name: string) => {
+    vi.mocked(core.getBooleanInput).mockImplementation((name: string) => {
       if (name === 'publish-pages') return true;
       if (name === 'fork-pr') return true;
       return false;
     });
-    vi.spyOn(core, 'getInput').mockImplementation((name: string) => {
+    vi.mocked(core.getInput).mockImplementation((name: string) => {
       if (name === 'pages-destination-directory') return 'allure/pr-1';
       return 'default';
     });

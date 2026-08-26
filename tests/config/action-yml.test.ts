@@ -21,6 +21,18 @@ describe('Action.yml Metadata', () => {
     expect(actionYml).not.toContain('using: node24');
   });
 
+  it('uploads all pyramid outputs with the configured artifact contract', () => {
+    expect(actionYml).toContain(
+      'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7'
+    );
+    expect(actionYml).toContain("if: ${{ inputs.pyramid-enabled == 'true' }}");
+    expect(actionYml).toContain('name: ${{ inputs.pyramid-artifact-name }}');
+    expect(actionYml).toContain('${{ inputs.pyramid-markdown-file }}');
+    expect(actionYml).toContain('${{ inputs.pyramid-json-file }}');
+    expect(actionYml).toContain('${{ inputs.pyramid-gates-json-file }}');
+    expect(actionYml).toContain('retention-days: ${{ inputs.pyramid-retention-days }}');
+  });
+
   it('forwards every runtime input through INPUT_* environment variables', () => {
     for (const input of [
       'github-token',
