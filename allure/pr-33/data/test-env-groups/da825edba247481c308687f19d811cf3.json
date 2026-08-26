@@ -1,1 +1,1 @@
-{"id":"da825edba247481c308687f19d811cf3","fullName":"tests/allure/parser.test.ts#Allure Parser aggregateResults handles empty results directory","name":"handles empty results directory","status":"passed","testResultsByEnv":{"default":"ed99c90e4e747085bd4d06a59e905438"}}
+{"id":"da825edba247481c308687f19d811cf3","fullName":"tests/allure/parser.test.ts#Allure Parser aggregateResults handles empty results directory","name":"handles empty results directory","status":"passed","testResultsByEnv":{"default":"ec19c5d75e0a908e2414ad3b7b1435df"}}

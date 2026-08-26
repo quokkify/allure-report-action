@@ -1,1 +1,1 @@
-{"id":"903e78fbdc1b01a3ee6755da26cf94c6","fullName":"tests/allure/prepare-results.test.ts#Prepare Results deduplicates identical files","name":"deduplicates identical files","status":"passed","testResultsByEnv":{"default":"fabed1b87211756d2e37387f4fef7e6c"}}
+{"id":"903e78fbdc1b01a3ee6755da26cf94c6","fullName":"tests/allure/prepare-results.test.ts#Prepare Results deduplicates identical files","name":"deduplicates identical files","status":"passed","testResultsByEnv":{"default":"b478a8475b21fcbb6ea9c88861bcb13d"}}

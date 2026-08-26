@@ -1,1 +1,1 @@
-{"id":"34b1d9db820fc7ce5c3d1c5fd36e8950","fullName":"tests/config/action-yml.test.ts#Action.yml Metadata does not use GET /installation request","name":"does not use GET /installation request","status":"passed","testResultsByEnv":{"default":"ed439c97a9f27ad002314c537889affb"}}
+{"id":"34b1d9db820fc7ce5c3d1c5fd36e8950","fullName":"tests/config/action-yml.test.ts#Action.yml Metadata does not use GET /installation request","name":"does not use GET /installation request","status":"passed","testResultsByEnv":{"default":"39bf2d9699f8e2d59cbdc5429c16f798"}}
