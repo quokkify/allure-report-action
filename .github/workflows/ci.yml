@@ -48,6 +48,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           results-directory: allure-results
           config-file: allurerc.mjs
+          report-directory: allure-report
+          comment-file: ${{ github.workspace }}/allure-pr-comment.md
           pr-number: ${{ github.event.pull_request.number }}
           comment-marker: "<!-- allure-report-action-ci -->"
       - name: Run synthetic Allure 3 smoke test (Bash CLI)
