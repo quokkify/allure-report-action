@@ -127,7 +127,6 @@ outputs:
   comment-file:
     description: Generated PR comment Markdown file
     value: ${{ inputs.comment-file }}
-
 runs:
-  using: node22
+  using: node20
   main: dist/index.cjs

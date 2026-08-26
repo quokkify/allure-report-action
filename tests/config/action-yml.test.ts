@@ -9,8 +9,8 @@ describe('Action.yml Metadata', () => {
   const actionYmlPath = path.resolve(__dirname, '../../action.yml');
   const actionYml = fs.readFileSync(actionYmlPath, 'utf8');
 
-  it('uses node22 runner instead of composite', () => {
-    expect(actionYml).toContain('runs:\n  using: node22');
+  it('uses node20 runner instead of composite', () => {
+    expect(actionYml).toContain('runs:\n  using: node20');
     expect(actionYml).toContain('main: dist/index.cjs');
     expect(actionYml).not.toContain('using: composite');
   });
