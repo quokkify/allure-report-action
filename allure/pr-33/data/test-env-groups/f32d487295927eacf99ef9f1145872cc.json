@@ -1,0 +1,1 @@
+{"id":"f32d487295927eacf99ef9f1145872cc","fullName":"tests/allure/parser.test.ts#Allure Parser readJsonSafe returns null for non-existent file","name":"returns null for non-existent file","status":"passed","testResultsByEnv":{"default":"3c1fa4f62b1c9082a95b5fa7aa9c62e0"}}
