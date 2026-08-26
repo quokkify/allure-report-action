@@ -4,14 +4,4 @@ export default {
   variables: {
     "GitHub.RunId": "123",
   },
-  plugins: {
-    awesome: {
-      options: {
-        reportName: "Allure report action smoke",
-        singleFile: false,
-        reportLanguage: "en",
-        groupBy: ["epic", "feature", "story"],
-      },
-    },
-  },
 };
