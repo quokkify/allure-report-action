@@ -8,6 +8,8 @@ import * as path from 'node:path';
 describe('Action.yml Metadata', () => {
   const actionYmlPath = path.resolve(__dirname, '../../action.yml');
   const actionYml = fs.readFileSync(actionYmlPath, 'utf8');
+  const ciWorkflowPath = path.resolve(__dirname, '../../.github/workflows/ci.yml');
+  const ciWorkflow = fs.readFileSync(ciWorkflowPath, 'utf8');
 
   it('delegates runtime and Pages publication through composite steps', () => {
     expect(actionYml).toContain('using: composite');
@@ -33,6 +35,14 @@ describe('Action.yml Metadata', () => {
     expect(runtimeStep).toBeGreaterThanOrEqual(0);
     expect(pagesStep).toBeGreaterThan(runtimeStep);
     expect(uploadStep).toBeGreaterThan(pagesStep);
+  });
+
+  it('forwards fork pull-request status to the local action invocation', () => {
+    const localInvocation = ciWorkflow.slice(ciWorkflow.indexOf('uses: ./'));
+    const nextStep = localInvocation.indexOf('\n      - name:');
+    const invocationBlock = nextStep === -1 ? localInvocation : localInvocation.slice(0, nextStep);
+
+    expect(invocationBlock).toContain('fork-pr: ${{ github.event.pull_request.head.repo.fork }}');
   });
 
   it('uploads all pyramid outputs with the configured artifact contract', () => {

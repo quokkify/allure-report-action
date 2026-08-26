@@ -55,6 +55,7 @@ jobs:
           pr-number: ${{ github.event.pull_request.number }}
           comment-marker: "<!-- allure-report-action-ci -->"
           publish-pages: true
+          fork-pr: ${{ github.event.pull_request.head.repo.fork }}
           pages-destination-directory: allure/pr-${{ github.event.pull_request.number }}
           pages-branch: gh-pages
           pages-retention-count: 5
