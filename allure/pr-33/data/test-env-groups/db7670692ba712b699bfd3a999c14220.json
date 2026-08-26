@@ -1,1 +1,1 @@
-{"id":"db7670692ba712b699bfd3a999c14220","fullName":"tests/allure/parser.test.ts#Allure Parser getEpicForResult returns 'other' for unrecognized epic","name":"returns 'other' for unrecognized epic","status":"passed","testResultsByEnv":{"default":"4f809307e67287005a01cc1dcf8cf917"}}
+{"id":"db7670692ba712b699bfd3a999c14220","fullName":"tests/allure/parser.test.ts#Allure Parser getEpicForResult returns 'other' for unrecognized epic","name":"returns 'other' for unrecognized epic","status":"passed","testResultsByEnv":{"default":"58cbcaa83e27c0fdc0397449110a7231"}}
