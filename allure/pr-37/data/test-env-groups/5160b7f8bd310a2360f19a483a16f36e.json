@@ -1,1 +1,1 @@
-{"id":"5160b7f8bd310a2360f19a483a16f36e","fullName":"tests/cli.test.ts#sanitize-results CLI rejects missing output without filesystem mutation","name":"rejects missing output without filesystem mutation","status":"passed","testResultsByEnv":{"default":"f7acc96b4af8c1b2ab08e5c58e116f4f"}}
+{"id":"5160b7f8bd310a2360f19a483a16f36e","fullName":"tests/cli.test.ts#sanitize-results CLI rejects missing output without filesystem mutation","name":"rejects missing output without filesystem mutation","status":"passed","testResultsByEnv":{"default":"536defa0224e83bf61990d9c79076d11"}}
