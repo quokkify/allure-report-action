@@ -1,1 +1,1 @@
-{"id":"92ee0141c5126a1f1acfa7506e4a75b3","fullName":"tests/commands/index.test.ts#Commands runPrBody generates PR comment markdown","name":"generates PR comment markdown","status":"passed","testResultsByEnv":{"default":"e28a339cfa3aacae9cbfbffd7335444e"}}
+{"id":"92ee0141c5126a1f1acfa7506e4a75b3","fullName":"tests/commands/index.test.ts#Commands runPrBody generates PR comment markdown","name":"generates PR comment markdown","status":"passed","testResultsByEnv":{"default":"ce3642d7815c8c8343545ef980091ac6"}}
