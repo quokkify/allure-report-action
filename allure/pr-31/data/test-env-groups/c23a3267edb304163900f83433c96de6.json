@@ -1,1 +1,1 @@
-{"id":"c23a3267edb304163900f83433c96de6","fullName":"tests/allure/parser.test.ts#Allure Parser getLabelValue trims whitespace","name":"trims whitespace","status":"passed","testResultsByEnv":{"default":"3e0a40ba59396761613ab2d8fdc064c4"}}
+{"id":"c23a3267edb304163900f83433c96de6","fullName":"tests/allure/parser.test.ts#Allure Parser getLabelValue trims whitespace","name":"trims whitespace","status":"passed","testResultsByEnv":{"default":"c543e695d7ef444cc79e456f85bd5e34"}}
