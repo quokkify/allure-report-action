@@ -83,6 +83,7 @@ jobs:
           pr-number: ${{ steps.identity.outputs.number }}
           comment-marker: '<!-- allure-report-action-ci -->'
           publish-pages: true
+          pages-url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/allure/pr-${{ steps.identity.outputs.number }}/
           fork-pr: false
           source-run-id: ${{ steps.identity.outputs.run_id }}
           pages-destination-directory: allure/pr-${{ steps.identity.outputs.number }}

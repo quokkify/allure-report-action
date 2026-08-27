@@ -1,5 +1,7 @@
 # allure-report-action
 
+For pull requests, the CI workflow publishes the Allure preview to GitHub Pages and links it from the test summary comment.
+
 Build an Allure 3 HTML report from an already-merged results directory, generate the existing outcome badges and optional test-pyramid files, optionally publish the report to a GitHub Pages subdirectory, and finally create or update one pull-request comment with total and passed test counts.
 
 Tests do **not** need Allure `epic` metadata. Results without a recognized `epic` remain in the overall totals. The preserved CSP fallback classifies Playwright results as `E2E`; other unclassified results appear under `No epic assigned` so the missing relationship is explicit.
