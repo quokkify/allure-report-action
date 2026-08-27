@@ -1,1 +1,0 @@
-{"id":"62deb96c7ab94c4d30459ba63bc48f15","fullName":"tests/allure/parser.test.ts#Allure Parser getLabelValue returns empty string for undefined labels","name":"returns empty string for undefined labels","status":"passed","testResultsByEnv":{"default":"b3f5b5599e6fa5d120653d18226e3b7b"}}
