@@ -1,10 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>quokkify/renovate-presets//presets/base", "github>quokkify/renovate-presets//presets/github-actions/default"],
+  "extends": [
+    "github>quokkify/renovate-presets//presets/base",
+    "github>quokkify/renovate-presets//presets/github-actions/default"
+  ],
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^action\\.yml$"],
+      "managerFilePatterns": ["/^action\\.yml$/"],
       "matchStrings": [
         "(?m)^  allure-version:\\n(?:    [^\\n]*\\n)*?    default:\\s*[\\\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\\\"']?\\s*$"
       ],
@@ -13,7 +16,7 @@
     },
     {
       "customType": "regex",
-      "fileMatch": [".github/workflows/ci\\.yml$"],
+      "managerFilePatterns": ["/.github/workflows/ci\\.yml$/"],
       "matchStrings": [
         "uses: quokkify/project-toolkit/.github/workflows/node-ci\\.yml@(?<currentValue>v?\\d+\\.\\d+\\.\\d+|[a-f0-9]{40})"
       ],
