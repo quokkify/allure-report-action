@@ -78,6 +78,29 @@ describe('Prepare Results', () => {
     }
   });
 
+  it('normalizes missing and sub-millisecond result timestamps', () => {
+    writeResult(resultsDir, 'missing', { uuid: 'missing', status: 'passed' });
+    writeResult(resultsDir, 'fractional', {
+      uuid: 'fractional',
+      status: 'passed',
+      start: 1000.25,
+      stop: 1000.5,
+    });
+
+    sanitizeResults({ inputDir: resultsDir, outputDir: path.join(tempDir, 'sanitized') });
+
+    const missing = JSON.parse(
+      fs.readFileSync(path.join(tempDir, 'sanitized', 'missing-result.json'), 'utf8')
+    );
+    const fractional = JSON.parse(
+      fs.readFileSync(path.join(tempDir, 'sanitized', 'fractional-result.json'), 'utf8')
+    );
+    expect(missing.stop).toBeGreaterThan(missing.start);
+    expect(Number.isInteger(missing.start)).toBe(true);
+    expect(Number.isInteger(missing.stop)).toBe(true);
+    expect(fractional).toMatchObject({ start: 1000, stop: 1001 });
+  });
+
   it('uses sidecar as authoritative module', async () => {
     const source = path.join(tempDir, 'artifacts', 'test-report', 'build', 'allure-results');
     fs.mkdirSync(source, { recursive: true });

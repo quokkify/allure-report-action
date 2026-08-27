@@ -80,6 +80,10 @@ async function run() {
         if (allureGenerate.status !== 0) {
             throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
         }
+        const fs = await import('node:fs');
+        if (!fs.existsSync(path.join(config.reportDirectory, 'index.html'))) {
+            throw new Error(`Allure generate did not produce ${path.join(config.reportDirectory, 'index.html')}`);
+        }
         // Step 5: Generate badges
         runBadges({
             resultsDir: config.resultsDirectory,
