@@ -1,0 +1,1 @@
+{"id":"4375d1be75875c002533c6b0965de3b6","fullName":"quokkify/allure-report-action:tests/config/loader.test.ts#Config Loader preserves an explicit empty module label to disable normalization","name":"preserves an explicit empty module label to disable normalization","status":"passed","testResultsByEnv":{"default":"2141b9841248f0c4f2163c028e1eb3cd"}}
