@@ -32,7 +32,7 @@
     "@actions/github": "9.1.1",
     "@octokit/core": "^7.0.0",
     "@octokit/plugin-paginate-rest": "^15.0.0",
-    "@octokit/plugin-rest-endpoint-methods": "^16.0.0",
+    "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
     "@octokit/rest": "^22.0.1"
   },
   "devDependencies": {
