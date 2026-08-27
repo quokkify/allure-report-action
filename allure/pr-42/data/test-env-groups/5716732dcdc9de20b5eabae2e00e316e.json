@@ -1,1 +1,0 @@
-{"id":"5716732dcdc9de20b5eabae2e00e316e","fullName":"tests/allure/parser.test.ts#Allure Parser getLabelValue returns empty string when label not found","name":"returns empty string when label not found","status":"passed","testResultsByEnv":{"default":"0660749dbf394828ff295c7d92951c9c"}}
