@@ -1,1 +1,0 @@
-{"id":"12a81e09f21c66c71f5e8c7bc9467e37","fullName":"tests/config/action-yml.test.ts#Action.yml Metadata forwards every runtime input through INPUT_* environment variables","name":"forwards every runtime input through INPUT_* environment variables","status":"passed","testResultsByEnv":{"default":"ca3371b47a9ae665cbe1995fad0a9804"}}
