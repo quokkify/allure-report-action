@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/quokkify/allure-report-action/compare/v0.3.0...v0.4.0) (2026-08-27)
+
+
+### Features
+
+* migrate from Bash to TypeScript ([#33](https://github.com/quokkify/allure-report-action/issues/33)) ([542a5ee](https://github.com/quokkify/allure-report-action/commit/542a5ee9f3fd0a9b9862c7aa1514e9953b12dce5))
+
 ## [0.3.0](https://github.com/quokkify/allure-report-action/compare/v0.2.3...v0.3.0) (2026-08-25)
 
 
