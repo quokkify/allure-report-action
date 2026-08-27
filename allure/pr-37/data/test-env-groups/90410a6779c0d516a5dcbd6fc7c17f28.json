@@ -1,1 +1,0 @@
-{"id":"90410a6779c0d516a5dcbd6fc7c17f28","fullName":"tests/cli.test.ts#sanitize-results CLI rejects empty input without filesystem mutation","name":"rejects empty input without filesystem mutation","status":"passed","testResultsByEnv":{"default":"e49dd72bae8a0439c49a944dbd00d0a7"}}
