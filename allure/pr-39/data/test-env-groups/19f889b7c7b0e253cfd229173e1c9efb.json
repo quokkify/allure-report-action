@@ -1,0 +1,1 @@
+{"id":"19f889b7c7b0e253cfd229173e1c9efb","fullName":"tests/allure/parser.test.ts#Allure Parser listResultFiles returns empty array for non-existent directory","name":"returns empty array for non-existent directory","status":"passed","testResultsByEnv":{"default":"2f69bf520c4f303d3d846d24642cc09d"}}
