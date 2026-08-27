@@ -1,1 +1,1 @@
-{"id":"0dd661d2aa86884672b77f4a7043d010","fullName":"quokkify/allure-report-action:tests/commands/index.test.ts#Commands runPrBody generates PR comment markdown","name":"generates PR comment markdown","status":"passed","testResultsByEnv":{"default":"498d2e32db253d9a1ddb85d4c47b668b"}}
+{"id":"0dd661d2aa86884672b77f4a7043d010","fullName":"quokkify/allure-report-action:tests/commands/index.test.ts#Commands runPrBody generates PR comment markdown","name":"generates PR comment markdown","status":"passed","testResultsByEnv":{"default":"3e4a7a5f3eac474f9c4820edad8ca031"}}
