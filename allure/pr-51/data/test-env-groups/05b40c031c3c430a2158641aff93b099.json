@@ -1,1 +1,0 @@
-{"id":"05b40c031c3c430a2158641aff93b099","fullName":"tests/allure/parser.test.ts#Allure Parser getEpicForResult returns 'other' when no labels","name":"returns 'other' when no labels","status":"passed","testResultsByEnv":{"default":"25e49b469afd869a082587b10fcf5306"}}

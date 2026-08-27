@@ -1,1 +1,0 @@
-{"id":"44b237c96a745ff779adbbb50fc8a778","fullName":"tests/allure/parser.test.ts#Allure Parser readJsonSafe returns null for invalid JSON","name":"returns null for invalid JSON","status":"passed","testResultsByEnv":{"default":"0d8ab748afa44f3e2944ffc0b5a48ac8"}}

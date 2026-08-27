@@ -1,0 +1,1 @@
+{"id":"93d47d62ebbb4e421304e80ab18f5720","fullName":"tests/allure/prepare-results.test.ts#Prepare Results rejects equal, parent, and child sanitizer paths before filesystem mutation","name":"rejects equal, parent, and child sanitizer paths before filesystem mutation","status":"passed","testResultsByEnv":{"default":"d558319e5de0dcf67226871b509f69dd"}}
