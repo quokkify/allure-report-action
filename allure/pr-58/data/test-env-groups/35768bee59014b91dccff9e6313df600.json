@@ -1,0 +1,1 @@
+{"id":"35768bee59014b91dccff9e6313df600","fullName":"quokkify/allure-report-action:tests/allure/prepare-results.test.ts#Prepare Results sanitizes passive inputs and rejects active attachment payloads","name":"sanitizes passive inputs and rejects active attachment payloads","status":"passed","testResultsByEnv":{"default":"a4ee0501302515a8f1f5d22dc7ba7700"}}
