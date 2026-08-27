@@ -15,43 +15,16 @@ permissions:
 jobs:
   validate-ts:
     name: Validate TypeScript implementation
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "24"
-          cache: "npm"
-      - name: Install dependencies
-        run: npm ci
-      - name: Run TypeScript type check
-        run: npx tsc --noEmit
-      - name: Run ESLint
-        run: npm run lint
-      - name: Run Prettier
-        run: npm run format:check
-      - name: Build TypeScript action
-        run: npm run build
-      - name: Run Vitest tests & generate Allure report
-        run: npm run test
-      - name: Upload untrusted Allure result data
-        if: ${{ success() && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: allure-results
-          path: allure-results
-          if-no-files-found: error
-          retention-days: 1
-      - name: Run synthetic Allure 3 smoke test (Bash CLI)
-        run: bash tests/smoke.sh
+    uses: quokkify/project-toolkit/.github/workflows/node-ci.yml@204b0f332c03d8ea8ceed920e3dc7487a13bb224 # v2.12.4
+    with:
+      node-version: "24"
+      package-manager: npm
+      lint-command: npm run lint
+      test-command: npm test && npm run build && bash tests/smoke.sh
+      run-build: false
+      upload-test-artifacts: true
+      test-artifact-path: allure-results
+      test-artifact-name: allure-results
 
   gitleaks:
     name: Gitleaks
