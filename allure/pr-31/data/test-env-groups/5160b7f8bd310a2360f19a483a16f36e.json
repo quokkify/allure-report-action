@@ -1,0 +1,1 @@
+{"id":"5160b7f8bd310a2360f19a483a16f36e","fullName":"tests/cli.test.ts#sanitize-results CLI rejects missing output without filesystem mutation","name":"rejects missing output without filesystem mutation","status":"passed","testResultsByEnv":{"default":"82134d5e5320824988a043b51c3fa312"}}
