@@ -1,0 +1,1 @@
+{"version":3,"file":"config-generator.d.ts","sourceRoot":"","sources":["../../src/allure/config-generator.ts"],"names":[],"mappings":"AAiHA,MAAM,WAAW,mBAAmB;IAClC,UAAU,EAAE,MAAM,CAAC;IACnB,UAAU,EAAE,MAAM,CAAC;IACnB,UAAU,EAAE,MAAM,CAAC;IACnB,WAAW,EAAE,MAAM,CAAC;CACrB;AAED;;GAEG;AACH,wBAAsB,oBAAoB,CAAC,OAAO,EAAE,mBAAmB,GAAG,OAAO,CAAC,IAAI,CAAC,CA+HtF"}

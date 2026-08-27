@@ -13,34 +13,44 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Validate action and report behavior
+  validate-ts:
+    name: Validate TypeScript implementation
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Validate metadata and JavaScript
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          text = Path("action.yml").read_text()
-          assert "runs:\n  using: composite" in text
-          assert text.index("name: Deploy Allure HTML to GitHub Pages") < text.index("name: Post or update Allure comment on PR")
-          assert 'default: "<!-- project-toolkit-allure-ci -->"' in text
-          PY
-          node --check allure-ci.mjs
-          base_sha="${{ github.event.pull_request.base.sha || github.event.before }}"
-          if [[ ! "$base_sha" =~ ^[0-9a-f]{40}$ ]] || [[ "$base_sha" =~ ^0+$ ]]; then
-            base_sha="$(git hash-object -t tree /dev/null)"
-          fi
-          git diff --check "$base_sha..${{ github.sha }}"
-      - name: Run unit tests
-        run: python3 -m unittest discover -s tests -p 'test_*.py'
-      - name: Run synthetic Allure 3 smoke test
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+      - name: Run ESLint
+        run: npm run lint
+      - name: Run Prettier
+        run: npm run format:check
+      - name: Build TypeScript action
+        run: npm run build
+      - name: Run Vitest tests & generate Allure report
+        run: npm run test
+      - name: Upload untrusted Allure result data
+        if: ${{ success() && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: allure-results
+          path: allure-results
+          if-no-files-found: error
+          retention-days: 1
+      - name: Run synthetic Allure 3 smoke test (Bash CLI)
         run: bash tests/smoke.sh
 
   gitleaks:
@@ -72,16 +82,16 @@ jobs:
   required:
     name: Validation pipeline complete
     if: ${{ always() }}
-    needs: [validate, gitleaks]
+    needs: [validate-ts, gitleaks]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Require every validation stage
         env:
-          VALIDATE_RESULT: ${{ needs.validate.result }}
+          VALIDATE_TS_RESULT: ${{ needs.validate-ts.result }}
           GITLEAKS_RESULT: ${{ needs.gitleaks.result }}
         run: |
-          [[ "$VALIDATE_RESULT" == success && "$GITLEAKS_RESULT" == success ]] || {
+          [[ "$VALIDATE_TS_RESULT" == success && "$GITLEAKS_RESULT" == success ]] || {
             echo "One or more required validation stages did not succeed." >&2
             exit 1
           }

@@ -1,0 +1,221 @@
+/**
+ * Markdown renderer - generates PR comment markdown from domain model
+ */
+import {
+  AggregatedResults,
+  TestSummary,
+  EPIC_DISPLAY,
+  ACTION_REPOSITORY_URL,
+  calculatePassRate,
+} from '../report/index.js';
+
+export interface PrCommentData {
+  summary: TestSummary;
+  aggregated: AggregatedResults;
+  pagesUrl: string;
+  forkPr: boolean;
+  sourceRunId: string;
+  actionVersion: string;
+  commentMarker: string;
+}
+
+/**
+ * Builds the report link with optional run ID
+ */
+function buildReportLink(pagesUrl: string, forkPr: boolean, sourceRunId: string): string {
+  if (!pagesUrl || forkPr) return '';
+  if (!sourceRunId) return pagesUrl;
+  try {
+    const url = new URL(pagesUrl);
+    url.searchParams.set('run', sourceRunId);
+    return url.toString();
+  } catch {
+    return `${pagesUrl}${pagesUrl.includes('?') ? '&' : '?'}run=${encodeURIComponent(sourceRunId)}`;
+  }
+}
+
+/**
+ * Formats test summary line
+ */
+function formatSummaryLine(summary: TestSummary): string {
+  const parts = [
+    `${summary.passed} / ${summary.total} tests passed`,
+    `${calculatePassRate(summary.passed, summary.total)} pass rate`,
+  ];
+  if (summary.failed > 0) parts.push(`${summary.failed} failed`);
+  if (summary.broken > 0) parts.push(`${summary.broken} broken`);
+  if (summary.skipped > 0) parts.push(`${summary.skipped} skipped`);
+  if (summary.unknown > 0) parts.push(`${summary.unknown} unknown`);
+  return parts.join(' · ');
+}
+
+/**
+ * Determines status emoji and label
+ */
+function getStatusInfo(
+  total: number,
+  failed: number,
+  broken: number
+): { emoji: string; label: string } {
+  if (total === 0) return { emoji: '⚪', label: 'no tests' };
+  if (failed + broken > 0) return { emoji: '❌', label: 'failures detected' };
+  return { emoji: '✅', label: 'passed' };
+}
+
+/**
+ * Renders the main summary table
+ */
+function renderSummaryTable(
+  summary: TestSummary,
+  reportLink: string,
+  hasUnknown: boolean
+): string[] {
+  const lines: string[] = [];
+  const columns = hasUnknown
+    ? '| Tests | Passed | Failed | Broken | Skipped | Unknown | Report |'
+    : '| Tests | Passed | Failed | Broken | Skipped | Report |';
+  const separator = hasUnknown
+    ? '| ---: | ---: | ---: | ---: | ---: | ---: | :--- |'
+    : '| ---: | ---: | ---: | ---: | ---: | :--- |';
+
+  const reportCell = reportLink ? `[View report ↗](${reportLink})` : '—';
+
+  const row = (stats: TestSummary, report = '—'): string => {
+    const values: (string | number)[] = [
+      stats.total,
+      stats.passed,
+      stats.failed,
+      stats.broken,
+      stats.skipped,
+    ];
+    if (hasUnknown) values.push(stats.unknown || 0);
+    values.push(report);
+    return `| ${values.join(' | ')} |`;
+  };
+
+  lines.push(columns, separator, row(summary, reportCell), '');
+  return lines;
+}
+
+/**
+ * Renders the layer details table
+ */
+function renderLayerDetails(aggregated: AggregatedResults, hasUnknown: boolean): string[] {
+  const lines: string[] = [];
+  lines.push('<details>');
+  lines.push('<summary><strong>Tests by layer</strong></summary>');
+  lines.push('');
+
+  const emptyStats: TestSummary = {
+    total: 0,
+    passed: 0,
+    failed: 0,
+    broken: 0,
+    skipped: 0,
+    unknown: 0,
+  };
+
+  lines.push(
+    hasUnknown
+      ? '| Layer | Tests | Passed | Failed | Broken | Skipped | Unknown |'
+      : '| Layer | Tests | Passed | Failed | Broken | Skipped |'
+  );
+  lines.push(
+    hasUnknown
+      ? '| --- | ---: | ---: | ---: | ---: | ---: | ---: |'
+      : '| --- | ---: | ---: | ---: | ---: | ---: |'
+  );
+
+  const epics: (keyof typeof aggregated.byEpic)[] = ['unit', 'api', 'ui', 'end-to-end', 'other'];
+  for (const epic of epics) {
+    const stats = aggregated.byEpic[epic] || emptyStats;
+    if (stats.total === 0) continue;
+    const label = EPIC_DISPLAY[epic as keyof typeof EPIC_DISPLAY] || epic;
+    const values: (string | number)[] = [
+      label,
+      stats.total,
+      stats.passed,
+      stats.failed,
+      stats.broken,
+      stats.skipped,
+    ];
+    if (hasUnknown) values.push(stats.unknown || 0);
+    lines.push(`| ${values.join(' | ')} |`);
+  }
+
+  // Total row
+  const total = aggregated.total;
+  const allValues = [
+    'All layers',
+    total.total,
+    total.passed,
+    total.failed,
+    total.broken,
+    total.skipped,
+  ];
+  if (hasUnknown) allValues.push(total.unknown);
+  lines.push(`| ${allValues.join(' | ')} |`);
+  lines.push('');
+  lines.push('</details>');
+  lines.push('');
+  return lines;
+}
+
+/**
+ * Renders the footer
+ */
+function renderFooter(forkPr: boolean, reportLink: string, actionVersion: string): string[] {
+  const lines: string[] = [];
+
+  if (forkPr) {
+    lines.push(
+      '_Preview on GitHub Pages is only published for PRs from the same repository. Download the `allure-report` artifact from this workflow run._',
+      ''
+    );
+  } else if (!reportLink) {
+    lines.push('_GitHub Pages URL not available for this run._', '');
+  }
+
+  lines.push(
+    `<sub>Generated by <a href="${ACTION_REPOSITORY_URL}">quokkify/allure-report-action</a> · <a href="${ACTION_REPOSITORY_URL}/releases/latest">${displayActionVersion(actionVersion)}</a></sub>`,
+    ''
+  );
+
+  return lines;
+}
+
+/**
+ * Formats action version for display
+ */
+function displayActionVersion(version: string): string {
+  const normalized = String(version || '').trim();
+  if (!normalized) return 'unversioned';
+  return normalized.startsWith('v') ? normalized : `v${normalized}`;
+}
+
+/**
+ * Main render function - generates PR comment markdown
+ */
+export function renderPrComment(data: PrCommentData): string {
+  const { summary, aggregated, pagesUrl, forkPr, sourceRunId, actionVersion, commentMarker } = data;
+
+  const status = getStatusInfo(summary.total, summary.failed, summary.broken);
+  const reportLink = buildReportLink(pagesUrl, forkPr, sourceRunId);
+  const hasUnknown = summary.unknown > 0 || aggregated.total.unknown > 0;
+
+  const lines: string[] = [];
+  lines.push(`## ${status.emoji} Allure Report — ${status.label}`, '');
+
+  if (summary.total > 0) {
+    lines.push(formatSummaryLine(summary), '');
+  } else {
+    lines.push('No tests found · no pass rate', '');
+  }
+
+  lines.push(...renderSummaryTable(summary, reportLink, hasUnknown));
+  lines.push(...renderLayerDetails(aggregated, hasUnknown));
+  lines.push(...renderFooter(forkPr, reportLink, actionVersion));
+  lines.push(commentMarker);
+
+  return lines.join('\n');
+}

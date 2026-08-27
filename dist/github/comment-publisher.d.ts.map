@@ -1,0 +1,1 @@
+{"version":3,"file":"comment-publisher.d.ts","sourceRoot":"","sources":["../../src/github/comment-publisher.ts"],"names":[],"mappings":"AAKA,MAAM,WAAW,uBAAuB;IACtC,WAAW,EAAE,MAAM,CAAC;IACpB,QAAQ,EAAE,MAAM,CAAC;IACjB,aAAa,EAAE,MAAM,CAAC;IACtB,kBAAkB,EAAE,MAAM,CAAC;IAC3B,IAAI,EAAE,MAAM,CAAC;CACd;AAsDD;;GAEG;AACH,wBAAsB,gBAAgB,CAAC,OAAO,EAAE,uBAAuB,GAAG,OAAO,CAAC,IAAI,CAAC,CA6CtF"}
