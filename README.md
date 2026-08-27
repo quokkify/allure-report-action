@@ -27,6 +27,16 @@ steps:
 
 Pin the action to a full commit SHA. The version comment documents the corresponding release without weakening the immutable reference.
 
+### Trust boundary for pull-request reporting
+
+The repository's `CI` workflow treats pull-request code as untrusted: it has only
+`contents: read`, does not invoke the local action, and uploads only the generated
+Allure result data. A separate `workflow_run` publisher runs trusted code checked
+out from the default branch, requires a successful same-repository non-fork run,
+and is the only workflow granted `contents: write` and `pull-requests: write`.
+The publisher downloads the result artifact by run ID; PR-produced HTML, scripts,
+and workflow files are never used as trusted publisher payload.
+
 The action uses the caller repository from the GitHub Actions context and an explicitly supplied token, so the same action works in public and private repositories. Private organizations must allow this public action in their Actions policy. GitHub Pages publishing is disabled by default and is not required for the PR summary comment.
 
 ## Module-scoped environments and variables

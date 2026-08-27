@@ -1,0 +1,56 @@
+name: Publish trusted Allure report
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  publish:
+    name: Publish report from trusted code
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_repository.fork == false &&
+      github.event.workflow_run.pull_requests[0].number != null }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out trusted default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Download validated Allure result data
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: allure-results
+          path: artifacts/allure-results
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Generate and publish trusted report
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          results-directory: artifacts/allure-results
+          source-artifacts-directory: ""
+          config-file: allurerc.mjs
+          report-directory: allure-report
+          comment-file: ${{ github.workspace }}/allure-pr-comment.md
+          pr-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          comment-marker: "<!-- allure-report-action-ci -->"
+          publish-pages: true
+          fork-pr: false
+          source-run-id: ${{ github.event.workflow_run.id }}
+          pages-destination-directory: allure/pr-${{ github.event.workflow_run.pull_requests[0].number }}
+          pages-branch: gh-pages
+          pages-retention-count: 5

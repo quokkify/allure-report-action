@@ -10,6 +10,8 @@ describe('Action.yml Metadata', () => {
   const actionYml = fs.readFileSync(actionYmlPath, 'utf8');
   const ciWorkflowPath = path.resolve(__dirname, '../../.github/workflows/ci.yml');
   const ciWorkflow = fs.readFileSync(ciWorkflowPath, 'utf8');
+  const publisherWorkflowPath = path.resolve(__dirname, '../../.github/workflows/publish.yml');
+  const publisherWorkflow = fs.readFileSync(publisherWorkflowPath, 'utf8');
 
   it('delegates runtime and Pages publication through composite steps', () => {
     expect(actionYml).toContain('using: composite');
@@ -37,12 +39,27 @@ describe('Action.yml Metadata', () => {
     expect(uploadStep).toBeGreaterThan(pagesStep);
   });
 
-  it('forwards fork pull-request status to the local action invocation', () => {
-    const localInvocation = ciWorkflow.slice(ciWorkflow.indexOf('uses: ./'));
-    const nextStep = localInvocation.indexOf('\n      - name:');
-    const invocationBlock = nextStep === -1 ? localInvocation : localInvocation.slice(0, nextStep);
+  it('keeps pull-request validation read-only', () => {
+    expect(ciWorkflow).not.toContain('uses: ./');
+    expect(ciWorkflow).not.toContain('secrets.GITHUB_TOKEN');
+    expect(ciWorkflow).toContain('contents: read');
+    expect(ciWorkflow).not.toContain('contents: write');
+    expect(ciWorkflow).not.toContain('pull-requests: write');
+  });
 
-    expect(invocationBlock).toContain('fork-pr: ${{ github.event.pull_request.head.repo.fork }}');
+  it('publishes only from trusted workflow code and same-repository runs', () => {
+    expect(publisherWorkflow).toContain('workflow_run:');
+    expect(publisherWorkflow).toContain(
+      'github.event.workflow_run.head_repository.full_name == github.repository'
+    );
+    expect(publisherWorkflow).toContain('github.event.workflow_run.head_repository.fork == false');
+    expect(publisherWorkflow).toContain('ref: ${{ github.event.repository.default_branch }}');
+    expect(publisherWorkflow).toContain('uses: ./');
+    expect(publisherWorkflow).toContain('run-id: ${{ github.event.workflow_run.id }}');
+    expect(publisherWorkflow).toContain('path: artifacts/allure-results');
+    expect(publisherWorkflow).toContain('contents: write');
+    expect(publisherWorkflow).toContain('pull-requests: write');
+    expect(publisherWorkflow).not.toContain('github.event.workflow_run.head_sha');
   });
 
   it('uploads all pyramid outputs with the configured artifact contract', () => {
