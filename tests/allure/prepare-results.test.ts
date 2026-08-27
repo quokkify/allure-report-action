@@ -204,7 +204,13 @@ describe('Prepare Results', () => {
     fs.mkdirSync(source, { recursive: true });
     const validStart = 1000;
     const validStop = 2000;
-    writeResult(source, 'case-1', { uuid: 'case-1', name: 'case-1', start: validStart, stop: validStop, labels: [] });
+    writeResult(source, 'case-1', {
+      uuid: 'case-1',
+      name: 'case-1',
+      start: validStart,
+      stop: validStop,
+      labels: [],
+    });
     writeFragment(source, 'Module=module-a\n');
 
     prepareAttributedResults({
