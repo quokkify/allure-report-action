@@ -1,1 +1,0 @@
-{"id":"d72cb5540bc56aee4d7bf9c7d3c4c398","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser readJsonSafe returns null for invalid JSON","name":"returns null for invalid JSON","status":"passed","testResultsByEnv":{"default":"81c1c39e62f20c63be353325ba979429"}}
