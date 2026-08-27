@@ -32,7 +32,6 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // node_modules/tunnel/lib/tunnel.js
 var require_tunnel = __commonJS({
@@ -2452,7 +2451,7 @@ var require_connect = __commonJS({
     var util = require_util();
     var { InvalidArgumentError, ConnectTimeoutError } = require_errors();
     var timers = require_timers();
-    function noop4() {
+    function noop3() {
     }
     var tls;
     var SessionCache;
@@ -2577,7 +2576,7 @@ var require_connect = __commonJS({
     }
     var setupConnectTimeout = process.platform === "win32" ? (socketWeakRef, opts) => {
       if (!opts.timeout) {
-        return noop4;
+        return noop3;
       }
       let s1 = null;
       let s2 = null;
@@ -2593,7 +2592,7 @@ var require_connect = __commonJS({
       };
     } : (socketWeakRef, opts) => {
       if (!opts.timeout) {
-        return noop4;
+        return noop3;
       }
       let s1 = null;
       const fastTimer = timers.setFastTimeout(() => {
@@ -3602,18 +3601,18 @@ var require_webidl = __commonJS({
     webidl.errors.exception = function(message) {
       return new TypeError(`${message.header}: ${message.message}`);
     };
-    webidl.errors.conversionFailed = function(context) {
-      const plural = context.types.length === 1 ? "" : " one of";
-      const message = `${context.argument} could not be converted to${plural}: ${context.types.join(", ")}.`;
+    webidl.errors.conversionFailed = function(context3) {
+      const plural = context3.types.length === 1 ? "" : " one of";
+      const message = `${context3.argument} could not be converted to${plural}: ${context3.types.join(", ")}.`;
       return webidl.errors.exception({
-        header: context.prefix,
+        header: context3.prefix,
         message
       });
     };
-    webidl.errors.invalidArgument = function(context) {
+    webidl.errors.invalidArgument = function(context3) {
       return webidl.errors.exception({
-        header: context.prefix,
-        message: `"${context.value}" is an invalid ${context.type}.`
+        header: context3.prefix,
+        message: `"${context3.value}" is an invalid ${context3.type}.`
       });
     };
     webidl.brandCheck = function(V, I, opts) {
@@ -5384,7 +5383,7 @@ var require_body = __commonJS({
       random = (max) => Math.floor(Math.random(max));
     }
     var textEncoder = new TextEncoder();
-    function noop4() {
+    function noop3() {
     }
     var hasFinalizationRegistry = globalThis.FinalizationRegistry && process.version.indexOf("v18") !== 0;
     var streamRegistry;
@@ -5392,7 +5391,7 @@ var require_body = __commonJS({
       streamRegistry = new FinalizationRegistry((weakRef) => {
         const stream = weakRef.deref();
         if (stream && !stream.locked && !isDisturbed(stream) && !isErrored(stream)) {
-          stream.cancel("Response object has been garbage collected").catch(noop4);
+          stream.cancel("Response object has been garbage collected").catch(noop3);
         }
       });
     }
@@ -7576,7 +7575,7 @@ var require_client = __commonJS({
     var connectH2 = require_client_h2();
     var deprecatedInterceptorWarned = false;
     var kClosedResolve = Symbol("kClosedResolve");
-    var noop4 = () => {
+    var noop3 = () => {
     };
     function getPipelining(client) {
       return client[kPipelining] ?? client[kHTTPContext]?.defaultPipelining ?? 1;
@@ -7867,14 +7866,14 @@ var require_client = __commonJS({
           });
         });
         if (client.destroyed) {
-          util.destroy(socket.on("error", noop4), new ClientDestroyedError());
+          util.destroy(socket.on("error", noop3), new ClientDestroyedError());
           return;
         }
         assert(socket);
         try {
           client[kHTTPContext] = socket.alpnProtocol === "h2" ? await connectH2(client, socket) : await connectH1(client, socket);
         } catch (err) {
-          socket.destroy().on("error", noop4);
+          socket.destroy().on("error", noop3);
           throw err;
         }
         client[kConnecting] = false;
@@ -8615,7 +8614,7 @@ var require_proxy_agent = __commonJS({
     function defaultFactory(origin, opts) {
       return new Pool(origin, opts);
     }
-    var noop4 = () => {
+    var noop3 = () => {
     };
     function defaultAgentFactory(origin, opts) {
       if (opts.connections === 1) {
@@ -8732,7 +8731,7 @@ var require_proxy_agent = __commonJS({
                 servername: this[kProxyTls]?.servername || proxyHostname
               });
               if (statusCode !== 200) {
-                socket.on("error", noop4).destroy();
+                socket.on("error", noop3).destroy();
                 callback(new RequestAbortedError(`Proxy response (${statusCode}) !== 200 when HTTP Tunneling`));
               }
               if (opts2.protocol !== "https:") {
@@ -9325,7 +9324,7 @@ var require_readable = __commonJS({
     var kAbort = Symbol("kAbort");
     var kContentType = Symbol("kContentType");
     var kContentLength = Symbol("kContentLength");
-    var noop4 = () => {
+    var noop3 = () => {
     };
     var BodyReadable = class extends Readable {
       constructor({
@@ -9457,7 +9456,7 @@ var require_readable = __commonJS({
             } else {
               resolve4(null);
             }
-          }).on("error", noop4).on("data", function(chunk) {
+          }).on("error", noop3).on("data", function(chunk) {
             limit -= chunk.length;
             if (limit <= 0) {
               this.destroy();
@@ -9743,17 +9742,17 @@ var require_api_request = __commonJS({
           }
         }
       }
-      onConnect(abort, context) {
+      onConnect(abort, context3) {
         if (this.reason) {
           abort(this.reason);
           return;
         }
         assert(this.callback);
         this.abort = abort;
-        this.context = context;
+        this.context = context3;
       }
       onHeaders(statusCode, rawHeaders, resume, statusMessage) {
-        const { callback, opaque, abort, context, responseHeaders, highWaterMark } = this;
+        const { callback, opaque, abort, context: context3, responseHeaders, highWaterMark } = this;
         const headers = responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
         if (statusCode < 200) {
           if (this.onInfo) {
@@ -9790,7 +9789,7 @@ var require_api_request = __commonJS({
               trailers: this.trailers,
               opaque,
               body: res,
-              context
+              context: context3
             });
           }
         }
@@ -9959,17 +9958,17 @@ var require_api_stream = __commonJS({
         }
         addSignal(this, signal);
       }
-      onConnect(abort, context) {
+      onConnect(abort, context3) {
         if (this.reason) {
           abort(this.reason);
           return;
         }
         assert(this.callback);
         this.abort = abort;
-        this.context = context;
+        this.context = context3;
       }
       onHeaders(statusCode, rawHeaders, resume, statusMessage) {
-        const { factory, opaque, context, callback, responseHeaders } = this;
+        const { factory, opaque, context: context3, callback, responseHeaders } = this;
         const headers = responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
         if (statusCode < 200) {
           if (this.onInfo) {
@@ -9997,7 +9996,7 @@ var require_api_stream = __commonJS({
             statusCode,
             headers,
             opaque,
-            context
+            context: context3
           });
           if (!res || typeof res.write !== "function" || typeof res.end !== "function" || typeof res.on !== "function") {
             throw new InvalidReturnValueError("expected Writable");
@@ -10189,7 +10188,7 @@ var require_api_pipeline = __commonJS({
         this.res = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context) {
+      onConnect(abort, context3) {
         const { ret, res } = this;
         if (this.reason) {
           abort(this.reason);
@@ -10198,10 +10197,10 @@ var require_api_pipeline = __commonJS({
         assert(!res, "pipeline cannot be retried");
         assert(!ret.destroyed);
         this.abort = abort;
-        this.context = context;
+        this.context = context3;
       }
       onHeaders(statusCode, rawHeaders, resume) {
-        const { opaque, handler: handler3, context } = this;
+        const { opaque, handler: handler3, context: context3 } = this;
         if (statusCode < 200) {
           if (this.onInfo) {
             const headers = this.responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
@@ -10219,7 +10218,7 @@ var require_api_pipeline = __commonJS({
             headers,
             opaque,
             body: this.res,
-            context
+            context: context3
           });
         } catch (err) {
           this.res.on("error", util.nop);
@@ -10303,7 +10302,7 @@ var require_api_upgrade = __commonJS({
         this.context = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context) {
+      onConnect(abort, context3) {
         if (this.reason) {
           abort(this.reason);
           return;
@@ -10317,7 +10316,7 @@ var require_api_upgrade = __commonJS({
       }
       onUpgrade(statusCode, rawHeaders, socket) {
         assert(statusCode === 101);
-        const { callback, opaque, context } = this;
+        const { callback, opaque, context: context3 } = this;
         removeSignal(this);
         this.callback = null;
         const headers = this.responseHeaders === "raw" ? util.parseRawHeaders(rawHeaders) : util.parseHeaders(rawHeaders);
@@ -10325,7 +10324,7 @@ var require_api_upgrade = __commonJS({
           headers,
           socket,
           opaque,
-          context
+          context: context3
         });
       }
       onError(err) {
@@ -10394,20 +10393,20 @@ var require_api_connect = __commonJS({
         this.abort = null;
         addSignal(this, signal);
       }
-      onConnect(abort, context) {
+      onConnect(abort, context3) {
         if (this.reason) {
           abort(this.reason);
           return;
         }
         assert(this.callback);
         this.abort = abort;
-        this.context = context;
+        this.context = context3;
       }
       onHeaders() {
         throw new SocketError("bad connect", null);
       }
       onUpgrade(statusCode, rawHeaders, socket) {
-        const { callback, opaque, context } = this;
+        const { callback, opaque, context: context3 } = this;
         removeSignal(this);
         this.callback = null;
         let headers = rawHeaders;
@@ -10419,7 +10418,7 @@ var require_api_connect = __commonJS({
           headers,
           socket,
           opaque,
-          context
+          context: context3
         });
       }
       onError(err) {
@@ -12754,13 +12753,13 @@ var require_request2 = __commonJS({
         init = webidl.converters.RequestInit(init, prefix, "init");
         let request2 = null;
         let fallbackMode = null;
-        const baseUrl = environmentSettingsObject.settingsObject.baseUrl;
+        const baseUrl2 = environmentSettingsObject.settingsObject.baseUrl;
         let signal = null;
         if (typeof input === "string") {
           this[kDispatcher] = init.dispatcher;
           let parsedURL;
           try {
-            parsedURL = new URL(input, baseUrl);
+            parsedURL = new URL(input, baseUrl2);
           } catch (err) {
             throw new TypeError("Failed to parse URL from " + input, { cause: err });
           }
@@ -12851,7 +12850,7 @@ var require_request2 = __commonJS({
           } else {
             let parsedReferrer;
             try {
-              parsedReferrer = new URL(referrer, baseUrl);
+              parsedReferrer = new URL(referrer, baseUrl2);
             } catch (err) {
               throw new TypeError(`Referrer "${referrer}" is not a valid URL.`, { cause: err });
             }
@@ -13477,7 +13476,7 @@ var require_fetch = __commonJS({
     function handleFetchDone(response) {
       finalizeAndReportTiming(response, "fetch");
     }
-    function fetch(input, init = void 0) {
+    function fetch2(input, init = void 0) {
       webidl.argumentLengthCheck(arguments, 1, "globalThis.fetch");
       let p = createDeferredPromise();
       let requestObject;
@@ -14434,7 +14433,7 @@ var require_fetch = __commonJS({
       }
     }
     module2.exports = {
-      fetch,
+      fetch: fetch2,
       Fetch,
       fetching,
       finalizeAndReportTiming
@@ -18783,7 +18782,7 @@ var require_undici = __commonJS({
     module2.exports.setGlobalDispatcher = setGlobalDispatcher;
     module2.exports.getGlobalDispatcher = getGlobalDispatcher;
     var fetchImpl = require_fetch().fetch;
-    module2.exports.fetch = async function fetch(init, options = void 0) {
+    module2.exports.fetch = async function fetch2(init, options = void 0) {
       try {
         return await fetchImpl(init, options);
       } catch (err) {
@@ -18847,6 +18846,132 @@ var init_universal_user_agent = __esm({
   }
 });
 
+// node_modules/before-after-hook/lib/register.js
+function register(state, name, method, options) {
+  if (typeof method !== "function") {
+    throw new Error("method for before hook must be a function");
+  }
+  if (!options) {
+    options = {};
+  }
+  if (Array.isArray(name)) {
+    return name.reverse().reduce((callback, name2) => {
+      return register.bind(null, state, name2, callback, options);
+    }, method)();
+  }
+  return Promise.resolve().then(() => {
+    if (!state.registry[name]) {
+      return method(options);
+    }
+    return state.registry[name].reduce((method2, registered) => {
+      return registered.hook.bind(null, method2, options);
+    }, method)();
+  });
+}
+var init_register = __esm({
+  "node_modules/before-after-hook/lib/register.js"() {
+  }
+});
+
+// node_modules/before-after-hook/lib/add.js
+function addHook(state, kind, name, hook2) {
+  const orig = hook2;
+  if (!state.registry[name]) {
+    state.registry[name] = [];
+  }
+  if (kind === "before") {
+    hook2 = (method, options) => {
+      return Promise.resolve().then(orig.bind(null, options)).then(method.bind(null, options));
+    };
+  }
+  if (kind === "after") {
+    hook2 = (method, options) => {
+      let result;
+      return Promise.resolve().then(method.bind(null, options)).then((result_) => {
+        result = result_;
+        return orig(result, options);
+      }).then(() => {
+        return result;
+      });
+    };
+  }
+  if (kind === "error") {
+    hook2 = (method, options) => {
+      return Promise.resolve().then(method.bind(null, options)).catch((error2) => {
+        return orig(error2, options);
+      });
+    };
+  }
+  state.registry[name].push({
+    hook: hook2,
+    orig
+  });
+}
+var init_add = __esm({
+  "node_modules/before-after-hook/lib/add.js"() {
+  }
+});
+
+// node_modules/before-after-hook/lib/remove.js
+function removeHook(state, name, method) {
+  if (!state.registry[name]) {
+    return;
+  }
+  const index = state.registry[name].map((registered) => {
+    return registered.orig;
+  }).indexOf(method);
+  if (index === -1) {
+    return;
+  }
+  state.registry[name].splice(index, 1);
+}
+var init_remove = __esm({
+  "node_modules/before-after-hook/lib/remove.js"() {
+  }
+});
+
+// node_modules/before-after-hook/index.js
+function bindApi(hook2, state, name) {
+  const removeHookRef = bindable(removeHook, null).apply(
+    null,
+    name ? [state, name] : [state]
+  );
+  hook2.api = { remove: removeHookRef };
+  hook2.remove = removeHookRef;
+  ["before", "error", "after", "wrap"].forEach((kind) => {
+    const args = name ? [state, kind, name] : [state, kind];
+    hook2[kind] = hook2.api[kind] = bindable(addHook, null).apply(null, args);
+  });
+}
+function Singular() {
+  const singularHookName = Symbol("Singular");
+  const singularHookState = {
+    registry: {}
+  };
+  const singularHook = register.bind(null, singularHookState, singularHookName);
+  bindApi(singularHook, singularHookState, singularHookName);
+  return singularHook;
+}
+function Collection() {
+  const state = {
+    registry: {}
+  };
+  const hook2 = register.bind(null, state);
+  bindApi(hook2, state);
+  return hook2;
+}
+var bind, bindable, before_after_hook_default;
+var init_before_after_hook = __esm({
+  "node_modules/before-after-hook/index.js"() {
+    init_register();
+    init_add();
+    init_remove();
+    bind = Function.bind;
+    bindable = bind.bind(bind);
+    before_after_hook_default = { Singular, Collection };
+  }
+});
+
 // node_modules/@octokit/endpoint/dist-bundle/index.js
 function lowercaseKeys(object) {
   if (!object) {
@@ -18865,12 +18990,12 @@ function isPlainObject(value) {
   const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
   return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
 }
-function mergeDeep(defaults, options) {
-  const result = Object.assign({}, defaults);
+function mergeDeep(defaults2, options) {
+  const result = Object.assign({}, defaults2);
   Object.keys(options).forEach((key) => {
     if (isPlainObject(options[key])) {
-      if (!(key in defaults)) Object.assign(result, { [key]: options[key] });
-      else result[key] = mergeDeep(defaults[key], options[key]);
+      if (!(key in defaults2)) Object.assign(result, { [key]: options[key] });
+      else result[key] = mergeDeep(defaults2[key], options[key]);
     } else {
       Object.assign(result, { [key]: options[key] });
     }
@@ -18885,7 +19010,7 @@ function removeUndefinedProperties(obj) {
   }
   return obj;
 }
-function merge(defaults, route, options) {
+function merge(defaults2, route, options) {
   if (typeof route === "string") {
     let [method, url] = route.split(" ");
     options = Object.assign(url ? { method, url } : { url: method }, options);
@@ -18895,10 +19020,10 @@ function merge(defaults, route, options) {
   options.headers = lowercaseKeys(options.headers);
   removeUndefinedProperties(options);
   removeUndefinedProperties(options.headers);
-  const mergedOptions = mergeDeep(defaults || {}, options);
+  const mergedOptions = mergeDeep(defaults2 || {}, options);
   if (options.url === "/graphql") {
-    if (defaults && defaults.mediaType.previews?.length) {
-      mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(
+    if (defaults2 && defaults2.mediaType.previews?.length) {
+      mergedOptions.mediaType.previews = defaults2.mediaType.previews.filter(
         (preview) => !mergedOptions.mediaType.previews.includes(preview)
       ).concat(mergedOptions.mediaType.previews);
     }
@@ -18965,8 +19090,8 @@ function isDefined(value) {
 function isKeyOperator(operator) {
   return operator === ";" || operator === "&" || operator === "?";
 }
-function getValues(context, operator, key, modifier) {
-  var value = context[key], result = [];
+function getValues(context3, operator, key, modifier) {
+  var value = context3[key], result = [];
   if (isDefined(value) && value !== "") {
     if (typeof value === "string" || typeof value === "number" || typeof value === "bigint" || typeof value === "boolean") {
       value = value.toString();
@@ -19030,7 +19155,7 @@ function parseUrl(template) {
     expand: expand.bind(null, template)
   };
 }
-function expand(template, context) {
+function expand(template, context3) {
   var operators = ["+", "#", ".", "/", ";", "?", "&"];
   template = template.replace(
     /\{([^\{\}]+)\}|([^\{\}]+)/g,
@@ -19044,7 +19169,7 @@ function expand(template, context) {
         }
         expression.split(/,/g).forEach(function(variable) {
           var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
-          values.push(getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+          values.push(getValues(context3, operator, tmp[1], tmp[2] || tmp[3]));
         });
         if (operator && operator !== "+") {
           var separator = ",";
@@ -19131,8 +19256,8 @@ function parse(options) {
     options.request ? { request: options.request } : null
   );
 }
-function endpointWithDefaults(defaults, route, options) {
-  return parse(merge(defaults, route, options));
+function endpointWithDefaults(defaults2, route, options) {
+  return parse(merge(defaults2, route, options));
 }
 function withDefaults(oldDefaults, newDefaults) {
   const DEFAULTS2 = merge(oldDefaults, newDefaults);
@@ -19502,7 +19627,7 @@ var init_json_with_bigint = __esm({
       try {
         const result = JSON.parse(
           "1",
-          (_, __, context) => !!context?.source && context.source === "1"
+          (_, __, context3) => !!context3?.source && context3.source === "1"
         );
         featureCache.set(parseFingerprint, result);
         return result;
@@ -19511,26 +19636,26 @@ var init_json_with_bigint = __esm({
         return false;
       }
     };
-    convertMarkedBigIntsReviver = (key, value, context, userReviver) => {
+    convertMarkedBigIntsReviver = (key, value, context3, userReviver) => {
       const isCustomFormatBigInt = typeof value === "string" && customFormat.test(value);
       if (isCustomFormatBigInt) return BigInt(value.slice(0, -1));
       const isNoiseValue = typeof value === "string" && noiseValue.test(value);
       if (isNoiseValue) return value.slice(0, -1);
       const hasUserReviver = typeof userReviver === "function";
       if (!hasUserReviver) return value;
-      return userReviver(key, value, context);
+      return userReviver(key, value, context3);
     };
     JSONParseV2 = (text, reviver) => {
-      return JSON.parse(text, (key, value, context) => {
+      return JSON.parse(text, (key, value, context3) => {
         const isNumber = typeof value === "number";
         const isOutOfBounds = value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER;
         const isBigNumber = isNumber && isOutOfBounds;
-        const isInt = context && intRegex.test(context.source);
+        const isInt = context3 && intRegex.test(context3.source);
         const isBigInt = isBigNumber && isInt;
-        if (isBigInt) return BigInt(context.source);
+        if (isBigInt) return BigInt(context3.source);
         const hasCustomReviver = typeof reviver === "function";
         if (!hasCustomReviver) return value;
-        return reviver(key, value, context);
+        return reviver(key, value, context3);
       });
     };
     MAX_INT = Number.MAX_SAFE_INTEGER.toString();
@@ -19601,7 +19726,7 @@ var init_json_with_bigint = __esm({
         const serializedData = serializeBigInts(text);
         return originalParse(
           serializedData,
-          (key, value, context) => convertMarkedBigIntsReviver(key, value, context, reviver)
+          (key, value, context3) => convertMarkedBigIntsReviver(key, value, context3, reviver)
         );
       } catch (error2) {
         if (error2 instanceof RangeError) {
@@ -19669,8 +19794,8 @@ function isPlainObject2(value) {
   return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
 }
 async function fetchWrapper(requestOptions) {
-  const fetch = requestOptions.request?.fetch || globalThis.fetch;
-  if (!fetch) {
+  const fetch2 = requestOptions.request?.fetch || globalThis.fetch;
+  if (!fetch2) {
     throw new Error(
       "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
     );
@@ -19686,7 +19811,7 @@ async function fetchWrapper(requestOptions) {
   );
   let fetchResponse;
   try {
-    fetchResponse = await fetch(requestOptions.url, {
+    fetchResponse = await fetch2(requestOptions.url, {
       method: requestOptions.method,
       body,
       redirect: requestOptions.request?.redirect,
@@ -19851,15 +19976,333 @@ var init_dist_bundle2 = __esm({
   }
 });
 
+// node_modules/@octokit/graphql/dist-bundle/index.js
+function _buildMessageForResponseErrors(data) {
+  return `Request failed due to following response errors:
+` + data.errors.map((e) => ` - ${e.message}`).join("\n");
+}
+function graphql(request2, query, options) {
+  if (options) {
+    if (typeof query === "string" && "query" in options) {
+      return Promise.reject(
+        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
+      );
+    }
+    for (const key in options) {
+      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
+      return Promise.reject(
+        new Error(
+          `[@octokit/graphql] "${key}" cannot be used as variable name`
+        )
+      );
+    }
+  }
+  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
+  const requestOptions = Object.keys(
+    parsedOptions
+  ).reduce((result, key) => {
+    if (NON_VARIABLE_OPTIONS.includes(key)) {
+      result[key] = parsedOptions[key];
+      return result;
+    }
+    if (!result.variables) {
+      result.variables = {};
+    }
+    result.variables[key] = parsedOptions[key];
+    return result;
+  }, {});
+  const baseUrl2 = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
+  if (GHES_V3_SUFFIX_REGEX.test(baseUrl2)) {
+    requestOptions.url = baseUrl2.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
+  }
+  return request2(requestOptions).then((response) => {
+    if (response.data.errors) {
+      const headers = {};
+      for (const key of Object.keys(response.headers)) {
+        headers[key] = response.headers[key];
+      }
+      throw new GraphqlResponseError(
+        requestOptions,
+        headers,
+        response.data
+      );
+    }
+    return response.data.data;
+  });
+}
+function withDefaults3(request2, newDefaults) {
+  const newRequest = request2.defaults(newDefaults);
+  const newApi = (query, options) => {
+    return graphql(newRequest, query, options);
+  };
+  return Object.assign(newApi, {
+    defaults: withDefaults3.bind(null, newRequest),
+    endpoint: newRequest.endpoint
+  });
+}
+function withCustomRequest(customRequest) {
+  return withDefaults3(customRequest, {
+    method: "POST",
+    url: "/graphql"
+  });
+}
+var VERSION3, GraphqlResponseError, NON_VARIABLE_OPTIONS, FORBIDDEN_VARIABLE_OPTIONS, GHES_V3_SUFFIX_REGEX, graphql2;
+var init_dist_bundle3 = __esm({
+  "node_modules/@octokit/graphql/dist-bundle/index.js"() {
+    init_dist_bundle2();
+    init_universal_user_agent();
+    VERSION3 = "0.0.0-development";
+    GraphqlResponseError = class extends Error {
+      constructor(request2, headers, response) {
+        super(_buildMessageForResponseErrors(response));
+        this.request = request2;
+        this.headers = headers;
+        this.response = response;
+        this.errors = response.errors;
+        this.data = response.data;
+        if (Error.captureStackTrace) {
+          Error.captureStackTrace(this, this.constructor);
+        }
+      }
+      request;
+      headers;
+      response;
+      name = "GraphqlResponseError";
+      errors;
+      data;
+    };
+    NON_VARIABLE_OPTIONS = [
+      "method",
+      "baseUrl",
+      "url",
+      "headers",
+      "request",
+      "query",
+      "mediaType",
+      "operationName"
+    ];
+    FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
+    GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
+    graphql2 = withDefaults3(request, {
+      headers: {
+        "user-agent": `octokit-graphql.js/${VERSION3} ${getUserAgent()}`
+      },
+      method: "POST",
+      url: "/graphql"
+    });
+  }
+});
+
+// node_modules/@octokit/auth-token/dist-bundle/index.js
+async function auth(token) {
+  const isApp = isJWT(token);
+  const isInstallation = token.startsWith("v1.") || token.startsWith("ghs_");
+  const isUserToServer = token.startsWith("ghu_");
+  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
+  return {
+    type: "token",
+    token,
+    tokenType
+  };
+}
+function withAuthorizationPrefix(token) {
+  if (token.split(/\./).length === 3) {
+    return `bearer ${token}`;
+  }
+  return `token ${token}`;
+}
+async function hook(token, request2, route, parameters) {
+  const endpoint2 = request2.endpoint.merge(
+    route,
+    parameters
+  );
+  endpoint2.headers.authorization = withAuthorizationPrefix(token);
+  return request2(endpoint2);
+}
+var b64url, sep3, jwtRE, isJWT, createTokenAuth;
+var init_dist_bundle4 = __esm({
+  "node_modules/@octokit/auth-token/dist-bundle/index.js"() {
+    b64url = "(?:[a-zA-Z0-9_-]+)";
+    sep3 = "\\.";
+    jwtRE = new RegExp(`^${b64url}${sep3}${b64url}${sep3}${b64url}$`);
+    isJWT = jwtRE.test.bind(jwtRE);
+    createTokenAuth = function createTokenAuth2(token) {
+      if (!token) {
+        throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
+      }
+      if (typeof token !== "string") {
+        throw new Error(
+          "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
+        );
+      }
+      token = token.replace(/^(token|bearer) +/i, "");
+      return Object.assign(auth.bind(null, token), {
+        hook: hook.bind(null, token)
+      });
+    };
+  }
+});
+
+// node_modules/@octokit/core/dist-src/version.js
+var VERSION4;
+var init_version = __esm({
+  "node_modules/@octokit/core/dist-src/version.js"() {
+    VERSION4 = "7.0.7";
+  }
+});
+
+// node_modules/@octokit/core/dist-src/index.js
+function createLogger(logger = {}) {
+  if (typeof logger.debug !== "function") {
+    logger.debug = noop2;
+  }
+  if (typeof logger.info !== "function") {
+    logger.info = noop2;
+  }
+  if (typeof logger.warn !== "function") {
+    logger.warn = consoleWarn;
+  }
+  if (typeof logger.error !== "function") {
+    logger.error = consoleError;
+  }
+  return logger;
+}
+var noop2, consoleWarn, consoleError, userAgentTrail, Octokit;
+var init_dist_src2 = __esm({
+  "node_modules/@octokit/core/dist-src/index.js"() {
+    init_universal_user_agent();
+    init_before_after_hook();
+    init_dist_bundle2();
+    init_dist_bundle3();
+    init_dist_bundle4();
+    init_version();
+    noop2 = () => {
+    };
+    consoleWarn = console.warn.bind(console);
+    consoleError = console.error.bind(console);
+    userAgentTrail = `octokit-core.js/${VERSION4} ${getUserAgent()}`;
+    Octokit = class {
+      static VERSION = VERSION4;
+      static defaults(defaults2) {
+        const OctokitWithDefaults = class extends this {
+          constructor(...args) {
+            const options = args[0] || {};
+            if (typeof defaults2 === "function") {
+              super(defaults2(options));
+              return;
+            }
+            super(
+              Object.assign(
+                {},
+                defaults2,
+                options,
+                options.userAgent && defaults2.userAgent ? {
+                  userAgent: `${options.userAgent} ${defaults2.userAgent}`
+                } : null
+              )
+            );
+          }
+        };
+        return OctokitWithDefaults;
+      }
+      static plugins = [];
+      /**
+       * Attach a plugin (or many) to your Octokit instance.
+       *
+       * @example
+       * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
+       */
+      static plugin(...newPlugins) {
+        const currentPlugins = this.plugins;
+        const NewOctokit = class extends this {
+          static plugins = currentPlugins.concat(
+            newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
+          );
+        };
+        return NewOctokit;
+      }
+      constructor(options = {}) {
+        const hook2 = new before_after_hook_default.Collection();
+        const requestDefaults = {
+          baseUrl: request.endpoint.DEFAULTS.baseUrl,
+          headers: {},
+          request: Object.assign({}, options.request, {
+            // @ts-ignore internal usage only, no need to type
+            hook: hook2.bind(null, "request")
+          }),
+          mediaType: {
+            previews: [],
+            format: ""
+          }
+        };
+        requestDefaults.headers["user-agent"] = options.userAgent ? `${options.userAgent} ${userAgentTrail}` : userAgentTrail;
+        if (options.baseUrl) {
+          requestDefaults.baseUrl = options.baseUrl;
+        }
+        if (options.previews) {
+          requestDefaults.mediaType.previews = options.previews;
+        }
+        if (options.timeZone) {
+          requestDefaults.headers["time-zone"] = options.timeZone;
+        }
+        this.request = request.defaults(requestDefaults);
+        this.graphql = withCustomRequest(this.request).defaults(requestDefaults);
+        this.log = createLogger(options.log);
+        this.hook = hook2;
+        if (!options.authStrategy) {
+          if (!options.auth) {
+            this.auth = async () => ({
+              type: "unauthenticated"
+            });
+          } else {
+            const auth2 = createTokenAuth(options.auth);
+            hook2.wrap("request", auth2.hook);
+            this.auth = auth2;
+          }
+        } else {
+          const { authStrategy, ...otherOptions } = options;
+          const auth2 = authStrategy(
+            Object.assign(
+              {
+                request: this.request,
+                log: this.log,
+                // we pass the current octokit instance as well as its constructor options
+                // to allow for authentication strategies that return a new octokit instance
+                // that shares the same internal state as the current one. The original
+                // requirement for this was the "event-octokit" authentication strategy
+                // of https://github.com/probot/octokit-auth-probot.
+                octokit: this,
+                octokitOptions: otherOptions
+              },
+              options.auth
+            )
+          );
+          hook2.wrap("request", auth2.hook);
+          this.auth = auth2;
+        }
+        const classConstructor = this.constructor;
+        for (let i = 0; i < classConstructor.plugins.length; ++i) {
+          Object.assign(this, classConstructor.plugins[i](this, options));
+        }
+      }
+      // assigned during constructor
+      request;
+      graphql;
+      log;
+      hook;
+      // TODO: type `octokit.auth` based on passed options.authStrategy
+      auth;
+    };
+  }
+});
+
 // node_modules/@actions/github/lib/context.js
-var require_context = __commonJS({
-  "node_modules/@actions/github/lib/context.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.Context = void 0;
-    var fs_1 = require("fs");
-    var os_1 = require("os");
-    var Context = class {
+var import_fs2, import_os3, Context;
+var init_context = __esm({
+  "node_modules/@actions/github/lib/context.js"() {
+    import_fs2 = require("fs");
+    import_os3 = require("os");
+    Context = class {
       /**
        * Hydrate the context from the environment
        */
@@ -19867,11 +20310,11 @@ var require_context = __commonJS({
         var _a, _b, _c;
         this.payload = {};
         if (process.env.GITHUB_EVENT_PATH) {
-          if ((0, fs_1.existsSync)(process.env.GITHUB_EVENT_PATH)) {
-            this.payload = JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: "utf8" }));
+          if ((0, import_fs2.existsSync)(process.env.GITHUB_EVENT_PATH)) {
+            this.payload = JSON.parse((0, import_fs2.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: "utf8" }));
           } else {
             const path8 = process.env.GITHUB_EVENT_PATH;
-            process.stdout.write(`GITHUB_EVENT_PATH ${path8} does not exist${os_1.EOL}`);
+            process.stdout.write(`GITHUB_EVENT_PATH ${path8} does not exist${import_os3.EOL}`);
           }
         }
         this.eventName = process.env.GITHUB_EVENT_NAME;
@@ -19906,7 +20349,6 @@ var require_context = __commonJS({
         throw new Error("context.repo requires a GITHUB_REPOSITORY environment variable like 'owner/repo'");
       }
     };
-    exports2.Context = Context;
   }
 });
 
@@ -20032,7 +20474,7 @@ var require_lib = __commonJS({
         return result;
       };
     })();
-    var __awaiter2 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+    var __awaiter3 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
       function adopt(value) {
         return value instanceof P ? value : new P(function(resolve4) {
           resolve4(value);
@@ -20140,8 +20582,8 @@ var require_lib = __commonJS({
         this.message = message;
       }
       readBody() {
-        return __awaiter2(this, void 0, void 0, function* () {
-          return new Promise((resolve4) => __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve4) => __awaiter3(this, void 0, void 0, function* () {
             let output = Buffer.alloc(0);
             this.message.on("data", (chunk) => {
               output = Buffer.concat([output, chunk]);
@@ -20153,8 +20595,8 @@ var require_lib = __commonJS({
         });
       }
       readBodyBuffer() {
-        return __awaiter2(this, void 0, void 0, function* () {
-          return new Promise((resolve4) => __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve4) => __awaiter3(this, void 0, void 0, function* () {
             const chunks = [];
             this.message.on("data", (chunk) => {
               chunks.push(chunk);
@@ -20171,7 +20613,7 @@ var require_lib = __commonJS({
       const parsedUrl = new URL(requestUrl);
       return parsedUrl.protocol === "https:";
     }
-    var HttpClient2 = class {
+    var HttpClient3 = class {
       constructor(userAgent2, handlers, requestOptions) {
         this._ignoreSslError = false;
         this._allowRedirects = true;
@@ -20210,42 +20652,42 @@ var require_lib = __commonJS({
         }
       }
       options(requestUrl, additionalHeaders) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return this.request("OPTIONS", requestUrl, null, additionalHeaders || {});
         });
       }
       get(requestUrl, additionalHeaders) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return this.request("GET", requestUrl, null, additionalHeaders || {});
         });
       }
       del(requestUrl, additionalHeaders) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return this.request("DELETE", requestUrl, null, additionalHeaders || {});
         });
       }
       post(requestUrl, data, additionalHeaders) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return this.request("POST", requestUrl, data, additionalHeaders || {});
         });
       }
       patch(requestUrl, data, additionalHeaders) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return this.request("PATCH", requestUrl, data, additionalHeaders || {});
         });
       }
       put(requestUrl, data, additionalHeaders) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return this.request("PUT", requestUrl, data, additionalHeaders || {});
         });
       }
       head(requestUrl, additionalHeaders) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return this.request("HEAD", requestUrl, null, additionalHeaders || {});
         });
       }
       sendStream(verb, requestUrl, stream, additionalHeaders) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return this.request(verb, requestUrl, stream, additionalHeaders);
         });
       }
@@ -20254,14 +20696,14 @@ var require_lib = __commonJS({
        * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
        */
       getJson(requestUrl_1) {
-        return __awaiter2(this, arguments, void 0, function* (requestUrl, additionalHeaders = {}) {
+        return __awaiter3(this, arguments, void 0, function* (requestUrl, additionalHeaders = {}) {
           additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
           const res = yield this.get(requestUrl, additionalHeaders);
           return this._processResponse(res, this.requestOptions);
         });
       }
       postJson(requestUrl_1, obj_1) {
-        return __awaiter2(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
           const data = JSON.stringify(obj, null, 2);
           additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
           additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
@@ -20270,7 +20712,7 @@ var require_lib = __commonJS({
         });
       }
       putJson(requestUrl_1, obj_1) {
-        return __awaiter2(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
           const data = JSON.stringify(obj, null, 2);
           additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
           additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
@@ -20279,7 +20721,7 @@ var require_lib = __commonJS({
         });
       }
       patchJson(requestUrl_1, obj_1) {
-        return __awaiter2(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
           const data = JSON.stringify(obj, null, 2);
           additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
           additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
@@ -20293,7 +20735,7 @@ var require_lib = __commonJS({
        * Prefer get, del, post and patch
        */
       request(verb, requestUrl, data, headers) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           if (this._disposed) {
             throw new Error("Client has already been disposed.");
           }
@@ -20367,7 +20809,7 @@ var require_lib = __commonJS({
        * @param data
        */
       requestRaw(info, data) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           return new Promise((resolve4, reject) => {
             function callbackForResult(err, res) {
               if (err) {
@@ -20616,15 +21058,15 @@ var require_lib = __commonJS({
         return baseUserAgent;
       }
       _performExponentialBackoff(retryNumber) {
-        return __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
           retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
           const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
           return new Promise((resolve4) => setTimeout(() => resolve4(), ms));
         });
       }
       _processResponse(res, options) {
-        return __awaiter2(this, void 0, void 0, function* () {
-          return new Promise((resolve4, reject) => __awaiter2(this, void 0, void 0, function* () {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve4, reject) => __awaiter3(this, void 0, void 0, function* () {
             const statusCode = res.message.statusCode || 0;
             const response = {
               statusCode,
@@ -20677,53 +21119,57 @@ var require_lib = __commonJS({
         });
       }
     };
-    exports2.HttpClient = HttpClient2;
+    exports2.HttpClient = HttpClient3;
     var lowercaseKeys2 = (obj) => Object.keys(obj).reduce((c, k) => (c[k.toLowerCase()] = obj[k], c), {});
   }
 });
 
 // node_modules/@actions/github/lib/internal/utils.js
-var require_utils2 = __commonJS({
-  "node_modules/@actions/github/lib/internal/utils.js"(exports2) {
-    "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
-      if (k2 === void 0) k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    }) : (function(o, m, k, k2) {
-      if (k2 === void 0) k2 = k;
-      o[k2] = m[k];
-    }));
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    }) : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
-      var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function(o2) {
-          var ar = [];
-          for (var k in o2) if (Object.prototype.hasOwnProperty.call(o2, k)) ar[ar.length] = k;
-          return ar;
-        };
-        return ownKeys(o);
-      };
-      return function(mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) {
-          for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        }
-        __setModuleDefault(result, mod);
-        return result;
-      };
-    })();
-    var __awaiter2 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+function getAuthString(token, options) {
+  if (!token && !options.auth) {
+    throw new Error("Parameter token or opts.auth is required");
+  } else if (token && options.auth) {
+    throw new Error("Parameters token and opts.auth may not both be specified");
+  }
+  return typeof options.auth === "string" ? options.auth : `token ${token}`;
+}
+function getProxyAgent(destinationUrl) {
+  const hc = new httpClient.HttpClient();
+  return hc.getAgent(destinationUrl);
+}
+function getProxyAgentDispatcher(destinationUrl) {
+  const hc = new httpClient.HttpClient();
+  return hc.getAgentDispatcher(destinationUrl);
+}
+function getProxyFetch(destinationUrl) {
+  const httpDispatcher = getProxyAgentDispatcher(destinationUrl);
+  const proxyFetch = (url, opts) => __awaiter2(this, void 0, void 0, function* () {
+    return (0, import_undici2.fetch)(url, Object.assign(Object.assign({}, opts), { dispatcher: httpDispatcher }));
+  });
+  return proxyFetch;
+}
+function getApiBaseUrl() {
+  return process.env["GITHUB_API_URL"] || "https://api.github.com";
+}
+function getUserAgentWithOrchestrationId(baseUserAgent) {
+  var _a;
+  const orchId = (_a = process.env["ACTIONS_ORCHESTRATION_ID"]) === null || _a === void 0 ? void 0 : _a.trim();
+  if (orchId) {
+    const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, "_");
+    const tag = `actions_orchestration_id/${sanitizedId}`;
+    if (baseUserAgent === null || baseUserAgent === void 0 ? void 0 : baseUserAgent.includes(tag))
+      return baseUserAgent;
+    const ua = baseUserAgent ? `${baseUserAgent} ` : "";
+    return `${ua}${tag}`;
+  }
+  return baseUserAgent;
+}
+var httpClient, import_undici2, __awaiter2;
+var init_utils = __esm({
+  "node_modules/@actions/github/lib/internal/utils.js"() {
+    httpClient = __toESM(require_lib(), 1);
+    import_undici2 = __toESM(require_undici(), 1);
+    __awaiter2 = function(thisArg, _arguments, P, generator) {
       function adopt(value) {
         return value instanceof P ? value : new P(function(resolve4) {
           resolve4(value);
@@ -20750,498 +21196,14 @@ var require_utils2 = __commonJS({
         step((generator = generator.apply(thisArg, _arguments || [])).next());
       });
     };
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.getAuthString = getAuthString;
-    exports2.getProxyAgent = getProxyAgent;
-    exports2.getProxyAgentDispatcher = getProxyAgentDispatcher;
-    exports2.getProxyFetch = getProxyFetch;
-    exports2.getApiBaseUrl = getApiBaseUrl;
-    var httpClient = __importStar(require_lib());
-    var undici_1 = require_undici();
-    function getAuthString(token, options) {
-      if (!token && !options.auth) {
-        throw new Error("Parameter token or opts.auth is required");
-      } else if (token && options.auth) {
-        throw new Error("Parameters token and opts.auth may not both be specified");
-      }
-      return typeof options.auth === "string" ? options.auth : `token ${token}`;
-    }
-    function getProxyAgent(destinationUrl) {
-      const hc = new httpClient.HttpClient();
-      return hc.getAgent(destinationUrl);
-    }
-    function getProxyAgentDispatcher(destinationUrl) {
-      const hc = new httpClient.HttpClient();
-      return hc.getAgentDispatcher(destinationUrl);
-    }
-    function getProxyFetch(destinationUrl) {
-      const httpDispatcher = getProxyAgentDispatcher(destinationUrl);
-      const proxyFetch = (url, opts) => __awaiter2(this, void 0, void 0, function* () {
-        return (0, undici_1.fetch)(url, Object.assign(Object.assign({}, opts), { dispatcher: httpDispatcher }));
-      });
-      return proxyFetch;
-    }
-    function getApiBaseUrl() {
-      return process.env["GITHUB_API_URL"] || "https://api.github.com";
-    }
-  }
-});
-
-// node_modules/@actions/github/node_modules/before-after-hook/lib/register.js
-function register2(state, name, method, options) {
-  if (typeof method !== "function") {
-    throw new Error("method for before hook must be a function");
-  }
-  if (!options) {
-    options = {};
-  }
-  if (Array.isArray(name)) {
-    return name.reverse().reduce((callback, name2) => {
-      return register2.bind(null, state, name2, callback, options);
-    }, method)();
-  }
-  return Promise.resolve().then(() => {
-    if (!state.registry[name]) {
-      return method(options);
-    }
-    return state.registry[name].reduce((method2, registered) => {
-      return registered.hook.bind(null, method2, options);
-    }, method)();
-  });
-}
-var init_register = __esm({
-  "node_modules/@actions/github/node_modules/before-after-hook/lib/register.js"() {
-  }
-});
-
-// node_modules/@actions/github/node_modules/before-after-hook/lib/add.js
-function addHook2(state, kind, name, hook3) {
-  const orig = hook3;
-  if (!state.registry[name]) {
-    state.registry[name] = [];
-  }
-  if (kind === "before") {
-    hook3 = (method, options) => {
-      return Promise.resolve().then(orig.bind(null, options)).then(method.bind(null, options));
-    };
-  }
-  if (kind === "after") {
-    hook3 = (method, options) => {
-      let result;
-      return Promise.resolve().then(method.bind(null, options)).then((result_) => {
-        result = result_;
-        return orig(result, options);
-      }).then(() => {
-        return result;
-      });
-    };
-  }
-  if (kind === "error") {
-    hook3 = (method, options) => {
-      return Promise.resolve().then(method.bind(null, options)).catch((error2) => {
-        return orig(error2, options);
-      });
-    };
-  }
-  state.registry[name].push({
-    hook: hook3,
-    orig
-  });
-}
-var init_add = __esm({
-  "node_modules/@actions/github/node_modules/before-after-hook/lib/add.js"() {
-  }
-});
-
-// node_modules/@actions/github/node_modules/before-after-hook/lib/remove.js
-function removeHook2(state, name, method) {
-  if (!state.registry[name]) {
-    return;
-  }
-  const index = state.registry[name].map((registered) => {
-    return registered.orig;
-  }).indexOf(method);
-  if (index === -1) {
-    return;
-  }
-  state.registry[name].splice(index, 1);
-}
-var init_remove = __esm({
-  "node_modules/@actions/github/node_modules/before-after-hook/lib/remove.js"() {
-  }
-});
-
-// node_modules/@actions/github/node_modules/before-after-hook/index.js
-function bindApi2(hook3, state, name) {
-  const removeHookRef = bindable2(removeHook2, null).apply(
-    null,
-    name ? [state, name] : [state]
-  );
-  hook3.api = { remove: removeHookRef };
-  hook3.remove = removeHookRef;
-  ["before", "error", "after", "wrap"].forEach((kind) => {
-    const args = name ? [state, kind, name] : [state, kind];
-    hook3[kind] = hook3.api[kind] = bindable2(addHook2, null).apply(null, args);
-  });
-}
-function Singular2() {
-  const singularHookName = Symbol("Singular");
-  const singularHookState = {
-    registry: {}
-  };
-  const singularHook = register2.bind(null, singularHookState, singularHookName);
-  bindApi2(singularHook, singularHookState, singularHookName);
-  return singularHook;
-}
-function Collection2() {
-  const state = {
-    registry: {}
-  };
-  const hook3 = register2.bind(null, state);
-  bindApi2(hook3, state);
-  return hook3;
-}
-var bind2, bindable2, before_after_hook_default2;
-var init_before_after_hook = __esm({
-  "node_modules/@actions/github/node_modules/before-after-hook/index.js"() {
-    init_register();
-    init_add();
-    init_remove();
-    bind2 = Function.bind;
-    bindable2 = bind2.bind(bind2);
-    before_after_hook_default2 = { Singular: Singular2, Collection: Collection2 };
-  }
-});
-
-// node_modules/@actions/github/node_modules/@octokit/graphql/dist-bundle/index.js
-function _buildMessageForResponseErrors2(data) {
-  return `Request failed due to following response errors:
-` + data.errors.map((e) => ` - ${e.message}`).join("\n");
-}
-function graphql3(request2, query, options) {
-  if (options) {
-    if (typeof query === "string" && "query" in options) {
-      return Promise.reject(
-        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
-      );
-    }
-    for (const key in options) {
-      if (!FORBIDDEN_VARIABLE_OPTIONS2.includes(key)) continue;
-      return Promise.reject(
-        new Error(
-          `[@octokit/graphql] "${key}" cannot be used as variable name`
-        )
-      );
-    }
-  }
-  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
-  const requestOptions = Object.keys(
-    parsedOptions
-  ).reduce((result, key) => {
-    if (NON_VARIABLE_OPTIONS2.includes(key)) {
-      result[key] = parsedOptions[key];
-      return result;
-    }
-    if (!result.variables) {
-      result.variables = {};
-    }
-    result.variables[key] = parsedOptions[key];
-    return result;
-  }, {});
-  const baseUrl = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
-  if (GHES_V3_SUFFIX_REGEX2.test(baseUrl)) {
-    requestOptions.url = baseUrl.replace(GHES_V3_SUFFIX_REGEX2, "/api/graphql");
-  }
-  return request2(requestOptions).then((response) => {
-    if (response.data.errors) {
-      const headers = {};
-      for (const key of Object.keys(response.headers)) {
-        headers[key] = response.headers[key];
-      }
-      throw new GraphqlResponseError2(
-        requestOptions,
-        headers,
-        response.data
-      );
-    }
-    return response.data.data;
-  });
-}
-function withDefaults4(request2, newDefaults) {
-  const newRequest = request2.defaults(newDefaults);
-  const newApi = (query, options) => {
-    return graphql3(newRequest, query, options);
-  };
-  return Object.assign(newApi, {
-    defaults: withDefaults4.bind(null, newRequest),
-    endpoint: newRequest.endpoint
-  });
-}
-function withCustomRequest2(customRequest) {
-  return withDefaults4(customRequest, {
-    method: "POST",
-    url: "/graphql"
-  });
-}
-var VERSION9, GraphqlResponseError2, NON_VARIABLE_OPTIONS2, FORBIDDEN_VARIABLE_OPTIONS2, GHES_V3_SUFFIX_REGEX2, graphql22;
-var init_dist_bundle3 = __esm({
-  "node_modules/@actions/github/node_modules/@octokit/graphql/dist-bundle/index.js"() {
-    init_dist_bundle2();
-    init_universal_user_agent();
-    VERSION9 = "0.0.0-development";
-    GraphqlResponseError2 = class extends Error {
-      constructor(request2, headers, response) {
-        super(_buildMessageForResponseErrors2(response));
-        this.request = request2;
-        this.headers = headers;
-        this.response = response;
-        this.errors = response.errors;
-        this.data = response.data;
-        if (Error.captureStackTrace) {
-          Error.captureStackTrace(this, this.constructor);
-        }
-      }
-      request;
-      headers;
-      response;
-      name = "GraphqlResponseError";
-      errors;
-      data;
-    };
-    NON_VARIABLE_OPTIONS2 = [
-      "method",
-      "baseUrl",
-      "url",
-      "headers",
-      "request",
-      "query",
-      "mediaType",
-      "operationName"
-    ];
-    FORBIDDEN_VARIABLE_OPTIONS2 = ["query", "method", "url"];
-    GHES_V3_SUFFIX_REGEX2 = /\/api\/v3\/?$/;
-    graphql22 = withDefaults4(request, {
-      headers: {
-        "user-agent": `octokit-graphql.js/${VERSION9} ${getUserAgent()}`
-      },
-      method: "POST",
-      url: "/graphql"
-    });
-  }
-});
-
-// node_modules/@actions/github/node_modules/@octokit/auth-token/dist-bundle/index.js
-async function auth2(token) {
-  const isApp = isJWT2(token);
-  const isInstallation = token.startsWith("v1.") || token.startsWith("ghs_");
-  const isUserToServer = token.startsWith("ghu_");
-  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
-  return {
-    type: "token",
-    token,
-    tokenType
-  };
-}
-function withAuthorizationPrefix2(token) {
-  if (token.split(/\./).length === 3) {
-    return `bearer ${token}`;
-  }
-  return `token ${token}`;
-}
-async function hook2(token, request2, route, parameters) {
-  const endpoint2 = request2.endpoint.merge(
-    route,
-    parameters
-  );
-  endpoint2.headers.authorization = withAuthorizationPrefix2(token);
-  return request2(endpoint2);
-}
-var b64url2, sep4, jwtRE2, isJWT2, createTokenAuth3;
-var init_dist_bundle4 = __esm({
-  "node_modules/@actions/github/node_modules/@octokit/auth-token/dist-bundle/index.js"() {
-    b64url2 = "(?:[a-zA-Z0-9_-]+)";
-    sep4 = "\\.";
-    jwtRE2 = new RegExp(`^${b64url2}${sep4}${b64url2}${sep4}${b64url2}$`);
-    isJWT2 = jwtRE2.test.bind(jwtRE2);
-    createTokenAuth3 = function createTokenAuth22(token) {
-      if (!token) {
-        throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
-      }
-      if (typeof token !== "string") {
-        throw new Error(
-          "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
-        );
-      }
-      token = token.replace(/^(token|bearer) +/i, "");
-      return Object.assign(auth2.bind(null, token), {
-        hook: hook2.bind(null, token)
-      });
-    };
-  }
-});
-
-// node_modules/@actions/github/node_modules/@octokit/core/dist-src/version.js
-var VERSION10;
-var init_version = __esm({
-  "node_modules/@actions/github/node_modules/@octokit/core/dist-src/version.js"() {
-    VERSION10 = "7.0.7";
-  }
-});
-
-// node_modules/@actions/github/node_modules/@octokit/core/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
-  Octokit: () => Octokit3
-});
-function createLogger2(logger = {}) {
-  if (typeof logger.debug !== "function") {
-    logger.debug = noop3;
-  }
-  if (typeof logger.info !== "function") {
-    logger.info = noop3;
-  }
-  if (typeof logger.warn !== "function") {
-    logger.warn = consoleWarn2;
-  }
-  if (typeof logger.error !== "function") {
-    logger.error = consoleError2;
-  }
-  return logger;
-}
-var noop3, consoleWarn2, consoleError2, userAgentTrail2, Octokit3;
-var init_dist_src2 = __esm({
-  "node_modules/@actions/github/node_modules/@octokit/core/dist-src/index.js"() {
-    init_universal_user_agent();
-    init_before_after_hook();
-    init_dist_bundle2();
-    init_dist_bundle3();
-    init_dist_bundle4();
-    init_version();
-    noop3 = () => {
-    };
-    consoleWarn2 = console.warn.bind(console);
-    consoleError2 = console.error.bind(console);
-    userAgentTrail2 = `octokit-core.js/${VERSION10} ${getUserAgent()}`;
-    Octokit3 = class {
-      static VERSION = VERSION10;
-      static defaults(defaults) {
-        const OctokitWithDefaults = class extends this {
-          constructor(...args) {
-            const options = args[0] || {};
-            if (typeof defaults === "function") {
-              super(defaults(options));
-              return;
-            }
-            super(
-              Object.assign(
-                {},
-                defaults,
-                options,
-                options.userAgent && defaults.userAgent ? {
-                  userAgent: `${options.userAgent} ${defaults.userAgent}`
-                } : null
-              )
-            );
-          }
-        };
-        return OctokitWithDefaults;
-      }
-      static plugins = [];
-      /**
-       * Attach a plugin (or many) to your Octokit instance.
-       *
-       * @example
-       * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
-       */
-      static plugin(...newPlugins) {
-        const currentPlugins = this.plugins;
-        const NewOctokit = class extends this {
-          static plugins = currentPlugins.concat(
-            newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
-          );
-        };
-        return NewOctokit;
-      }
-      constructor(options = {}) {
-        const hook3 = new before_after_hook_default2.Collection();
-        const requestDefaults = {
-          baseUrl: request.endpoint.DEFAULTS.baseUrl,
-          headers: {},
-          request: Object.assign({}, options.request, {
-            // @ts-ignore internal usage only, no need to type
-            hook: hook3.bind(null, "request")
-          }),
-          mediaType: {
-            previews: [],
-            format: ""
-          }
-        };
-        requestDefaults.headers["user-agent"] = options.userAgent ? `${options.userAgent} ${userAgentTrail2}` : userAgentTrail2;
-        if (options.baseUrl) {
-          requestDefaults.baseUrl = options.baseUrl;
-        }
-        if (options.previews) {
-          requestDefaults.mediaType.previews = options.previews;
-        }
-        if (options.timeZone) {
-          requestDefaults.headers["time-zone"] = options.timeZone;
-        }
-        this.request = request.defaults(requestDefaults);
-        this.graphql = withCustomRequest2(this.request).defaults(requestDefaults);
-        this.log = createLogger2(options.log);
-        this.hook = hook3;
-        if (!options.authStrategy) {
-          if (!options.auth) {
-            this.auth = async () => ({
-              type: "unauthenticated"
-            });
-          } else {
-            const auth3 = createTokenAuth3(options.auth);
-            hook3.wrap("request", auth3.hook);
-            this.auth = auth3;
-          }
-        } else {
-          const { authStrategy, ...otherOptions } = options;
-          const auth3 = authStrategy(
-            Object.assign(
-              {
-                request: this.request,
-                log: this.log,
-                // we pass the current octokit instance as well as its constructor options
-                // to allow for authentication strategies that return a new octokit instance
-                // that shares the same internal state as the current one. The original
-                // requirement for this was the "event-octokit" authentication strategy
-                // of https://github.com/probot/octokit-auth-probot.
-                octokit: this,
-                octokitOptions: otherOptions
-              },
-              options.auth
-            )
-          );
-          hook3.wrap("request", auth3.hook);
-          this.auth = auth3;
-        }
-        const classConstructor = this.constructor;
-        for (let i = 0; i < classConstructor.plugins.length; ++i) {
-          Object.assign(this, classConstructor.plugins[i](this, options));
-        }
-      }
-      // assigned during constructor
-      request;
-      graphql;
-      log;
-      hook;
-      // TODO: type `octokit.auth` based on passed options.authStrategy
-      auth;
-    };
   }
 });
 
 // node_modules/@actions/github/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/version.js
-var VERSION11;
+var VERSION9;
 var init_version2 = __esm({
   "node_modules/@actions/github/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/version.js"() {
-    VERSION11 = "17.0.0";
+    VERSION9 = "17.0.0";
   }
 });
 
@@ -23550,8 +23512,8 @@ function endpointsToMethods2(octokit) {
   }
   return newMethods;
 }
-function decorate2(octokit, scope, methodName, defaults, decorations) {
-  const requestWithDefaults = octokit.request.defaults(defaults);
+function decorate2(octokit, scope, methodName, defaults2, decorations) {
+  const requestWithDefaults = octokit.request.defaults(defaults2);
   function withDecorations(...args) {
     let options = requestWithDefaults.endpoint.merge(...args);
     if (decorations.mapToData) {
@@ -23598,14 +23560,14 @@ var init_endpoints_to_methods = __esm({
     endpointMethodsMap2 = /* @__PURE__ */ new Map();
     for (const [scope, endpoints] of Object.entries(endpoints_default2)) {
       for (const [methodName, endpoint2] of Object.entries(endpoints)) {
-        const [route, defaults, decorations] = endpoint2;
+        const [route, defaults2, decorations] = endpoint2;
         const [method, url] = route.split(/ /);
         const endpointDefaults = Object.assign(
           {
             method,
             url
           },
-          defaults
+          defaults2
         );
         if (!endpointMethodsMap2.has(scope)) {
           endpointMethodsMap2.set(scope, /* @__PURE__ */ new Map());
@@ -23672,11 +23634,6 @@ var init_endpoints_to_methods = __esm({
 });
 
 // node_modules/@actions/github/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/index.js
-var dist_src_exports2 = {};
-__export(dist_src_exports2, {
-  legacyRestEndpointMethods: () => legacyRestEndpointMethods2,
-  restEndpointMethods: () => restEndpointMethods2
-});
 function restEndpointMethods2(octokit) {
   const api = endpointsToMethods2(octokit);
   return {
@@ -23694,19 +23651,12 @@ var init_dist_src3 = __esm({
   "node_modules/@actions/github/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/index.js"() {
     init_version2();
     init_endpoints_to_methods();
-    restEndpointMethods2.VERSION = VERSION11;
-    legacyRestEndpointMethods2.VERSION = VERSION11;
+    restEndpointMethods2.VERSION = VERSION9;
+    legacyRestEndpointMethods2.VERSION = VERSION9;
   }
 });
 
 // node_modules/@actions/github/node_modules/@octokit/plugin-paginate-rest/dist-bundle/index.js
-var dist_bundle_exports = {};
-__export(dist_bundle_exports, {
-  composePaginateRest: () => composePaginateRest2,
-  isPaginatingEndpoint: () => isPaginatingEndpoint,
-  paginateRest: () => paginateRest2,
-  paginatingEndpoints: () => paginatingEndpoints
-});
 function normalizePaginatedListResponse2(response) {
   if (!response.data) {
     return {
@@ -23809,13 +23759,6 @@ function gather2(octokit, results, iterator22, mapFn) {
     return gather2(octokit, results, iterator22, mapFn);
   });
 }
-function isPaginatingEndpoint(arg) {
-  if (typeof arg === "string") {
-    return paginatingEndpoints.includes(arg);
-  } else {
-    return false;
-  }
-}
 function paginateRest2(octokit) {
   return {
     paginate: Object.assign(paginate2.bind(null, octokit), {
@@ -23823,411 +23766,68 @@ function paginateRest2(octokit) {
     })
   };
 }
-var VERSION12, composePaginateRest2, paginatingEndpoints;
+var VERSION10, composePaginateRest2;
 var init_dist_bundle5 = __esm({
   "node_modules/@actions/github/node_modules/@octokit/plugin-paginate-rest/dist-bundle/index.js"() {
-    VERSION12 = "0.0.0-development";
+    VERSION10 = "0.0.0-development";
     composePaginateRest2 = Object.assign(paginate2, {
       iterator: iterator2
     });
-    paginatingEndpoints = [
-      "GET /advisories",
-      "GET /app/hook/deliveries",
-      "GET /app/installation-requests",
-      "GET /app/installations",
-      "GET /assignments/{assignment_id}/accepted_assignments",
-      "GET /classrooms",
-      "GET /classrooms/{classroom_id}/assignments",
-      "GET /enterprises/{enterprise}/code-security/configurations",
-      "GET /enterprises/{enterprise}/code-security/configurations/{configuration_id}/repositories",
-      "GET /enterprises/{enterprise}/dependabot/alerts",
-      "GET /enterprises/{enterprise}/teams",
-      "GET /enterprises/{enterprise}/teams/{enterprise-team}/memberships",
-      "GET /enterprises/{enterprise}/teams/{enterprise-team}/organizations",
-      "GET /events",
-      "GET /gists",
-      "GET /gists/public",
-      "GET /gists/starred",
-      "GET /gists/{gist_id}/comments",
-      "GET /gists/{gist_id}/commits",
-      "GET /gists/{gist_id}/forks",
-      "GET /installation/repositories",
-      "GET /issues",
-      "GET /licenses",
-      "GET /marketplace_listing/plans",
-      "GET /marketplace_listing/plans/{plan_id}/accounts",
-      "GET /marketplace_listing/stubbed/plans",
-      "GET /marketplace_listing/stubbed/plans/{plan_id}/accounts",
-      "GET /networks/{owner}/{repo}/events",
-      "GET /notifications",
-      "GET /organizations",
-      "GET /organizations/{org}/dependabot/repository-access",
-      "GET /orgs/{org}/actions/cache/usage-by-repository",
-      "GET /orgs/{org}/actions/hosted-runners",
-      "GET /orgs/{org}/actions/permissions/repositories",
-      "GET /orgs/{org}/actions/permissions/self-hosted-runners/repositories",
-      "GET /orgs/{org}/actions/runner-groups",
-      "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/hosted-runners",
-      "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/repositories",
-      "GET /orgs/{org}/actions/runner-groups/{runner_group_id}/runners",
-      "GET /orgs/{org}/actions/runners",
-      "GET /orgs/{org}/actions/secrets",
-      "GET /orgs/{org}/actions/secrets/{secret_name}/repositories",
-      "GET /orgs/{org}/actions/variables",
-      "GET /orgs/{org}/actions/variables/{name}/repositories",
-      "GET /orgs/{org}/attestations/repositories",
-      "GET /orgs/{org}/attestations/{subject_digest}",
-      "GET /orgs/{org}/blocks",
-      "GET /orgs/{org}/campaigns",
-      "GET /orgs/{org}/code-scanning/alerts",
-      "GET /orgs/{org}/code-security/configurations",
-      "GET /orgs/{org}/code-security/configurations/{configuration_id}/repositories",
-      "GET /orgs/{org}/codespaces",
-      "GET /orgs/{org}/codespaces/secrets",
-      "GET /orgs/{org}/codespaces/secrets/{secret_name}/repositories",
-      "GET /orgs/{org}/copilot/billing/seats",
-      "GET /orgs/{org}/copilot/metrics",
-      "GET /orgs/{org}/dependabot/alerts",
-      "GET /orgs/{org}/dependabot/secrets",
-      "GET /orgs/{org}/dependabot/secrets/{secret_name}/repositories",
-      "GET /orgs/{org}/events",
-      "GET /orgs/{org}/failed_invitations",
-      "GET /orgs/{org}/hooks",
-      "GET /orgs/{org}/hooks/{hook_id}/deliveries",
-      "GET /orgs/{org}/insights/api/route-stats/{actor_type}/{actor_id}",
-      "GET /orgs/{org}/insights/api/subject-stats",
-      "GET /orgs/{org}/insights/api/user-stats/{user_id}",
-      "GET /orgs/{org}/installations",
-      "GET /orgs/{org}/invitations",
-      "GET /orgs/{org}/invitations/{invitation_id}/teams",
-      "GET /orgs/{org}/issues",
-      "GET /orgs/{org}/members",
-      "GET /orgs/{org}/members/{username}/codespaces",
-      "GET /orgs/{org}/migrations",
-      "GET /orgs/{org}/migrations/{migration_id}/repositories",
-      "GET /orgs/{org}/organization-roles/{role_id}/teams",
-      "GET /orgs/{org}/organization-roles/{role_id}/users",
-      "GET /orgs/{org}/outside_collaborators",
-      "GET /orgs/{org}/packages",
-      "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
-      "GET /orgs/{org}/personal-access-token-requests",
-      "GET /orgs/{org}/personal-access-token-requests/{pat_request_id}/repositories",
-      "GET /orgs/{org}/personal-access-tokens",
-      "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories",
-      "GET /orgs/{org}/private-registries",
-      "GET /orgs/{org}/projects",
-      "GET /orgs/{org}/projectsV2",
-      "GET /orgs/{org}/projectsV2/{project_number}/fields",
-      "GET /orgs/{org}/projectsV2/{project_number}/items",
-      "GET /orgs/{org}/properties/values",
-      "GET /orgs/{org}/public_members",
-      "GET /orgs/{org}/repos",
-      "GET /orgs/{org}/rulesets",
-      "GET /orgs/{org}/rulesets/rule-suites",
-      "GET /orgs/{org}/rulesets/{ruleset_id}/history",
-      "GET /orgs/{org}/secret-scanning/alerts",
-      "GET /orgs/{org}/security-advisories",
-      "GET /orgs/{org}/settings/immutable-releases/repositories",
-      "GET /orgs/{org}/settings/network-configurations",
-      "GET /orgs/{org}/team/{team_slug}/copilot/metrics",
-      "GET /orgs/{org}/teams",
-      "GET /orgs/{org}/teams/{team_slug}/discussions",
-      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments",
-      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions",
-      "GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions",
-      "GET /orgs/{org}/teams/{team_slug}/invitations",
-      "GET /orgs/{org}/teams/{team_slug}/members",
-      "GET /orgs/{org}/teams/{team_slug}/projects",
-      "GET /orgs/{org}/teams/{team_slug}/repos",
-      "GET /orgs/{org}/teams/{team_slug}/teams",
-      "GET /projects/{project_id}/collaborators",
-      "GET /repos/{owner}/{repo}/actions/artifacts",
-      "GET /repos/{owner}/{repo}/actions/caches",
-      "GET /repos/{owner}/{repo}/actions/organization-secrets",
-      "GET /repos/{owner}/{repo}/actions/organization-variables",
-      "GET /repos/{owner}/{repo}/actions/runners",
-      "GET /repos/{owner}/{repo}/actions/runs",
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs",
-      "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
-      "GET /repos/{owner}/{repo}/actions/secrets",
-      "GET /repos/{owner}/{repo}/actions/variables",
-      "GET /repos/{owner}/{repo}/actions/workflows",
-      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
-      "GET /repos/{owner}/{repo}/activity",
-      "GET /repos/{owner}/{repo}/assignees",
-      "GET /repos/{owner}/{repo}/attestations/{subject_digest}",
-      "GET /repos/{owner}/{repo}/branches",
-      "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations",
-      "GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs",
-      "GET /repos/{owner}/{repo}/code-scanning/alerts",
-      "GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_number}/instances",
-      "GET /repos/{owner}/{repo}/code-scanning/analyses",
-      "GET /repos/{owner}/{repo}/codespaces",
-      "GET /repos/{owner}/{repo}/codespaces/devcontainers",
-      "GET /repos/{owner}/{repo}/codespaces/secrets",
-      "GET /repos/{owner}/{repo}/collaborators",
-      "GET /repos/{owner}/{repo}/comments",
-      "GET /repos/{owner}/{repo}/comments/{comment_id}/reactions",
-      "GET /repos/{owner}/{repo}/commits",
-      "GET /repos/{owner}/{repo}/commits/{commit_sha}/comments",
-      "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
-      "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
-      "GET /repos/{owner}/{repo}/commits/{ref}/check-suites",
-      "GET /repos/{owner}/{repo}/commits/{ref}/status",
-      "GET /repos/{owner}/{repo}/commits/{ref}/statuses",
-      "GET /repos/{owner}/{repo}/compare/{basehead}",
-      "GET /repos/{owner}/{repo}/compare/{base}...{head}",
-      "GET /repos/{owner}/{repo}/contributors",
-      "GET /repos/{owner}/{repo}/dependabot/alerts",
-      "GET /repos/{owner}/{repo}/dependabot/secrets",
-      "GET /repos/{owner}/{repo}/deployments",
-      "GET /repos/{owner}/{repo}/deployments/{deployment_id}/statuses",
-      "GET /repos/{owner}/{repo}/environments",
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment-branch-policies",
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/deployment_protection_rules/apps",
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets",
-      "GET /repos/{owner}/{repo}/environments/{environment_name}/variables",
-      "GET /repos/{owner}/{repo}/events",
-      "GET /repos/{owner}/{repo}/forks",
-      "GET /repos/{owner}/{repo}/hooks",
-      "GET /repos/{owner}/{repo}/hooks/{hook_id}/deliveries",
-      "GET /repos/{owner}/{repo}/invitations",
-      "GET /repos/{owner}/{repo}/issues",
-      "GET /repos/{owner}/{repo}/issues/comments",
-      "GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions",
-      "GET /repos/{owner}/{repo}/issues/events",
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by",
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocking",
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/events",
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/labels",
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/reactions",
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
-      "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline",
-      "GET /repos/{owner}/{repo}/keys",
-      "GET /repos/{owner}/{repo}/labels",
-      "GET /repos/{owner}/{repo}/milestones",
-      "GET /repos/{owner}/{repo}/milestones/{milestone_number}/labels",
-      "GET /repos/{owner}/{repo}/notifications",
-      "GET /repos/{owner}/{repo}/pages/builds",
-      "GET /repos/{owner}/{repo}/projects",
-      "GET /repos/{owner}/{repo}/pulls",
-      "GET /repos/{owner}/{repo}/pulls/comments",
-      "GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions",
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
-      "GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments",
-      "GET /repos/{owner}/{repo}/releases",
-      "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
-      "GET /repos/{owner}/{repo}/releases/{release_id}/reactions",
-      "GET /repos/{owner}/{repo}/rules/branches/{branch}",
-      "GET /repos/{owner}/{repo}/rulesets",
-      "GET /repos/{owner}/{repo}/rulesets/rule-suites",
-      "GET /repos/{owner}/{repo}/rulesets/{ruleset_id}/history",
-      "GET /repos/{owner}/{repo}/secret-scanning/alerts",
-      "GET /repos/{owner}/{repo}/secret-scanning/alerts/{alert_number}/locations",
-      "GET /repos/{owner}/{repo}/security-advisories",
-      "GET /repos/{owner}/{repo}/stargazers",
-      "GET /repos/{owner}/{repo}/subscribers",
-      "GET /repos/{owner}/{repo}/tags",
-      "GET /repos/{owner}/{repo}/teams",
-      "GET /repos/{owner}/{repo}/topics",
-      "GET /repositories",
-      "GET /search/code",
-      "GET /search/commits",
-      "GET /search/issues",
-      "GET /search/labels",
-      "GET /search/repositories",
-      "GET /search/topics",
-      "GET /search/users",
-      "GET /teams/{team_id}/discussions",
-      "GET /teams/{team_id}/discussions/{discussion_number}/comments",
-      "GET /teams/{team_id}/discussions/{discussion_number}/comments/{comment_number}/reactions",
-      "GET /teams/{team_id}/discussions/{discussion_number}/reactions",
-      "GET /teams/{team_id}/invitations",
-      "GET /teams/{team_id}/members",
-      "GET /teams/{team_id}/projects",
-      "GET /teams/{team_id}/repos",
-      "GET /teams/{team_id}/teams",
-      "GET /user/blocks",
-      "GET /user/codespaces",
-      "GET /user/codespaces/secrets",
-      "GET /user/emails",
-      "GET /user/followers",
-      "GET /user/following",
-      "GET /user/gpg_keys",
-      "GET /user/installations",
-      "GET /user/installations/{installation_id}/repositories",
-      "GET /user/issues",
-      "GET /user/keys",
-      "GET /user/marketplace_purchases",
-      "GET /user/marketplace_purchases/stubbed",
-      "GET /user/memberships/orgs",
-      "GET /user/migrations",
-      "GET /user/migrations/{migration_id}/repositories",
-      "GET /user/orgs",
-      "GET /user/packages",
-      "GET /user/packages/{package_type}/{package_name}/versions",
-      "GET /user/public_emails",
-      "GET /user/repos",
-      "GET /user/repository_invitations",
-      "GET /user/social_accounts",
-      "GET /user/ssh_signing_keys",
-      "GET /user/starred",
-      "GET /user/subscriptions",
-      "GET /user/teams",
-      "GET /users",
-      "GET /users/{username}/attestations/{subject_digest}",
-      "GET /users/{username}/events",
-      "GET /users/{username}/events/orgs/{org}",
-      "GET /users/{username}/events/public",
-      "GET /users/{username}/followers",
-      "GET /users/{username}/following",
-      "GET /users/{username}/gists",
-      "GET /users/{username}/gpg_keys",
-      "GET /users/{username}/keys",
-      "GET /users/{username}/orgs",
-      "GET /users/{username}/packages",
-      "GET /users/{username}/projects",
-      "GET /users/{username}/projectsV2",
-      "GET /users/{username}/projectsV2/{project_number}/fields",
-      "GET /users/{username}/projectsV2/{project_number}/items",
-      "GET /users/{username}/received_events",
-      "GET /users/{username}/received_events/public",
-      "GET /users/{username}/repos",
-      "GET /users/{username}/social_accounts",
-      "GET /users/{username}/ssh_signing_keys",
-      "GET /users/{username}/starred",
-      "GET /users/{username}/subscriptions"
-    ];
-    paginateRest2.VERSION = VERSION12;
+    paginateRest2.VERSION = VERSION10;
   }
 });
 
 // node_modules/@actions/github/lib/utils.js
-var require_utils3 = __commonJS({
-  "node_modules/@actions/github/lib/utils.js"(exports2) {
-    "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
-      if (k2 === void 0) k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    }) : (function(o, m, k, k2) {
-      if (k2 === void 0) k2 = k;
-      o[k2] = m[k];
-    }));
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    }) : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
-      var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function(o2) {
-          var ar = [];
-          for (var k in o2) if (Object.prototype.hasOwnProperty.call(o2, k)) ar[ar.length] = k;
-          return ar;
-        };
-        return ownKeys(o);
-      };
-      return function(mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) {
-          for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        }
-        __setModuleDefault(result, mod);
-        return result;
-      };
-    })();
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.GitHub = exports2.defaults = exports2.context = void 0;
-    exports2.getOctokitOptions = getOctokitOptions;
-    var Context = __importStar(require_context());
-    var Utils = __importStar(require_utils2());
-    var core_1 = (init_dist_src2(), __toCommonJS(dist_src_exports));
-    var plugin_rest_endpoint_methods_1 = (init_dist_src3(), __toCommonJS(dist_src_exports2));
-    var plugin_paginate_rest_1 = (init_dist_bundle5(), __toCommonJS(dist_bundle_exports));
-    exports2.context = new Context.Context();
-    var baseUrl = Utils.getApiBaseUrl();
-    exports2.defaults = {
+function getOctokitOptions(token, options) {
+  const opts = Object.assign({}, options || {});
+  const auth2 = getAuthString(token, opts);
+  if (auth2) {
+    opts.auth = auth2;
+  }
+  const userAgent2 = getUserAgentWithOrchestrationId(opts.userAgent);
+  if (userAgent2) {
+    opts.userAgent = userAgent2;
+  }
+  return opts;
+}
+var context, baseUrl, defaults, GitHub;
+var init_utils2 = __esm({
+  "node_modules/@actions/github/lib/utils.js"() {
+    init_context();
+    init_utils();
+    init_dist_src2();
+    init_dist_src3();
+    init_dist_bundle5();
+    init_utils();
+    context = new Context();
+    baseUrl = getApiBaseUrl();
+    defaults = {
       baseUrl,
       request: {
-        agent: Utils.getProxyAgent(baseUrl),
-        fetch: Utils.getProxyFetch(baseUrl)
+        agent: getProxyAgent(baseUrl),
+        fetch: getProxyFetch(baseUrl)
       }
     };
-    exports2.GitHub = core_1.Octokit.plugin(plugin_rest_endpoint_methods_1.restEndpointMethods, plugin_paginate_rest_1.paginateRest).defaults(exports2.defaults);
-    function getOctokitOptions(token, options) {
-      const opts = Object.assign({}, options || {});
-      const auth3 = Utils.getAuthString(token, opts);
-      if (auth3) {
-        opts.auth = auth3;
-      }
-      return opts;
-    }
+    GitHub = Octokit.plugin(restEndpointMethods2, paginateRest2).defaults(defaults);
   }
 });
 
 // node_modules/@actions/github/lib/github.js
-var require_github = __commonJS({
-  "node_modules/@actions/github/lib/github.js"(exports2) {
-    "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
-      if (k2 === void 0) k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    }) : (function(o, m, k, k2) {
-      if (k2 === void 0) k2 = k;
-      o[k2] = m[k];
-    }));
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    }) : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
-      var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function(o2) {
-          var ar = [];
-          for (var k in o2) if (Object.prototype.hasOwnProperty.call(o2, k)) ar[ar.length] = k;
-          return ar;
-        };
-        return ownKeys(o);
-      };
-      return function(mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) {
-          for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        }
-        __setModuleDefault(result, mod);
-        return result;
-      };
-    })();
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.context = void 0;
-    exports2.getOctokit = getOctokit;
-    var Context = __importStar(require_context());
-    var utils_1 = require_utils3();
-    exports2.context = new Context.Context();
-    function getOctokit(token, options, ...additionalPlugins) {
-      const GitHubWithPlugins = utils_1.GitHub.plugin(...additionalPlugins);
-      return new GitHubWithPlugins((0, utils_1.getOctokitOptions)(token, options));
-    }
+var github_exports = {};
+__export(github_exports, {
+  context: () => context2,
+  getOctokit: () => getOctokit
+});
+function getOctokit(token, options, ...additionalPlugins) {
+  const GitHubWithPlugins = GitHub.plugin(...additionalPlugins);
+  return new GitHubWithPlugins(getOctokitOptions(token, options));
+}
+var context2;
+var init_github = __esm({
+  "node_modules/@actions/github/lib/github.js"() {
+    init_context();
+    init_utils2();
+    context2 = new Context();
   }
 });
 
@@ -25923,411 +25523,8 @@ function validateConfig(config) {
   }
 }
 
-// node_modules/@octokit/rest/node_modules/@octokit/core/dist-src/index.js
-init_universal_user_agent();
-
-// node_modules/@octokit/rest/node_modules/before-after-hook/lib/register.js
-function register(state, name, method, options) {
-  if (typeof method !== "function") {
-    throw new Error("method for before hook must be a function");
-  }
-  if (!options) {
-    options = {};
-  }
-  if (Array.isArray(name)) {
-    return name.reverse().reduce((callback, name2) => {
-      return register.bind(null, state, name2, callback, options);
-    }, method)();
-  }
-  return Promise.resolve().then(() => {
-    if (!state.registry[name]) {
-      return method(options);
-    }
-    return state.registry[name].reduce((method2, registered) => {
-      return registered.hook.bind(null, method2, options);
-    }, method)();
-  });
-}
-
-// node_modules/@octokit/rest/node_modules/before-after-hook/lib/add.js
-function addHook(state, kind, name, hook3) {
-  const orig = hook3;
-  if (!state.registry[name]) {
-    state.registry[name] = [];
-  }
-  if (kind === "before") {
-    hook3 = (method, options) => {
-      return Promise.resolve().then(orig.bind(null, options)).then(method.bind(null, options));
-    };
-  }
-  if (kind === "after") {
-    hook3 = (method, options) => {
-      let result;
-      return Promise.resolve().then(method.bind(null, options)).then((result_) => {
-        result = result_;
-        return orig(result, options);
-      }).then(() => {
-        return result;
-      });
-    };
-  }
-  if (kind === "error") {
-    hook3 = (method, options) => {
-      return Promise.resolve().then(method.bind(null, options)).catch((error2) => {
-        return orig(error2, options);
-      });
-    };
-  }
-  state.registry[name].push({
-    hook: hook3,
-    orig
-  });
-}
-
-// node_modules/@octokit/rest/node_modules/before-after-hook/lib/remove.js
-function removeHook(state, name, method) {
-  if (!state.registry[name]) {
-    return;
-  }
-  const index = state.registry[name].map((registered) => {
-    return registered.orig;
-  }).indexOf(method);
-  if (index === -1) {
-    return;
-  }
-  state.registry[name].splice(index, 1);
-}
-
-// node_modules/@octokit/rest/node_modules/before-after-hook/index.js
-var bind = Function.bind;
-var bindable = bind.bind(bind);
-function bindApi(hook3, state, name) {
-  const removeHookRef = bindable(removeHook, null).apply(
-    null,
-    name ? [state, name] : [state]
-  );
-  hook3.api = { remove: removeHookRef };
-  hook3.remove = removeHookRef;
-  ["before", "error", "after", "wrap"].forEach((kind) => {
-    const args = name ? [state, kind, name] : [state, kind];
-    hook3[kind] = hook3.api[kind] = bindable(addHook, null).apply(null, args);
-  });
-}
-function Singular() {
-  const singularHookName = Symbol("Singular");
-  const singularHookState = {
-    registry: {}
-  };
-  const singularHook = register.bind(null, singularHookState, singularHookName);
-  bindApi(singularHook, singularHookState, singularHookName);
-  return singularHook;
-}
-function Collection() {
-  const state = {
-    registry: {}
-  };
-  const hook3 = register.bind(null, state);
-  bindApi(hook3, state);
-  return hook3;
-}
-var before_after_hook_default = { Singular, Collection };
-
-// node_modules/@octokit/rest/node_modules/@octokit/core/dist-src/index.js
-init_dist_bundle2();
-
-// node_modules/@octokit/rest/node_modules/@octokit/graphql/dist-bundle/index.js
-init_dist_bundle2();
-init_universal_user_agent();
-var VERSION3 = "0.0.0-development";
-function _buildMessageForResponseErrors(data) {
-  return `Request failed due to following response errors:
-` + data.errors.map((e) => ` - ${e.message}`).join("\n");
-}
-var GraphqlResponseError = class extends Error {
-  constructor(request2, headers, response) {
-    super(_buildMessageForResponseErrors(response));
-    this.request = request2;
-    this.headers = headers;
-    this.response = response;
-    this.errors = response.errors;
-    this.data = response.data;
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
-  }
-  request;
-  headers;
-  response;
-  name = "GraphqlResponseError";
-  errors;
-  data;
-};
-var NON_VARIABLE_OPTIONS = [
-  "method",
-  "baseUrl",
-  "url",
-  "headers",
-  "request",
-  "query",
-  "mediaType",
-  "operationName"
-];
-var FORBIDDEN_VARIABLE_OPTIONS = ["query", "method", "url"];
-var GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
-function graphql(request2, query, options) {
-  if (options) {
-    if (typeof query === "string" && "query" in options) {
-      return Promise.reject(
-        new Error(`[@octokit/graphql] "query" cannot be used as variable name`)
-      );
-    }
-    for (const key in options) {
-      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
-      return Promise.reject(
-        new Error(
-          `[@octokit/graphql] "${key}" cannot be used as variable name`
-        )
-      );
-    }
-  }
-  const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
-  const requestOptions = Object.keys(
-    parsedOptions
-  ).reduce((result, key) => {
-    if (NON_VARIABLE_OPTIONS.includes(key)) {
-      result[key] = parsedOptions[key];
-      return result;
-    }
-    if (!result.variables) {
-      result.variables = {};
-    }
-    result.variables[key] = parsedOptions[key];
-    return result;
-  }, {});
-  const baseUrl = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
-  if (GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
-    requestOptions.url = baseUrl.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
-  }
-  return request2(requestOptions).then((response) => {
-    if (response.data.errors) {
-      const headers = {};
-      for (const key of Object.keys(response.headers)) {
-        headers[key] = response.headers[key];
-      }
-      throw new GraphqlResponseError(
-        requestOptions,
-        headers,
-        response.data
-      );
-    }
-    return response.data.data;
-  });
-}
-function withDefaults3(request2, newDefaults) {
-  const newRequest = request2.defaults(newDefaults);
-  const newApi = (query, options) => {
-    return graphql(newRequest, query, options);
-  };
-  return Object.assign(newApi, {
-    defaults: withDefaults3.bind(null, newRequest),
-    endpoint: newRequest.endpoint
-  });
-}
-var graphql2 = withDefaults3(request, {
-  headers: {
-    "user-agent": `octokit-graphql.js/${VERSION3} ${getUserAgent()}`
-  },
-  method: "POST",
-  url: "/graphql"
-});
-function withCustomRequest(customRequest) {
-  return withDefaults3(customRequest, {
-    method: "POST",
-    url: "/graphql"
-  });
-}
-
-// node_modules/@octokit/rest/node_modules/@octokit/auth-token/dist-bundle/index.js
-var b64url = "(?:[a-zA-Z0-9_-]+)";
-var sep3 = "\\.";
-var jwtRE = new RegExp(`^${b64url}${sep3}${b64url}${sep3}${b64url}$`);
-var isJWT = jwtRE.test.bind(jwtRE);
-async function auth(token) {
-  const isApp = isJWT(token);
-  const isInstallation = token.startsWith("v1.") || token.startsWith("ghs_");
-  const isUserToServer = token.startsWith("ghu_");
-  const tokenType = isApp ? "app" : isInstallation ? "installation" : isUserToServer ? "user-to-server" : "oauth";
-  return {
-    type: "token",
-    token,
-    tokenType
-  };
-}
-function withAuthorizationPrefix(token) {
-  if (token.split(/\./).length === 3) {
-    return `bearer ${token}`;
-  }
-  return `token ${token}`;
-}
-async function hook(token, request2, route, parameters) {
-  const endpoint2 = request2.endpoint.merge(
-    route,
-    parameters
-  );
-  endpoint2.headers.authorization = withAuthorizationPrefix(token);
-  return request2(endpoint2);
-}
-var createTokenAuth = function createTokenAuth2(token) {
-  if (!token) {
-    throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
-  }
-  if (typeof token !== "string") {
-    throw new Error(
-      "[@octokit/auth-token] Token passed to createTokenAuth is not a string"
-    );
-  }
-  token = token.replace(/^(token|bearer) +/i, "");
-  return Object.assign(auth.bind(null, token), {
-    hook: hook.bind(null, token)
-  });
-};
-
-// node_modules/@octokit/rest/node_modules/@octokit/core/dist-src/version.js
-var VERSION4 = "7.0.7";
-
-// node_modules/@octokit/rest/node_modules/@octokit/core/dist-src/index.js
-var noop2 = () => {
-};
-var consoleWarn = console.warn.bind(console);
-var consoleError = console.error.bind(console);
-function createLogger(logger = {}) {
-  if (typeof logger.debug !== "function") {
-    logger.debug = noop2;
-  }
-  if (typeof logger.info !== "function") {
-    logger.info = noop2;
-  }
-  if (typeof logger.warn !== "function") {
-    logger.warn = consoleWarn;
-  }
-  if (typeof logger.error !== "function") {
-    logger.error = consoleError;
-  }
-  return logger;
-}
-var userAgentTrail = `octokit-core.js/${VERSION4} ${getUserAgent()}`;
-var Octokit = class {
-  static VERSION = VERSION4;
-  static defaults(defaults) {
-    const OctokitWithDefaults = class extends this {
-      constructor(...args) {
-        const options = args[0] || {};
-        if (typeof defaults === "function") {
-          super(defaults(options));
-          return;
-        }
-        super(
-          Object.assign(
-            {},
-            defaults,
-            options,
-            options.userAgent && defaults.userAgent ? {
-              userAgent: `${options.userAgent} ${defaults.userAgent}`
-            } : null
-          )
-        );
-      }
-    };
-    return OctokitWithDefaults;
-  }
-  static plugins = [];
-  /**
-   * Attach a plugin (or many) to your Octokit instance.
-   *
-   * @example
-   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
-   */
-  static plugin(...newPlugins) {
-    const currentPlugins = this.plugins;
-    const NewOctokit = class extends this {
-      static plugins = currentPlugins.concat(
-        newPlugins.filter((plugin) => !currentPlugins.includes(plugin))
-      );
-    };
-    return NewOctokit;
-  }
-  constructor(options = {}) {
-    const hook3 = new before_after_hook_default.Collection();
-    const requestDefaults = {
-      baseUrl: request.endpoint.DEFAULTS.baseUrl,
-      headers: {},
-      request: Object.assign({}, options.request, {
-        // @ts-ignore internal usage only, no need to type
-        hook: hook3.bind(null, "request")
-      }),
-      mediaType: {
-        previews: [],
-        format: ""
-      }
-    };
-    requestDefaults.headers["user-agent"] = options.userAgent ? `${options.userAgent} ${userAgentTrail}` : userAgentTrail;
-    if (options.baseUrl) {
-      requestDefaults.baseUrl = options.baseUrl;
-    }
-    if (options.previews) {
-      requestDefaults.mediaType.previews = options.previews;
-    }
-    if (options.timeZone) {
-      requestDefaults.headers["time-zone"] = options.timeZone;
-    }
-    this.request = request.defaults(requestDefaults);
-    this.graphql = withCustomRequest(this.request).defaults(requestDefaults);
-    this.log = createLogger(options.log);
-    this.hook = hook3;
-    if (!options.authStrategy) {
-      if (!options.auth) {
-        this.auth = async () => ({
-          type: "unauthenticated"
-        });
-      } else {
-        const auth3 = createTokenAuth(options.auth);
-        hook3.wrap("request", auth3.hook);
-        this.auth = auth3;
-      }
-    } else {
-      const { authStrategy, ...otherOptions } = options;
-      const auth3 = authStrategy(
-        Object.assign(
-          {
-            request: this.request,
-            log: this.log,
-            // we pass the current octokit instance as well as its constructor options
-            // to allow for authentication strategies that return a new octokit instance
-            // that shares the same internal state as the current one. The original
-            // requirement for this was the "event-octokit" authentication strategy
-            // of https://github.com/probot/octokit-auth-probot.
-            octokit: this,
-            octokitOptions: otherOptions
-          },
-          options.auth
-        )
-      );
-      hook3.wrap("request", auth3.hook);
-      this.auth = auth3;
-    }
-    const classConstructor = this.constructor;
-    for (let i = 0; i < classConstructor.plugins.length; ++i) {
-      Object.assign(this, classConstructor.plugins[i](this, options));
-    }
-  }
-  // assigned during constructor
-  request;
-  graphql;
-  log;
-  hook;
-  // TODO: type `octokit.auth` based on passed options.authStrategy
-  auth;
-};
+// node_modules/@octokit/rest/dist-src/index.js
+init_dist_src2();
 
 // node_modules/@octokit/plugin-request-log/dist-src/version.js
 var VERSION5 = "6.0.0";
@@ -28771,14 +27968,14 @@ var endpoints_default = Endpoints;
 var endpointMethodsMap = /* @__PURE__ */ new Map();
 for (const [scope, endpoints] of Object.entries(endpoints_default)) {
   for (const [methodName, endpoint2] of Object.entries(endpoints)) {
-    const [route, defaults, decorations] = endpoint2;
+    const [route, defaults2, decorations] = endpoint2;
     const [method, url] = route.split(/ /);
     const endpointDefaults = Object.assign(
       {
         method,
         url
       },
-      defaults
+      defaults2
     );
     if (!endpointMethodsMap.has(scope)) {
       endpointMethodsMap.set(scope, /* @__PURE__ */ new Map());
@@ -28848,8 +28045,8 @@ function endpointsToMethods(octokit) {
   }
   return newMethods;
 }
-function decorate(octokit, scope, methodName, defaults, decorations) {
-  const requestWithDefaults = octokit.request.defaults(defaults);
+function decorate(octokit, scope, methodName, defaults2, decorations) {
+  const requestWithDefaults = octokit.request.defaults(defaults2);
   function withDecorations(...args) {
     let options = requestWithDefaults.endpoint.merge(...args);
     if (decorations.mapToData) {
@@ -28954,8 +28151,8 @@ async function publishPrComment(options) {
     throw new Error("comment-marker must not be empty");
   }
   const octokit = new Octokit2({ auth: githubToken });
-  const { context } = await Promise.resolve().then(() => __toESM(require_github(), 1));
-  const { owner, repo } = context.repo;
+  const { context: context3 } = await Promise.resolve().then(() => (init_github(), github_exports));
+  const { owner, repo } = context3.repo;
   const expectedAuthor = await resolveExpectedAuthor(octokit, commentAuthorLogin);
   const existing = await findExistingComment(octokit, owner, repo, prNumber, commentMarker, expectedAuthor);
   if (existing) {
@@ -29117,7 +28314,6 @@ content-type/dist/index.js:
   (* v8 ignore next -- @preserve *)
   (* v8 ignore else -- @preserve *)
 
-@octokit/graphql/dist-bundle/index.js:
 @octokit/graphql/dist-bundle/index.js:
   (* v8 ignore if -- @preserve *)
 */
