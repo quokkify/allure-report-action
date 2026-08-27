@@ -14185,7 +14185,7 @@ var require_fetch = __commonJS({
             fetchParams.controller.terminate(e);
           }
         };
-        requestBody = async function* () {
+        requestBody = (async function* () {
           try {
             for await (const bytes of request2.body.stream) {
               yield* processBodyChunk(bytes);
@@ -14194,7 +14194,7 @@ var require_fetch = __commonJS({
           } catch (err) {
             processBodyError(err);
           }
-        }();
+        })();
       }
       try {
         const { body, status, statusText, headersList, socket } = await dispatch({ body: requestBody });
@@ -19995,7 +19995,7 @@ var require_proxy = __commonJS({
 var require_lib = __commonJS({
   "node_modules/@actions/github/node_modules/@actions/http-client/lib/index.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -20004,16 +20004,16 @@ var require_lib = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -20031,7 +20031,7 @@ var require_lib = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     var __awaiter2 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
       function adopt(value) {
         return value instanceof P ? value : new P(function(resolve4) {
@@ -20686,7 +20686,7 @@ var require_lib = __commonJS({
 var require_utils2 = __commonJS({
   "node_modules/@actions/github/lib/internal/utils.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -20695,16 +20695,16 @@ var require_utils2 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -20722,7 +20722,7 @@ var require_utils2 = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     var __awaiter2 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
       function adopt(value) {
         return value instanceof P ? value : new P(function(resolve4) {
@@ -24111,7 +24111,7 @@ var init_dist_bundle5 = __esm({
 var require_utils3 = __commonJS({
   "node_modules/@actions/github/lib/utils.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -24120,16 +24120,16 @@ var require_utils3 = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -24147,7 +24147,7 @@ var require_utils3 = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GitHub = exports2.defaults = exports2.context = void 0;
     exports2.getOctokitOptions = getOctokitOptions;
@@ -24181,7 +24181,7 @@ var require_utils3 = __commonJS({
 var require_github = __commonJS({
   "node_modules/@actions/github/lib/github.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       var desc = Object.getOwnPropertyDescriptor(m, k);
       if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -24190,16 +24190,16 @@ var require_github = __commonJS({
         } };
       }
       Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
+    }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
       Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
+    }) : function(o, v) {
       o["default"] = v;
     });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ function() {
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
       var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function(o2) {
           var ar = [];
@@ -24217,7 +24217,7 @@ var require_github = __commonJS({
         __setModuleDefault(result, mod);
         return result;
       };
-    }();
+    })();
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.context = void 0;
     exports2.getOctokit = getOctokit;
@@ -25456,6 +25456,13 @@ var MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
 var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
 var MODULE_VARIABLES_METADATA2 = ".allure-module-variables.json";
 var MAX_SANITIZED_BYTES = 2 * 1024 * 1024 * 1024;
+function normalizeResultTimestamps(document) {
+  const start = typeof document.start === "number" && document.start > 0 ? document.start : 1;
+  const normalizedStart = Math.floor(start);
+  const stop = typeof document.stop === "number" && document.stop > 0 ? document.stop : start + 1;
+  document.start = normalizedStart;
+  document.stop = Math.max(normalizedStart + 1, Math.ceil(stop));
+}
 function parseModuleFragment(fragmentPath) {
   const stat2 = fs8.lstatSync(fragmentPath);
   if (!stat2.isFile() || stat2.isSymbolicLink()) {
@@ -25542,6 +25549,7 @@ function attributedResultBuffer(file, moduleName, moduleLabel) {
   const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
   labels.push({ name: moduleLabel, value: moduleName });
   document.labels = labels;
+  normalizeResultTimestamps(document);
   return Buffer.from(`${JSON.stringify(document)}
 `, "utf8");
 }
@@ -29001,9 +29009,9 @@ async function run() {
       });
     }
     if (config.categoriesFile) {
-      const fs11 = await import("node:fs");
+      const fs12 = await import("node:fs");
       const path8 = await import("node:path");
-      fs11.cpSync(config.categoriesFile, path8.join(config.resultsDirectory, "categories.json"), {
+      fs12.cpSync(config.categoriesFile, path8.join(config.resultsDirectory, "categories.json"), {
         force: true
       });
     }
@@ -29034,6 +29042,10 @@ async function run() {
     ], { stdio: "inherit" });
     if (allureGenerate.status !== 0) {
       throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
+    }
+    const fs11 = await import("node:fs");
+    if (!fs11.existsSync(import_node_path.default.join(config.reportDirectory, "index.html"))) {
+      throw new Error(`Allure generate did not produce ${import_node_path.default.join(config.reportDirectory, "index.html")}`);
     }
     runBadges({
       resultsDir: config.resultsDirectory,
@@ -29106,8 +29118,6 @@ content-type/dist/index.js:
   (* v8 ignore else -- @preserve *)
 
 @octokit/graphql/dist-bundle/index.js:
-  (* v8 ignore if -- @preserve *)
-
 @octokit/graphql/dist-bundle/index.js:
   (* v8 ignore if -- @preserve *)
 */
