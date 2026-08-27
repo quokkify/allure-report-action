@@ -1,0 +1,1 @@
+{"id":"4c4a29c3e954567d97e9a9cc26f07624","fullName":"tests/cli.test.ts#sanitize-results CLI rejects empty output without filesystem mutation","name":"rejects empty output without filesystem mutation","status":"passed","testResultsByEnv":{"default":"6e9d1f9a7478522064639e74cd4f28d4"}}
