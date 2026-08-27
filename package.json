@@ -29,7 +29,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "3.0.1",
-    "@actions/github": "8.0.1",
+    "@actions/github": "9.1.1",
     "@octokit/core": "^6.1.2",
     "@octokit/plugin-paginate-rest": "^14.0.0",
     "@octokit/plugin-rest-endpoint-methods": "^16.0.0",
