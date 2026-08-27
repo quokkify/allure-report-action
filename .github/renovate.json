@@ -15,7 +15,7 @@
       "customType": "regex",
       "fileMatch": [".github/workflows/ci\\.yml$"],
       "matchStrings": [
-        "uses: quokkify/project-toolkit/.github/workflows/node-ci\\.yml@(?<currentValue>v?\\d+\\.\\d+\\.\\d+)"
+        "uses: quokkify/project-toolkit/.github/workflows/node-ci\\.yml@(?<currentValue>v?\\d+\\.\\d+\\.\\d+|[a-f0-9]{40})"
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "quokkify/project-toolkit"
