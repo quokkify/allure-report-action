@@ -39,7 +39,7 @@
     "@types/node": "^22.5.0",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
-    "allure-vitest": "^3.0.6",
+    "allure-vitest": "^3.11.0",
     "esbuild": "^0.25.0",
     "eslint": "^9.10.0",
     "eslint-config-prettier": "^10.0.0",

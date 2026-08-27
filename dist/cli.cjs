@@ -143,6 +143,13 @@ function attributedResultBuffer(file, moduleName, moduleLabel) {
   const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
   labels.push({ name: moduleLabel, value: moduleName });
   document.labels = labels;
+  const now = Date.now();
+  if (typeof document.start !== "number" || document.start <= 0) {
+    document.start = now;
+  }
+  if (typeof document.stop !== "number" || document.stop <= 0) {
+    document.stop = document.start + 1;
+  }
   return Buffer.from(`${JSON.stringify(document)}
 `, "utf8");
 }
