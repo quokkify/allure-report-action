@@ -158,15 +158,44 @@ function rejectActiveAttachment(name, data) {
     throw new Error(`Active content in Allure attachment is not allowed: ${name}`);
   }
 }
+function pathContains(parent, child) {
+  const relative3 = path.relative(parent, child);
+  return relative3 === "" || !path.isAbsolute(relative3) && relative3 !== ".." && !relative3.startsWith(`..${path.sep}`);
+}
+function collectAttachmentReferences(node, inputName, referenced) {
+  if (!node || typeof node !== "object" || Array.isArray(node)) {
+    throw new Error(`Malformed executable node in ${inputName}`);
+  }
+  const executable = node;
+  if (executable.attachments !== void 0 && !Array.isArray(executable.attachments)) {
+    throw new Error(`Malformed attachment references: ${inputName}`);
+  }
+  for (const attachment of executable.attachments ?? []) {
+    if (!attachment || typeof attachment !== "object" || Array.isArray(attachment) || typeof attachment.source !== "string" || !safeResultName(attachment.source)) {
+      throw new Error(`Malformed attachment reference in ${inputName}`);
+    }
+    referenced.add(attachment.source);
+  }
+  if (executable.steps !== void 0 && !Array.isArray(executable.steps)) {
+    throw new Error(`Malformed executable steps in ${inputName}`);
+  }
+  for (const step of executable.steps ?? []) {
+    collectAttachmentReferences(step, inputName, referenced);
+  }
+}
 function sanitizeResults(options) {
+  if (!options.inputDir.trim())
+    throw new Error("--input must not be empty");
+  if (!options.outputDir.trim())
+    throw new Error("--output must not be empty");
   const input = path.resolve(options.inputDir);
   const output = path.resolve(options.outputDir);
+  if (pathContains(input, output) || pathContains(output, input)) {
+    throw new Error("Sanitized Allure results directory must not overlap the input directory");
+  }
   const inputStat = fs.lstatSync(input);
   if (!inputStat.isDirectory() || inputStat.isSymbolicLink()) {
     throw new Error(`Allure results input must be a regular directory: ${options.inputDir}`);
-  }
-  if (input === output || output.startsWith(`${input}${path.sep}`)) {
-    throw new Error("Sanitized Allure results directory must be outside the input directory");
   }
   const regular = /* @__PURE__ */ new Map();
   const referenced = /* @__PURE__ */ new Set();
@@ -199,14 +228,17 @@ function sanitizeResults(options) {
         throw new Error(`Allure input must be a JSON object: ${entry.name}`);
       }
       if (entry.name.endsWith("-result.json")) {
-        const attachments = document.attachments;
-        if (attachments !== void 0 && !Array.isArray(attachments))
-          throw new Error(`Malformed attachment references: ${entry.name}`);
-        for (const attachment of attachments ?? []) {
-          if (!attachment || typeof attachment.source !== "string" || !safeResultName(attachment.source)) {
-            throw new Error(`Malformed attachment reference in ${entry.name}`);
+        collectAttachmentReferences(document, entry.name, referenced);
+      } else {
+        const container = document;
+        for (const property of ["befores", "afters"]) {
+          const fixtures = container[property];
+          if (fixtures !== void 0 && !Array.isArray(fixtures)) {
+            throw new Error(`Malformed container ${property}: ${entry.name}`);
           }
-          referenced.add(attachment.source);
+          for (const fixture of fixtures ?? []) {
+            collectAttachmentReferences(fixture, entry.name, referenced);
+          }
         }
       }
     }
@@ -1262,6 +1294,14 @@ function getArg(args, name) {
   const value = index >= 0 ? args[index + 1] : void 0;
   return value ?? "";
 }
+function getRequiredArg(args, name) {
+  const index = args.indexOf(name);
+  const value = index >= 0 ? args[index + 1] : void 0;
+  if (value === void 0 || !value.trim() || value.startsWith("--")) {
+    throw new Error(`${name} is required and must not be empty`);
+  }
+  return value;
+}
 function getFlag(args, name) {
   return args.includes(name);
 }
@@ -1270,7 +1310,10 @@ async function main() {
   try {
     switch (command) {
       case "sanitize-results": {
-        sanitizeResults({ inputDir: getArg(args, "--input"), outputDir: getArg(args, "--output") });
+        sanitizeResults({
+          inputDir: getRequiredArg(args, "--input"),
+          outputDir: getRequiredArg(args, "--output")
+        });
         break;
       }
       case "prepare-results": {

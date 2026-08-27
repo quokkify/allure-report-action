@@ -27,6 +27,15 @@ function getArg(args: string[], name: string): string {
   return value ?? '';
 }
 
+function getRequiredArg(args: string[], name: string): string {
+  const index = args.indexOf(name);
+  const value = index >= 0 ? args[index + 1] : undefined;
+  if (value === undefined || !value.trim() || value.startsWith('--')) {
+    throw new Error(`${name} is required and must not be empty`);
+  }
+  return value;
+}
+
 function getFlag(args: string[], name: string): boolean {
   return args.includes(name);
 }
@@ -37,7 +46,10 @@ async function main(): Promise<void> {
   try {
     switch (command) {
       case 'sanitize-results': {
-        sanitizeResults({ inputDir: getArg(args, '--input'), outputDir: getArg(args, '--output') });
+        sanitizeResults({
+          inputDir: getRequiredArg(args, '--input'),
+          outputDir: getRequiredArg(args, '--output'),
+        });
         break;
       }
       case 'prepare-results': {

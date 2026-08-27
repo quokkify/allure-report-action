@@ -366,4 +366,114 @@ describe('Prepare Results', () => {
       sanitizeResults({ inputDir: input, outputDir: path.join(tempDir, 'sanitized') })
     ).toThrow('Only regular Allure result files');
   });
+
+  it('rejects equal, parent, and child sanitizer paths before filesystem mutation', () => {
+    const input = path.join(tempDir, 'downloaded');
+    fs.mkdirSync(input);
+    writeResult(input, 'case', { uuid: 'case' });
+    const sentinel = path.join(tempDir, 'sentinel.txt');
+    fs.writeFileSync(sentinel, 'unchanged');
+
+    for (const output of [input, path.join(input, 'child'), tempDir]) {
+      expect(() => sanitizeResults({ inputDir: input, outputDir: output })).toThrow(
+        'must not overlap'
+      );
+      expect(fs.readFileSync(sentinel, 'utf8')).toBe('unchanged');
+      expect(fs.existsSync(path.join(input, 'case-result.json'))).toBe(true);
+    }
+  });
+
+  it('allows sibling and path-prefix sanitizer outputs', () => {
+    for (const [inputName, outputName] of [
+      ['input', 'output'],
+      ['results', 'results-copy'],
+    ]) {
+      const input = path.join(tempDir, inputName);
+      const output = path.join(tempDir, outputName);
+      fs.mkdirSync(input);
+      writeResult(input, 'case', { uuid: 'case' });
+
+      sanitizeResults({ inputDir: input, outputDir: output });
+
+      expect(fs.existsSync(path.join(output, 'case-result.json'))).toBe(true);
+    }
+  });
+
+  it('collects nested result-step and container fixture attachments recursively', () => {
+    const input = path.join(tempDir, 'downloaded');
+    const output = path.join(tempDir, 'sanitized');
+    fs.mkdirSync(input);
+    writeResult(input, 'case', {
+      uuid: 'case',
+      attachments: [{ source: 'top.txt' }],
+      steps: [
+        {
+          attachments: [{ source: 'step.txt' }],
+          steps: [{ attachments: [{ source: 'nested-step.txt' }] }],
+        },
+      ],
+    });
+    fs.writeFileSync(
+      path.join(input, 'fixture-container.json'),
+      JSON.stringify({
+        befores: [
+          {
+            attachments: [{ source: 'before.txt' }],
+            steps: [{ attachments: [{ source: 'before-step.txt' }] }],
+          },
+        ],
+        afters: [{ steps: [{ attachments: [{ source: 'after-step.txt' }] }] }],
+      })
+    );
+    for (const attachment of [
+      'top.txt',
+      'step.txt',
+      'nested-step.txt',
+      'before.txt',
+      'before-step.txt',
+      'after-step.txt',
+    ]) {
+      fs.writeFileSync(path.join(input, attachment), `passive ${attachment}`);
+    }
+
+    sanitizeResults({ inputDir: input, outputDir: output });
+
+    expect(fs.readdirSync(output).sort()).toEqual(fs.readdirSync(input).sort());
+  });
+
+  it('rejects missing, malformed, and active nested attachment references', () => {
+    const cases: Array<[string, object, Record<string, string>, string]> = [
+      [
+        'missing',
+        { uuid: 'case', steps: [{ attachments: [{ source: 'missing.txt' }] }] },
+        {},
+        'Missing Allure attachment',
+      ],
+      [
+        'malformed',
+        { uuid: 'case', steps: [{ attachments: [{}] }] },
+        {},
+        'Malformed attachment reference',
+      ],
+      [
+        'active',
+        { uuid: 'case', steps: [{ attachments: [{ source: 'nested.txt' }] }] },
+        { 'nested.txt': '<svg onload="alert(1)"></svg>' },
+        'Active content in Allure attachment',
+      ],
+    ];
+
+    for (const [name, result, attachments, message] of cases) {
+      const input = path.join(tempDir, name);
+      const output = path.join(tempDir, `${name}-output`);
+      fs.mkdirSync(input);
+      writeResult(input, 'case', result);
+      for (const [attachment, data] of Object.entries(attachments)) {
+        fs.writeFileSync(path.join(input, attachment), data);
+      }
+
+      expect(() => sanitizeResults({ inputDir: input, outputDir: output })).toThrow(message);
+      expect(fs.existsSync(output)).toBe(false);
+    }
+  });
 });

@@ -57,6 +57,7 @@ describe('Action.yml Metadata', () => {
     expect(publisherWorkflow).toContain('uses: ./');
     expect(publisherWorkflow).toContain('run-id: ${{ steps.identity.outputs.run_id }}');
     expect(publisherWorkflow).toContain('path: artifacts/raw-allure-results');
+    expect(publisherWorkflow).toContain('actions: read');
     expect(publisherWorkflow).toContain('contents: write');
     expect(publisherWorkflow).toContain('pull-requests: write');
     expect(publisherWorkflow).toContain('github.event.workflow_run.head_sha');

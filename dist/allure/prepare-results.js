@@ -152,16 +152,50 @@ function rejectActiveAttachment(name, data) {
         throw new Error(`Active content in Allure attachment is not allowed: ${name}`);
     }
 }
+function pathContains(parent, child) {
+    const relative = path.relative(parent, child);
+    return (relative === '' ||
+        (!path.isAbsolute(relative) && relative !== '..' && !relative.startsWith(`..${path.sep}`)));
+}
+function collectAttachmentReferences(node, inputName, referenced) {
+    if (!node || typeof node !== 'object' || Array.isArray(node)) {
+        throw new Error(`Malformed executable node in ${inputName}`);
+    }
+    const executable = node;
+    if (executable.attachments !== undefined && !Array.isArray(executable.attachments)) {
+        throw new Error(`Malformed attachment references: ${inputName}`);
+    }
+    for (const attachment of executable.attachments ?? []) {
+        if (!attachment ||
+            typeof attachment !== 'object' ||
+            Array.isArray(attachment) ||
+            typeof attachment.source !== 'string' ||
+            !safeResultName(attachment.source)) {
+            throw new Error(`Malformed attachment reference in ${inputName}`);
+        }
+        referenced.add(attachment.source);
+    }
+    if (executable.steps !== undefined && !Array.isArray(executable.steps)) {
+        throw new Error(`Malformed executable steps in ${inputName}`);
+    }
+    for (const step of executable.steps ?? []) {
+        collectAttachmentReferences(step, inputName, referenced);
+    }
+}
 /** Copies only bounded, regular, passive Allure inputs across the trust boundary. */
 export function sanitizeResults(options) {
+    if (!options.inputDir.trim())
+        throw new Error('--input must not be empty');
+    if (!options.outputDir.trim())
+        throw new Error('--output must not be empty');
     const input = path.resolve(options.inputDir);
     const output = path.resolve(options.outputDir);
+    if (pathContains(input, output) || pathContains(output, input)) {
+        throw new Error('Sanitized Allure results directory must not overlap the input directory');
+    }
     const inputStat = fs.lstatSync(input);
     if (!inputStat.isDirectory() || inputStat.isSymbolicLink()) {
         throw new Error(`Allure results input must be a regular directory: ${options.inputDir}`);
-    }
-    if (input === output || output.startsWith(`${input}${path.sep}`)) {
-        throw new Error('Sanitized Allure results directory must be outside the input directory');
     }
     const regular = new Map();
     const referenced = new Set();
@@ -195,16 +229,18 @@ export function sanitizeResults(options) {
                 throw new Error(`Allure input must be a JSON object: ${entry.name}`);
             }
             if (entry.name.endsWith('-result.json')) {
-                const attachments = document.attachments;
-                if (attachments !== undefined && !Array.isArray(attachments))
-                    throw new Error(`Malformed attachment references: ${entry.name}`);
-                for (const attachment of (attachments ?? [])) {
-                    if (!attachment ||
-                        typeof attachment.source !== 'string' ||
-                        !safeResultName(attachment.source)) {
-                        throw new Error(`Malformed attachment reference in ${entry.name}`);
+                collectAttachmentReferences(document, entry.name, referenced);
+            }
+            else {
+                const container = document;
+                for (const property of ['befores', 'afters']) {
+                    const fixtures = container[property];
+                    if (fixtures !== undefined && !Array.isArray(fixtures)) {
+                        throw new Error(`Malformed container ${property}: ${entry.name}`);
                     }
-                    referenced.add(attachment.source);
+                    for (const fixture of fixtures ?? []) {
+                        collectAttachmentReferences(fixture, entry.name, referenced);
+                    }
                 }
             }
         }
