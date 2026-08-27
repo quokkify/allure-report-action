@@ -1,1 +1,0 @@
-{"id":"cf3916a2ef5ea8372efbbd756e8f3041","fullName":"quokkify/allure-report-action:tests/config/loader.test.ts#Config Loader warns when publish-pages is true for fork PR and disables it","name":"warns when publish-pages is true for fork PR and disables it","status":"passed","testResultsByEnv":{"default":"72f948bb1561dff16e77bf61a1a55028"}}

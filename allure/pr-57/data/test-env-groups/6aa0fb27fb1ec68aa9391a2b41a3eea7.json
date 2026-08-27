@@ -1,1 +1,0 @@
-{"id":"6aa0fb27fb1ec68aa9391a2b41a3eea7","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser getLabelValue returns empty string for undefined labels","name":"returns empty string for undefined labels","status":"passed","testResultsByEnv":{"default":"dae34563045eff62632ab9a7f3363093"}}
