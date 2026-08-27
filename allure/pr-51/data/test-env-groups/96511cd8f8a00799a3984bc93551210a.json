@@ -1,1 +1,1 @@
-{"id":"96511cd8f8a00799a3984bc93551210a","fullName":"tests/renderer/pyramid.test.ts#Pyramid Renderer renderPyramidMarkdown handles zero pyramid totals","name":"handles zero pyramid totals","status":"passed","testResultsByEnv":{"default":"7b17a66e6931009c9281cad74dd82adc"}}
+{"id":"96511cd8f8a00799a3984bc93551210a","fullName":"tests/renderer/pyramid.test.ts#Pyramid Renderer renderPyramidMarkdown handles zero pyramid totals","name":"handles zero pyramid totals","status":"passed","testResultsByEnv":{"default":"97115e9476a0630b6775f05bbe450db5"}}

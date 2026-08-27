@@ -1,1 +1,1 @@
-{"id":"abcda9b4efe06b4c3f7dc570d84a348b","fullName":"tests/allure/parser.test.ts#Allure Parser calculatePassRate returns em dash for zero total","name":"returns em dash for zero total","status":"passed","testResultsByEnv":{"default":"41ca0efd5ba3820fd7aadb6592e9cf2d"}}
+{"id":"abcda9b4efe06b4c3f7dc570d84a348b","fullName":"tests/allure/parser.test.ts#Allure Parser calculatePassRate returns em dash for zero total","name":"returns em dash for zero total","status":"passed","testResultsByEnv":{"default":"ef6b279143c3ad62a9b35278b4f4451b"}}
