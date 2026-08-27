@@ -1,0 +1,1 @@
+{"id":"b8fc2bf792bfa27a4b006c9dd4e9e337","fullName":"tests/allure/prepare-results.test.ts#Prepare Results rejects traversal references and symlinked downloaded files","name":"rejects traversal references and symlinked downloaded files","status":"passed","testResultsByEnv":{"default":"32553b926fbcac11c8e3c050189a520b"}}
