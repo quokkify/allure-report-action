@@ -4,12 +4,21 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^action\\.yml$/"],
+      "fileMatch": ["^action\\.yml$"],
       "matchStrings": [
         "(?m)^  allure-version:\\n(?:    [^\\n]*\\n)*?    default:\\s*[\\\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\\\"']?\\s*$"
       ],
       "datasourceTemplate": "npm",
       "depNameTemplate": "allure"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [".github/workflows/ci\\.yml$"],
+      "matchStrings": [
+        "uses: quokkify/project-toolkit/.github/workflows/node-ci\\.yml@(?<currentValue>v?\\d+\\.\\d+\\.\\d+|[a-f0-9]{40})"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "quokkify/project-toolkit"
     }
   ]
 }
