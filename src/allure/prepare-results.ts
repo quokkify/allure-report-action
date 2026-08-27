@@ -150,6 +150,14 @@ function attributedResultBuffer(file: string, moduleName: string, moduleLabel: s
   const labels = (document.labels || []).filter(label => !label || label.name !== moduleLabel);
   labels.push({ name: moduleLabel, value: moduleName });
   document.labels = labels;
+  // Ensure start/stop timestamps exist to prevent plugin-awesome duration chart errors
+  const now = Date.now();
+  if (typeof document.start !== 'number' || document.start <= 0) {
+    document.start = now;
+  }
+  if (typeof document.stop !== 'number' || document.stop <= 0) {
+    document.stop = document.start + 1;
+  }
   return Buffer.from(`${JSON.stringify(document)}\n`, 'utf8');
 }
 
