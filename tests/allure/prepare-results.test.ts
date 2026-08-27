@@ -154,7 +154,7 @@ describe('Prepare Results', () => {
   });
 
   it('deduplicates identical files', async () => {
-    const doc = { uuid: 'same', name: 'case', labels: [] };
+    const doc = { uuid: 'same', name: 'case', labels: [], start: 1000, stop: 2000 };
 
     for (const artifact of ['source-a', 'source-b']) {
       const source = path.join(tempDir, 'artifacts', artifact, 'allure-results');
@@ -202,6 +202,50 @@ describe('Prepare Results', () => {
     expect(fs.statSync(path.join(resultsDir, '.allure-module-variables.json')).mode & 0o777).toBe(
       0o600
     );
+  });
+  it('ensures start and stop timestamps for duration charts', async () => {
+    const source = path.join(tempDir, 'artifacts', 'test-report', 'allure-results');
+    fs.mkdirSync(source, { recursive: true });
+    writeResult(source, 'case-1', { uuid: 'case-1', name: 'case-1', labels: [] });
+    writeFragment(source, 'Module=module-a\n');
+
+    prepareAttributedResults({
+      sourceRoot: path.join(tempDir, 'artifacts'),
+      resultsDir,
+      moduleLabel: 'module',
+      autoMode: false,
+    });
+
+    const result = JSON.parse(fs.readFileSync(path.join(resultsDir, 'case-1-result.json'), 'utf8'));
+    expect(typeof result.start).toBe('number');
+    expect(result.start).toBeGreaterThan(0);
+    expect(typeof result.stop).toBe('number');
+    expect(result.stop).toBeGreaterThan(result.start);
+  });
+  it('preserves existing valid start and stop timestamps', async () => {
+    const source = path.join(tempDir, 'artifacts', 'test-report', 'allure-results');
+    fs.mkdirSync(source, { recursive: true });
+    const validStart = 1000;
+    const validStop = 2000;
+    writeResult(source, 'case-1', {
+      uuid: 'case-1',
+      name: 'case-1',
+      start: validStart,
+      stop: validStop,
+      labels: [],
+    });
+    writeFragment(source, 'Module=module-a\n');
+
+    prepareAttributedResults({
+      sourceRoot: path.join(tempDir, 'artifacts'),
+      resultsDir,
+      moduleLabel: 'module',
+      autoMode: false,
+    });
+
+    const result = JSON.parse(fs.readFileSync(path.join(resultsDir, 'case-1-result.json'), 'utf8'));
+    expect(result.start).toBe(validStart);
+    expect(result.stop).toBe(validStop);
   });
 
   it('rejects conflicting fragment variables atomically', async () => {
