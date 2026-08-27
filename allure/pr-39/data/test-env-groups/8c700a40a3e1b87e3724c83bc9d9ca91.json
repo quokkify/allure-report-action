@@ -1,1 +1,0 @@
-{"id":"8c700a40a3e1b87e3724c83bc9d9ca91","fullName":"tests/allure/parser.test.ts#Allure Parser getEpicForResult returns 'other' when labels is undefined","name":"returns 'other' when labels is undefined","status":"passed","testResultsByEnv":{"default":"5bb279dd3015d4682c193cdb0dbbf4ae"}}
