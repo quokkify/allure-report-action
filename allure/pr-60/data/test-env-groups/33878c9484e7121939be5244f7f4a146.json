@@ -1,1 +1,1 @@
-{"id":"33878c9484e7121939be5244f7f4a146","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser readJsonSafe parses valid JSON","name":"parses valid JSON","status":"passed","testResultsByEnv":{"default":"1d6b5440b934271c663d0a42dfcb6ad8"}}
+{"id":"33878c9484e7121939be5244f7f4a146","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser readJsonSafe parses valid JSON","name":"parses valid JSON","status":"passed","testResultsByEnv":{"default":"45ed000de16ccb9da22d764bf2908131"}}
