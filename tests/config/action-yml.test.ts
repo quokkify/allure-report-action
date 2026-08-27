@@ -55,11 +55,17 @@ describe('Action.yml Metadata', () => {
     expect(publisherWorkflow).toContain('github.event.workflow_run.head_repository.fork == false');
     expect(publisherWorkflow).toContain('ref: ${{ github.event.repository.default_branch }}');
     expect(publisherWorkflow).toContain('uses: ./');
-    expect(publisherWorkflow).toContain('run-id: ${{ github.event.workflow_run.id }}');
-    expect(publisherWorkflow).toContain('path: artifacts/allure-results');
+    expect(publisherWorkflow).toContain('run-id: ${{ steps.identity.outputs.run_id }}');
+    expect(publisherWorkflow).toContain('path: artifacts/raw-allure-results');
     expect(publisherWorkflow).toContain('contents: write');
     expect(publisherWorkflow).toContain('pull-requests: write');
-    expect(publisherWorkflow).not.toContain('github.event.workflow_run.head_sha');
+    expect(publisherWorkflow).toContain('github.event.workflow_run.head_sha');
+    expect(publisherWorkflow).toContain('Expected exactly one open PR');
+    expect(publisherWorkflow).toContain('Stale workflow run head SHA');
+    expect(publisherWorkflow).toContain('concurrency:');
+    expect(publisherWorkflow).toContain('cancel-in-progress: true');
+    expect(publisherWorkflow).toContain('sanitize-results');
+    expect(publisherWorkflow).toContain('artifacts/sanitized-allure-results');
   });
 
   it('uploads all pyramid outputs with the configured artifact contract', () => {

@@ -23,9 +23,357 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// dist/allure/badges.js
+// dist/allure/prepare-results.js
+var import_node_crypto = require("node:crypto");
 var fs = __toESM(require("node:fs"), 1);
 var path = __toESM(require("node:path"), 1);
+var SOURCE_SCAN_SKIP_DIRECTORIES = /* @__PURE__ */ new Set([
+  ".git",
+  ".gradle",
+  ".idea",
+  ".venv",
+  "allure-report",
+  "dist",
+  "node_modules",
+  "venv"
+]);
+var MAX_SOURCE_FILES = 1e5;
+var MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024;
+var MAX_SOURCE_FILE_BYTES = 256 * 1024 * 1024;
+var MAX_FRAGMENT_BYTES = 1024 * 1024;
+var MAX_FRAGMENT_VARIABLES = 1e4;
+var MAX_FRAGMENT_VARIABLE_BYTES = 4 * 1024 * 1024;
+var MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
+var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
+var MODULE_VARIABLES_METADATA = ".allure-module-variables.json";
+var MAX_SANITIZED_FILES = 1e5;
+var MAX_SANITIZED_BYTES = 2 * 1024 * 1024 * 1024;
+var ACTIVE_ATTACHMENT_EXTENSIONS = /* @__PURE__ */ new Set([
+  ".cjs",
+  ".htm",
+  ".html",
+  ".js",
+  ".mjs",
+  ".svg",
+  ".xhtml"
+]);
+function parseModuleFragment(fragmentPath) {
+  const stat = fs.lstatSync(fragmentPath);
+  if (!stat.isFile() || stat.isSymbolicLink()) {
+    throw new Error(`Module provenance must be a regular file: ${fragmentPath}`);
+  }
+  if (stat.size > MAX_FRAGMENT_BYTES) {
+    throw new Error(`Module provenance exceeds ${MAX_FRAGMENT_BYTES} bytes: ${fragmentPath}`);
+  }
+  const modules = /* @__PURE__ */ new Set();
+  const variables = /* @__PURE__ */ new Map();
+  for (const rawLine of fs.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#") || !line.includes("="))
+      continue;
+    const index = line.indexOf("=");
+    const key = line.slice(0, index).trim();
+    const value = line.slice(index + 1).trim();
+    if (!key || key === "__proto__" || key.length > 512 || value.length > 8192 || /[\u0000-\u001f\u007f]/.test(key) || /[\u0000-\u001f\u007f]/.test(value)) {
+      throw new Error(`Invalid environment variable in ${fragmentPath}`);
+    }
+    const previous = variables.get(key);
+    if (previous !== void 0 && previous !== value) {
+      throw new Error(`Conflicting environment variable ${key} in ${fragmentPath}`);
+    }
+    variables.set(key, value);
+    if ((key === "Module" || key.endsWith(".Module")) && value)
+      modules.add(value);
+  }
+  if (modules.size !== 1) {
+    const detail = modules.size === 0 ? "none" : [...modules].sort().join(", ");
+    throw new Error(`Expected exactly one module value in ${fragmentPath}; found ${detail}`);
+  }
+  const moduleArray = [...modules];
+  return { moduleName: moduleArray[0], variables };
+}
+function findSourceResultDirectories(sourceRoot, resultsDir) {
+  const root = path.resolve(sourceRoot);
+  const destination = path.resolve(resultsDir);
+  if (!fs.existsSync(root))
+    throw new Error(`Source artifacts directory not found: ${sourceRoot}`);
+  const rootStat = fs.lstatSync(root);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
+    throw new Error(`Source artifacts path must be a regular directory: ${sourceRoot}`);
+  }
+  const sources = [];
+  const stack = [root];
+  while (stack.length > 0) {
+    const directory = stack.pop();
+    if (directory === destination)
+      continue;
+    if (path.basename(directory) === "allure-results") {
+      sources.push(directory);
+      continue;
+    }
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const child = path.join(directory, entry.name);
+      if (entry.isSymbolicLink())
+        throw new Error(`Symbolic links are not allowed: ${child}`);
+      if (!entry.isDirectory())
+        continue;
+      if (SOURCE_SCAN_SKIP_DIRECTORIES.has(entry.name))
+        continue;
+      stack.push(child);
+    }
+  }
+  return sources.sort();
+}
+function sha256(buffer) {
+  return (0, import_node_crypto.createHash)("sha256").update(buffer).digest("hex");
+}
+function attributedResultBuffer(file, moduleName, moduleLabel) {
+  let document;
+  try {
+    document = JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch (error) {
+    throw new Error(`Malformed Allure result JSON ${file}: ${error.message}`);
+  }
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new Error(`Allure result must be a JSON object: ${file}`);
+  }
+  if (document.labels !== void 0 && !Array.isArray(document.labels)) {
+    throw new Error(`Allure result labels must be an array: ${file}`);
+  }
+  const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
+  labels.push({ name: moduleLabel, value: moduleName });
+  document.labels = labels;
+  return Buffer.from(`${JSON.stringify(document)}
+`, "utf8");
+}
+function safeResultName(name) {
+  return name === path.basename(name) && !name.includes("\\") && !name.includes("\0");
+}
+function rejectActiveAttachment(name, data) {
+  if (ACTIVE_ATTACHMENT_EXTENSIONS.has(path.extname(name).toLowerCase())) {
+    throw new Error(`Active Allure attachment is not allowed: ${name}`);
+  }
+  const text = data.toString("utf8", 0, Math.min(data.length, 64 * 1024)).toLowerCase();
+  if (/<\s*script\b|<\s*(iframe|object|embed|svg)\b|javascript\s*:/.test(text)) {
+    throw new Error(`Active content in Allure attachment is not allowed: ${name}`);
+  }
+}
+function sanitizeResults(options) {
+  const input = path.resolve(options.inputDir);
+  const output = path.resolve(options.outputDir);
+  const inputStat = fs.lstatSync(input);
+  if (!inputStat.isDirectory() || inputStat.isSymbolicLink()) {
+    throw new Error(`Allure results input must be a regular directory: ${options.inputDir}`);
+  }
+  if (input === output || output.startsWith(`${input}${path.sep}`)) {
+    throw new Error("Sanitized Allure results directory must be outside the input directory");
+  }
+  const regular = /* @__PURE__ */ new Map();
+  const referenced = /* @__PURE__ */ new Set();
+  let totalBytes = 0;
+  for (const entry of fs.readdirSync(input, { withFileTypes: true })) {
+    const file = path.join(input, entry.name);
+    if (!safeResultName(entry.name))
+      throw new Error(`Unsafe Allure result filename: ${entry.name}`);
+    if (entry.isSymbolicLink() || !entry.isFile()) {
+      throw new Error(`Only regular Allure result files are allowed: ${entry.name}`);
+    }
+    const stat = fs.lstatSync(file);
+    if (stat.nlink > 1)
+      throw new Error(`Hard-linked Allure result files are not allowed: ${entry.name}`);
+    if (stat.size > MAX_SOURCE_FILE_BYTES)
+      throw new Error(`Allure result file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${entry.name}`);
+    totalBytes += stat.size;
+    if (regular.size >= MAX_SANITIZED_FILES || totalBytes > MAX_SANITIZED_BYTES) {
+      throw new Error("Allure result inputs exceed count or byte limits");
+    }
+    const data = fs.readFileSync(file);
+    if (entry.name.endsWith("-result.json") || entry.name.endsWith("-container.json")) {
+      let document;
+      try {
+        document = JSON.parse(data.toString("utf8"));
+      } catch (error) {
+        throw new Error(`Malformed Allure input JSON ${entry.name}: ${error.message}`);
+      }
+      if (!document || typeof document !== "object" || Array.isArray(document)) {
+        throw new Error(`Allure input must be a JSON object: ${entry.name}`);
+      }
+      if (entry.name.endsWith("-result.json")) {
+        const attachments = document.attachments;
+        if (attachments !== void 0 && !Array.isArray(attachments))
+          throw new Error(`Malformed attachment references: ${entry.name}`);
+        for (const attachment of attachments ?? []) {
+          if (!attachment || typeof attachment.source !== "string" || !safeResultName(attachment.source)) {
+            throw new Error(`Malformed attachment reference in ${entry.name}`);
+          }
+          referenced.add(attachment.source);
+        }
+      }
+    }
+    regular.set(entry.name, data);
+  }
+  if (![...regular.keys()].some((name) => name.endsWith("-result.json"))) {
+    throw new Error("No Allure result JSON files found in downloaded artifact");
+  }
+  for (const reference of referenced) {
+    if (!regular.has(reference))
+      throw new Error(`Missing Allure attachment referenced by result: ${reference}`);
+  }
+  for (const [name, data] of regular) {
+    if (referenced.has(name))
+      rejectActiveAttachment(name, data);
+    if (!name.endsWith("-result.json") && !name.endsWith("-container.json") && !name.endsWith(".json") && !name.endsWith(".properties")) {
+      if (!referenced.has(name))
+        throw new Error(`Unreferenced Allure attachment is not allowed: ${name}`);
+    }
+  }
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  const temporary = fs.mkdtempSync(path.join(path.dirname(output), `.${path.basename(output)}-sanitize-`));
+  try {
+    for (const [name, data] of regular)
+      fs.writeFileSync(path.join(temporary, name), data, { flag: "wx", mode: 384 });
+    fs.rmSync(output, { recursive: true, force: true });
+    fs.renameSync(temporary, output);
+  } catch (error) {
+    fs.rmSync(temporary, { recursive: true, force: true });
+    throw error;
+  }
+}
+function prepareAttributedResults(options) {
+  const { sourceRoot, resultsDir, moduleLabel, autoMode } = options;
+  if (!sourceRoot.trim())
+    throw new Error("--source-root must not be empty");
+  if (!moduleLabel.trim())
+    throw new Error("--module-label must not be empty in attributed mode");
+  const destination = path.resolve(resultsDir);
+  const parent = path.dirname(destination);
+  fs.mkdirSync(parent, { recursive: true });
+  const temporary = fs.mkdtempSync(path.join(parent, `.${path.basename(destination)}-prepare-`));
+  const backup = path.join(parent, `.${path.basename(destination)}-backup-${process.pid}-${Date.now()}`);
+  let destinationMoved = false;
+  let sourceDirectories = 0;
+  let sourceFiles = 0;
+  let sourceBytes = 0;
+  let attributedResults = 0;
+  let fragmentVariableBytes = 0;
+  const staged = /* @__PURE__ */ new Map();
+  const fragmentVariables = /* @__PURE__ */ new Map();
+  const stage = (name, data, mode, source) => {
+    const digest = sha256(data);
+    const previous = staged.get(name);
+    if (previous) {
+      if (previous.digest === digest)
+        return;
+      throw new Error(`Conflicting source files named ${name}: ${previous.source} and ${source}`);
+    }
+    fs.writeFileSync(path.join(temporary, name), data, { flag: "wx", mode });
+    staged.set(name, { digest, source });
+  };
+  try {
+    const sourceDirectoriesFound = findSourceResultDirectories(sourceRoot, resultsDir);
+    const withProvenance = sourceDirectoriesFound.filter((directory) => fs.existsSync(path.join(directory, "ci-env-fragment.properties")));
+    if (autoMode && withProvenance.length === 0) {
+      fs.rmSync(temporary, { recursive: true, force: true });
+      console.log("No attributed source results detected; preserved legacy merged results");
+      return;
+    }
+    if (sourceDirectoriesFound.length === 0) {
+      throw new Error(`No source allure-results directories found under ${sourceRoot}`);
+    }
+    if (withProvenance.length !== sourceDirectoriesFound.length) {
+      throw new Error(`Partial module provenance: ${withProvenance.length} of ${sourceDirectoriesFound.length} source directories contain ci-env-fragment.properties`);
+    }
+    if (fs.existsSync(destination)) {
+      const destinationStat = fs.lstatSync(destination);
+      if (!destinationStat.isDirectory() || destinationStat.isSymbolicLink()) {
+        throw new Error(`Results destination must be a regular directory: ${resultsDir}`);
+      }
+      for (const name of PRESERVED_DESTINATION_METADATA) {
+        const file = path.join(destination, name);
+        if (!fs.existsSync(file))
+          continue;
+        const stat = fs.lstatSync(file);
+        if (!stat.isFile() || stat.isSymbolicLink()) {
+          throw new Error(`Preserved metadata must be a regular file: ${file}`);
+        }
+        if (stat.size > MAX_PRESERVED_METADATA_BYTES) {
+          throw new Error(`Preserved metadata exceeds ${MAX_PRESERVED_METADATA_BYTES} bytes: ${file}`);
+        }
+        stage(name, fs.readFileSync(file), stat.mode & 511, file);
+      }
+    }
+    for (const directory of sourceDirectoriesFound) {
+      sourceDirectories += 1;
+      const fragment = path.join(directory, "ci-env-fragment.properties");
+      if (!fs.existsSync(fragment)) {
+        throw new Error(`Missing module provenance: ${fragment}`);
+      }
+      const { moduleName, variables } = parseModuleFragment(fragment);
+      for (const [key, value] of variables) {
+        const previous = fragmentVariables.get(key);
+        if (previous !== void 0 && previous !== value) {
+          throw new Error(`Conflicting environment variable ${key} across source fragments`);
+        }
+        if (previous === void 0) {
+          fragmentVariableBytes += Buffer.byteLength(key) + Buffer.byteLength(value);
+          if (fragmentVariables.size >= MAX_FRAGMENT_VARIABLES || fragmentVariableBytes > MAX_FRAGMENT_VARIABLE_BYTES) {
+            throw new Error("Module environment variables exceed count or byte limits");
+          }
+          fragmentVariables.set(key, value);
+        }
+      }
+      for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        const file = path.join(directory, entry.name);
+        if (entry.isSymbolicLink() || !entry.isFile()) {
+          throw new Error(`Only regular files are allowed in source results: ${file}`);
+        }
+        if (entry.name === "ci-env-fragment.properties")
+          continue;
+        if (entry.name === MODULE_VARIABLES_METADATA) {
+          throw new Error(`Reserved source result filename is not allowed: ${file}`);
+        }
+        const stat = fs.lstatSync(file);
+        if (stat.size > MAX_SOURCE_FILE_BYTES) {
+          throw new Error(`Source file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${file}`);
+        }
+        sourceFiles += 1;
+        sourceBytes += stat.size;
+        if (sourceFiles > MAX_SOURCE_FILES || sourceBytes > MAX_SOURCE_BYTES) {
+          throw new Error(`Source results exceed limits (${MAX_SOURCE_FILES} files / ${MAX_SOURCE_BYTES} bytes)`);
+        }
+        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, moduleLabel) : fs.readFileSync(file);
+        if (entry.name.endsWith("-result.json"))
+          attributedResults += 1;
+        stage(entry.name, data, stat.mode & 511, file);
+      }
+    }
+    if (attributedResults === 0)
+      throw new Error("No Allure result JSON files found in source artifacts");
+    const environmentMetadata = Buffer.from(JSON.stringify(Object.fromEntries([...fragmentVariables].sort(([left], [right]) => left.localeCompare(right)))), "utf8");
+    if (environmentMetadata.length > MAX_FRAGMENT_VARIABLE_BYTES) {
+      throw new Error("Module environment metadata exceeds byte limit");
+    }
+    stage(MODULE_VARIABLES_METADATA, environmentMetadata, 384, "source fragments");
+    if (fs.existsSync(destination)) {
+      fs.renameSync(destination, backup);
+      destinationMoved = true;
+    }
+    fs.renameSync(temporary, destination);
+    if (destinationMoved)
+      fs.rmSync(backup, { recursive: true, force: true });
+  } catch (error) {
+    fs.rmSync(temporary, { recursive: true, force: true });
+    if (destinationMoved && !fs.existsSync(destination) && fs.existsSync(backup)) {
+      fs.renameSync(backup, destination);
+    }
+    throw error;
+  }
+  console.log(`Prepared ${attributedResults} attributed result(s) from ${sourceDirectories} source directories (${sourceFiles} files)`);
+}
+
+// dist/allure/badges.js
+var fs2 = __toESM(require("node:fs"), 1);
+var path2 = __toESM(require("node:path"), 1);
 function getColorForStats(stats) {
   if (stats.failed > 0 || stats.broken > 0)
     return "red";
@@ -60,10 +408,10 @@ function createShieldJson(label, stats) {
   };
 }
 function generateBadges(results, reportDir) {
-  const badgeDir = path.join(reportDir, "badges");
-  fs.mkdirSync(badgeDir, { recursive: true });
+  const badgeDir = path2.join(reportDir, "badges");
+  fs2.mkdirSync(badgeDir, { recursive: true });
   const totalBadge = createShieldJson("all tests", results.total);
-  fs.writeFileSync(path.join(badgeDir, "total.json"), JSON.stringify(totalBadge, null, 0));
+  fs2.writeFileSync(path2.join(badgeDir, "total.json"), JSON.stringify(totalBadge, null, 0));
   const epics = ["unit", "api", "ui", "end-to-end", "other"];
   for (const epic of epics) {
     const stats = results.byEpic[epic] || {
@@ -75,7 +423,7 @@ function generateBadges(results, reportDir) {
       unknown: 0
     };
     const badge = createShieldJson(`${epic} tests`, stats);
-    fs.writeFileSync(path.join(badgeDir, `${epic}.json`), JSON.stringify(badge, null, 0));
+    fs2.writeFileSync(path2.join(badgeDir, `${epic}.json`), JSON.stringify(badge, null, 0));
   }
 }
 
@@ -218,8 +566,8 @@ function aggregateResults(files, readJsonFile, getEpicForResult2) {
 }
 
 // dist/report/quality-gates.js
-var fs2 = __toESM(require("node:fs"), 1);
-var path2 = __toESM(require("node:path"), 1);
+var fs3 = __toESM(require("node:fs"), 1);
+var path3 = __toESM(require("node:path"), 1);
 function evaluatePyramidQualityGates(metrics) {
   const warnings = [];
   const blockingFailures = [];
@@ -310,8 +658,8 @@ function writeQualityGatesJson(gates, metrics, outputPath) {
       otherEpicTotal: metrics.otherEpicTotal
     }
   };
-  fs2.mkdirSync(path2.dirname(outputPath), { recursive: true });
-  fs2.writeFileSync(outputPath, JSON.stringify(payload, null, 2), "utf8");
+  fs3.mkdirSync(path3.dirname(outputPath), { recursive: true });
+  fs3.writeFileSync(outputPath, JSON.stringify(payload, null, 2), "utf8");
   console.log(`Wrote ${outputPath}`);
 }
 function githubWorkflowEscape(s) {
@@ -324,20 +672,20 @@ function appendJobSummary(markdown) {
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (!summaryPath)
     return;
-  fs2.appendFileSync(summaryPath, markdown, "utf8");
+  fs3.appendFileSync(summaryPath, markdown, "utf8");
 }
 
 // dist/allure/parser.js
-var fs3 = __toESM(require("node:fs"), 1);
-var path3 = __toESM(require("node:path"), 1);
+var fs4 = __toESM(require("node:fs"), 1);
+var path4 = __toESM(require("node:path"), 1);
 function listResultFiles(resultsDir) {
-  if (!fs3.existsSync(resultsDir))
+  if (!fs4.existsSync(resultsDir))
     return [];
-  return fs3.readdirSync(resultsDir, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith("-result.json")).map((entry) => path3.join(resultsDir, entry.name));
+  return fs4.readdirSync(resultsDir, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith("-result.json")).map((entry) => path4.join(resultsDir, entry.name));
 }
 function readJsonSafe(file) {
   try {
-    return JSON.parse(fs3.readFileSync(file, "utf8"));
+    return JSON.parse(fs4.readFileSync(file, "utf8"));
   } catch {
     return null;
   }
@@ -377,12 +725,12 @@ function runBadges(options) {
 }
 
 // dist/allure/config-generator.js
-var fs4 = __toESM(require("node:fs"), 1);
-var path4 = __toESM(require("node:path"), 1);
+var fs5 = __toESM(require("node:fs"), 1);
+var path5 = __toESM(require("node:path"), 1);
 var import_node_url = require("node:url");
-var MODULE_VARIABLES_METADATA = ".allure-module-variables.json";
-var MAX_FRAGMENT_VARIABLES = 1e4;
-var MAX_FRAGMENT_VARIABLE_BYTES = 4 * 1024 * 1024;
+var MODULE_VARIABLES_METADATA2 = ".allure-module-variables.json";
+var MAX_FRAGMENT_VARIABLES2 = 1e4;
+var MAX_FRAGMENT_VARIABLE_BYTES2 = 4 * 1024 * 1024;
 function normalizeModuleTokens(value) {
   return String(value || "").normalize("NFKD").toLowerCase().replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((token) => token && token !== "utils");
 }
@@ -420,16 +768,16 @@ function generateEnvironmentId(value, used) {
   return candidate;
 }
 function readModuleVariables(resultsDir) {
-  const metadata = path4.join(resultsDir, MODULE_VARIABLES_METADATA);
-  if (!fs4.existsSync(metadata))
+  const metadata = path5.join(resultsDir, MODULE_VARIABLES_METADATA2);
+  if (!fs5.existsSync(metadata))
     return {};
-  const stat = fs4.lstatSync(metadata);
-  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_FRAGMENT_VARIABLE_BYTES) {
+  const stat = fs5.lstatSync(metadata);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_FRAGMENT_VARIABLE_BYTES2) {
     throw new Error(`Invalid module environment metadata: ${metadata}`);
   }
   let document;
   try {
-    document = JSON.parse(fs4.readFileSync(metadata, "utf8"));
+    document = JSON.parse(fs5.readFileSync(metadata, "utf8"));
   } catch {
     throw new Error(`Malformed module environment metadata: ${metadata}`);
   }
@@ -437,7 +785,7 @@ function readModuleVariables(resultsDir) {
     throw new Error(`Invalid module environment metadata: ${metadata}`);
   }
   const entries = Object.entries(document);
-  if (entries.length > MAX_FRAGMENT_VARIABLES || entries.some(([key, value]) => !key || key === "__proto__" || key.length > 512 || typeof value !== "string" || value.length > 8192 || /[\u0000-\u001f\u007f]/.test(key) || /[\u0000-\u001f\u007f]/.test(value))) {
+  if (entries.length > MAX_FRAGMENT_VARIABLES2 || entries.some(([key, value]) => !key || key === "__proto__" || key.length > 512 || typeof value !== "string" || value.length > 8192 || /[\u0000-\u001f\u007f]/.test(key) || /[\u0000-\u001f\u007f]/.test(value))) {
     throw new Error(`Invalid module environment metadata: ${metadata}`);
   }
   return document;
@@ -447,8 +795,8 @@ async function generateModuleConfig(options) {
   if (!moduleLabel.trim()) {
     throw new Error("--module-label must not be empty");
   }
-  const configPath = path4.resolve(configFile);
-  if (!fs4.existsSync(configPath)) {
+  const configPath = path5.resolve(configFile);
+  if (!fs5.existsSync(configPath)) {
     throw new Error(`Allure config not found: ${configFile}`);
   }
   const moduleNames = /* @__PURE__ */ new Set();
@@ -482,8 +830,8 @@ async function generateModuleConfig(options) {
     const source2 = `import baseConfig from ${JSON.stringify(configUrl)};
 export default baseConfig;
 `;
-    fs4.mkdirSync(path4.dirname(outputFile), { recursive: true });
-    fs4.writeFileSync(outputFile, source2, "utf8");
+    fs5.mkdirSync(path5.dirname(outputFile), { recursive: true });
+    fs5.writeFileSync(outputFile, source2, "utf8");
     console.log(`No ${moduleLabel} labels found; preserved caller environments in ${outputFile}`);
     return;
   }
@@ -539,8 +887,8 @@ export default {
   environments,
 };
 `;
-  fs4.mkdirSync(path4.dirname(outputFile), { recursive: true });
-  fs4.writeFileSync(outputFile, source, "utf8");
+  fs5.mkdirSync(path5.dirname(outputFile), { recursive: true });
+  fs5.writeFileSync(outputFile, source, "utf8");
   console.log(`Prepared ${modules.length} module environment(s) from ${moduleLabel}; ${unmatchedResults} result(s) use default environment.`);
 }
 
@@ -550,7 +898,7 @@ async function runModuleConfig(options) {
 }
 
 // dist/commands/pr-body.js
-var fs5 = __toESM(require("node:fs"), 1);
+var fs6 = __toESM(require("node:fs"), 1);
 
 // dist/renderer/markdown.js
 function buildReportLink(pagesUrl, forkPr, sourceRunId) {
@@ -710,252 +1058,8 @@ async function runPrBody(options) {
     commentMarker
   };
   const markdown = renderPrComment(data);
-  fs5.writeFileSync(outputFile, markdown, "utf8");
+  fs6.writeFileSync(outputFile, markdown, "utf8");
   console.log(`Wrote PR body to ${outputFile}`);
-}
-
-// dist/allure/prepare-results.js
-var import_node_crypto = require("node:crypto");
-var fs6 = __toESM(require("node:fs"), 1);
-var path5 = __toESM(require("node:path"), 1);
-var SOURCE_SCAN_SKIP_DIRECTORIES = /* @__PURE__ */ new Set([
-  ".git",
-  ".gradle",
-  ".idea",
-  ".venv",
-  "allure-report",
-  "dist",
-  "node_modules",
-  "venv"
-]);
-var MAX_SOURCE_FILES = 1e5;
-var MAX_SOURCE_BYTES = 2 * 1024 * 1024 * 1024;
-var MAX_SOURCE_FILE_BYTES = 256 * 1024 * 1024;
-var MAX_FRAGMENT_BYTES = 1024 * 1024;
-var MAX_FRAGMENT_VARIABLES2 = 1e4;
-var MAX_FRAGMENT_VARIABLE_BYTES2 = 4 * 1024 * 1024;
-var MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
-var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
-var MODULE_VARIABLES_METADATA2 = ".allure-module-variables.json";
-function parseModuleFragment(fragmentPath) {
-  const stat = fs6.lstatSync(fragmentPath);
-  if (!stat.isFile() || stat.isSymbolicLink()) {
-    throw new Error(`Module provenance must be a regular file: ${fragmentPath}`);
-  }
-  if (stat.size > MAX_FRAGMENT_BYTES) {
-    throw new Error(`Module provenance exceeds ${MAX_FRAGMENT_BYTES} bytes: ${fragmentPath}`);
-  }
-  const modules = /* @__PURE__ */ new Set();
-  const variables = /* @__PURE__ */ new Map();
-  for (const rawLine of fs6.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#") || !line.includes("="))
-      continue;
-    const index = line.indexOf("=");
-    const key = line.slice(0, index).trim();
-    const value = line.slice(index + 1).trim();
-    if (!key || key === "__proto__" || key.length > 512 || value.length > 8192 || /[\u0000-\u001f\u007f]/.test(key) || /[\u0000-\u001f\u007f]/.test(value)) {
-      throw new Error(`Invalid environment variable in ${fragmentPath}`);
-    }
-    const previous = variables.get(key);
-    if (previous !== void 0 && previous !== value) {
-      throw new Error(`Conflicting environment variable ${key} in ${fragmentPath}`);
-    }
-    variables.set(key, value);
-    if ((key === "Module" || key.endsWith(".Module")) && value)
-      modules.add(value);
-  }
-  if (modules.size !== 1) {
-    const detail = modules.size === 0 ? "none" : [...modules].sort().join(", ");
-    throw new Error(`Expected exactly one module value in ${fragmentPath}; found ${detail}`);
-  }
-  const moduleArray = [...modules];
-  return { moduleName: moduleArray[0], variables };
-}
-function findSourceResultDirectories(sourceRoot, resultsDir) {
-  const root = path5.resolve(sourceRoot);
-  const destination = path5.resolve(resultsDir);
-  if (!fs6.existsSync(root))
-    throw new Error(`Source artifacts directory not found: ${sourceRoot}`);
-  const rootStat = fs6.lstatSync(root);
-  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
-    throw new Error(`Source artifacts path must be a regular directory: ${sourceRoot}`);
-  }
-  const sources = [];
-  const stack = [root];
-  while (stack.length > 0) {
-    const directory = stack.pop();
-    if (directory === destination)
-      continue;
-    if (path5.basename(directory) === "allure-results") {
-      sources.push(directory);
-      continue;
-    }
-    for (const entry of fs6.readdirSync(directory, { withFileTypes: true })) {
-      const child = path5.join(directory, entry.name);
-      if (entry.isSymbolicLink())
-        throw new Error(`Symbolic links are not allowed: ${child}`);
-      if (!entry.isDirectory())
-        continue;
-      if (SOURCE_SCAN_SKIP_DIRECTORIES.has(entry.name))
-        continue;
-      stack.push(child);
-    }
-  }
-  return sources.sort();
-}
-function sha256(buffer) {
-  return (0, import_node_crypto.createHash)("sha256").update(buffer).digest("hex");
-}
-function attributedResultBuffer(file, moduleName, moduleLabel) {
-  let document;
-  try {
-    document = JSON.parse(fs6.readFileSync(file, "utf8"));
-  } catch (error) {
-    throw new Error(`Malformed Allure result JSON ${file}: ${error.message}`);
-  }
-  if (!document || typeof document !== "object" || Array.isArray(document)) {
-    throw new Error(`Allure result must be a JSON object: ${file}`);
-  }
-  if (document.labels !== void 0 && !Array.isArray(document.labels)) {
-    throw new Error(`Allure result labels must be an array: ${file}`);
-  }
-  const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
-  labels.push({ name: moduleLabel, value: moduleName });
-  document.labels = labels;
-  return Buffer.from(`${JSON.stringify(document)}
-`, "utf8");
-}
-function prepareAttributedResults(options) {
-  const { sourceRoot, resultsDir, moduleLabel, autoMode } = options;
-  if (!sourceRoot.trim())
-    throw new Error("--source-root must not be empty");
-  if (!moduleLabel.trim())
-    throw new Error("--module-label must not be empty in attributed mode");
-  const destination = path5.resolve(resultsDir);
-  const parent = path5.dirname(destination);
-  fs6.mkdirSync(parent, { recursive: true });
-  const temporary = fs6.mkdtempSync(path5.join(parent, `.${path5.basename(destination)}-prepare-`));
-  const backup = path5.join(parent, `.${path5.basename(destination)}-backup-${process.pid}-${Date.now()}`);
-  let destinationMoved = false;
-  let sourceDirectories = 0;
-  let sourceFiles = 0;
-  let sourceBytes = 0;
-  let attributedResults = 0;
-  let fragmentVariableBytes = 0;
-  const staged = /* @__PURE__ */ new Map();
-  const fragmentVariables = /* @__PURE__ */ new Map();
-  const stage = (name, data, mode, source) => {
-    const digest = sha256(data);
-    const previous = staged.get(name);
-    if (previous) {
-      if (previous.digest === digest)
-        return;
-      throw new Error(`Conflicting source files named ${name}: ${previous.source} and ${source}`);
-    }
-    fs6.writeFileSync(path5.join(temporary, name), data, { flag: "wx", mode });
-    staged.set(name, { digest, source });
-  };
-  try {
-    const sourceDirectoriesFound = findSourceResultDirectories(sourceRoot, resultsDir);
-    const withProvenance = sourceDirectoriesFound.filter((directory) => fs6.existsSync(path5.join(directory, "ci-env-fragment.properties")));
-    if (autoMode && withProvenance.length === 0) {
-      fs6.rmSync(temporary, { recursive: true, force: true });
-      console.log("No attributed source results detected; preserved legacy merged results");
-      return;
-    }
-    if (sourceDirectoriesFound.length === 0) {
-      throw new Error(`No source allure-results directories found under ${sourceRoot}`);
-    }
-    if (withProvenance.length !== sourceDirectoriesFound.length) {
-      throw new Error(`Partial module provenance: ${withProvenance.length} of ${sourceDirectoriesFound.length} source directories contain ci-env-fragment.properties`);
-    }
-    if (fs6.existsSync(destination)) {
-      const destinationStat = fs6.lstatSync(destination);
-      if (!destinationStat.isDirectory() || destinationStat.isSymbolicLink()) {
-        throw new Error(`Results destination must be a regular directory: ${resultsDir}`);
-      }
-      for (const name of PRESERVED_DESTINATION_METADATA) {
-        const file = path5.join(destination, name);
-        if (!fs6.existsSync(file))
-          continue;
-        const stat = fs6.lstatSync(file);
-        if (!stat.isFile() || stat.isSymbolicLink()) {
-          throw new Error(`Preserved metadata must be a regular file: ${file}`);
-        }
-        if (stat.size > MAX_PRESERVED_METADATA_BYTES) {
-          throw new Error(`Preserved metadata exceeds ${MAX_PRESERVED_METADATA_BYTES} bytes: ${file}`);
-        }
-        stage(name, fs6.readFileSync(file), stat.mode & 511, file);
-      }
-    }
-    for (const directory of sourceDirectoriesFound) {
-      sourceDirectories += 1;
-      const fragment = path5.join(directory, "ci-env-fragment.properties");
-      if (!fs6.existsSync(fragment)) {
-        throw new Error(`Missing module provenance: ${fragment}`);
-      }
-      const { moduleName, variables } = parseModuleFragment(fragment);
-      for (const [key, value] of variables) {
-        const previous = fragmentVariables.get(key);
-        if (previous !== void 0 && previous !== value) {
-          throw new Error(`Conflicting environment variable ${key} across source fragments`);
-        }
-        if (previous === void 0) {
-          fragmentVariableBytes += Buffer.byteLength(key) + Buffer.byteLength(value);
-          if (fragmentVariables.size >= MAX_FRAGMENT_VARIABLES2 || fragmentVariableBytes > MAX_FRAGMENT_VARIABLE_BYTES2) {
-            throw new Error("Module environment variables exceed count or byte limits");
-          }
-          fragmentVariables.set(key, value);
-        }
-      }
-      for (const entry of fs6.readdirSync(directory, { withFileTypes: true })) {
-        const file = path5.join(directory, entry.name);
-        if (entry.isSymbolicLink() || !entry.isFile()) {
-          throw new Error(`Only regular files are allowed in source results: ${file}`);
-        }
-        if (entry.name === "ci-env-fragment.properties")
-          continue;
-        if (entry.name === MODULE_VARIABLES_METADATA2) {
-          throw new Error(`Reserved source result filename is not allowed: ${file}`);
-        }
-        const stat = fs6.lstatSync(file);
-        if (stat.size > MAX_SOURCE_FILE_BYTES) {
-          throw new Error(`Source file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${file}`);
-        }
-        sourceFiles += 1;
-        sourceBytes += stat.size;
-        if (sourceFiles > MAX_SOURCE_FILES || sourceBytes > MAX_SOURCE_BYTES) {
-          throw new Error(`Source results exceed limits (${MAX_SOURCE_FILES} files / ${MAX_SOURCE_BYTES} bytes)`);
-        }
-        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, moduleLabel) : fs6.readFileSync(file);
-        if (entry.name.endsWith("-result.json"))
-          attributedResults += 1;
-        stage(entry.name, data, stat.mode & 511, file);
-      }
-    }
-    if (attributedResults === 0)
-      throw new Error("No Allure result JSON files found in source artifacts");
-    const environmentMetadata = Buffer.from(JSON.stringify(Object.fromEntries([...fragmentVariables].sort(([left], [right]) => left.localeCompare(right)))), "utf8");
-    if (environmentMetadata.length > MAX_FRAGMENT_VARIABLE_BYTES2) {
-      throw new Error("Module environment metadata exceeds byte limit");
-    }
-    stage(MODULE_VARIABLES_METADATA2, environmentMetadata, 384, "source fragments");
-    if (fs6.existsSync(destination)) {
-      fs6.renameSync(destination, backup);
-      destinationMoved = true;
-    }
-    fs6.renameSync(temporary, destination);
-    if (destinationMoved)
-      fs6.rmSync(backup, { recursive: true, force: true });
-  } catch (error) {
-    fs6.rmSync(temporary, { recursive: true, force: true });
-    if (destinationMoved && !fs6.existsSync(destination) && fs6.existsSync(backup)) {
-      fs6.renameSync(backup, destination);
-    }
-    throw error;
-  }
-  console.log(`Prepared ${attributedResults} attributed result(s) from ${sourceDirectories} source directories (${sourceFiles} files)`);
 }
 
 // dist/commands/prepare-results.js
@@ -1165,6 +1269,10 @@ async function main() {
   const { command, args } = parseArgs(process.argv);
   try {
     switch (command) {
+      case "sanitize-results": {
+        sanitizeResults({ inputDir: getArg(args, "--input"), outputDir: getArg(args, "--output") });
+        break;
+      }
       case "prepare-results": {
         const sourceRoot = getArg(args, "--source-root") || "";
         const resultsDir = getArg(args, "--results") || "./allure-results";
@@ -1226,7 +1334,7 @@ async function main() {
       }
       default:
         console.error("Usage: node cli.cjs <command> [options]");
-        console.error("Commands: prepare-results, module-config, badges, pr-body, pyramid, pyramid-check");
+        console.error("Commands: sanitize-results, prepare-results, module-config, badges, pr-body, pyramid, pyramid-check");
         process.exit(1);
     }
   } catch (error) {

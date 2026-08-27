@@ -1,6 +1,7 @@
 /**
  * CLI entry point for individual commands
  */
+import { sanitizeResults } from './allure/prepare-results.js';
 import { runBadges } from './commands/badges.js';
 import { runModuleConfig } from './commands/module-config.js';
 import { runPrBody } from './commands/pr-body.js';
@@ -25,6 +26,10 @@ async function main() {
     const { command, args } = parseArgs(process.argv);
     try {
         switch (command) {
+            case 'sanitize-results': {
+                sanitizeResults({ inputDir: getArg(args, '--input'), outputDir: getArg(args, '--output') });
+                break;
+            }
             case 'prepare-results': {
                 const sourceRoot = getArg(args, '--source-root') || '';
                 const resultsDir = getArg(args, '--results') || './allure-results';
@@ -86,7 +91,7 @@ async function main() {
             }
             default:
                 console.error('Usage: node cli.cjs <command> [options]');
-                console.error('Commands: prepare-results, module-config, badges, pr-body, pyramid, pyramid-check');
+                console.error('Commands: sanitize-results, prepare-results, module-config, badges, pr-body, pyramid, pyramid-check');
                 process.exit(1);
         }
     }

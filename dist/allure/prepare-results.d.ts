@@ -1,3 +1,9 @@
+export interface SanitizeResultsOptions {
+    inputDir: string;
+    outputDir: string;
+}
+/** Copies only bounded, regular, passive Allure inputs across the trust boundary. */
+export declare function sanitizeResults(options: SanitizeResultsOptions): void;
 export interface PrepareResultsOptions {
     sourceRoot: string;
     resultsDir: string;

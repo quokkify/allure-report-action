@@ -23,6 +23,17 @@ const MAX_FRAGMENT_VARIABLE_BYTES = 4 * 1024 * 1024;
 const MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
 const PRESERVED_DESTINATION_METADATA = ['environment.properties', 'executor.json'];
 const MODULE_VARIABLES_METADATA = '.allure-module-variables.json';
+const MAX_SANITIZED_FILES = 100_000;
+const MAX_SANITIZED_BYTES = 2 * 1024 * 1024 * 1024;
+const ACTIVE_ATTACHMENT_EXTENSIONS = new Set([
+    '.cjs',
+    '.htm',
+    '.html',
+    '.js',
+    '.mjs',
+    '.svg',
+    '.xhtml',
+]);
 /**
  * Parses a ci-env-fragment.properties file
  */
@@ -128,6 +139,107 @@ function attributedResultBuffer(file, moduleName, moduleLabel) {
     labels.push({ name: moduleLabel, value: moduleName });
     document.labels = labels;
     return Buffer.from(`${JSON.stringify(document)}\n`, 'utf8');
+}
+function safeResultName(name) {
+    return name === path.basename(name) && !name.includes('\\') && !name.includes('\0');
+}
+function rejectActiveAttachment(name, data) {
+    if (ACTIVE_ATTACHMENT_EXTENSIONS.has(path.extname(name).toLowerCase())) {
+        throw new Error(`Active Allure attachment is not allowed: ${name}`);
+    }
+    const text = data.toString('utf8', 0, Math.min(data.length, 64 * 1024)).toLowerCase();
+    if (/<\s*script\b|<\s*(iframe|object|embed|svg)\b|javascript\s*:/.test(text)) {
+        throw new Error(`Active content in Allure attachment is not allowed: ${name}`);
+    }
+}
+/** Copies only bounded, regular, passive Allure inputs across the trust boundary. */
+export function sanitizeResults(options) {
+    const input = path.resolve(options.inputDir);
+    const output = path.resolve(options.outputDir);
+    const inputStat = fs.lstatSync(input);
+    if (!inputStat.isDirectory() || inputStat.isSymbolicLink()) {
+        throw new Error(`Allure results input must be a regular directory: ${options.inputDir}`);
+    }
+    if (input === output || output.startsWith(`${input}${path.sep}`)) {
+        throw new Error('Sanitized Allure results directory must be outside the input directory');
+    }
+    const regular = new Map();
+    const referenced = new Set();
+    let totalBytes = 0;
+    for (const entry of fs.readdirSync(input, { withFileTypes: true })) {
+        const file = path.join(input, entry.name);
+        if (!safeResultName(entry.name))
+            throw new Error(`Unsafe Allure result filename: ${entry.name}`);
+        if (entry.isSymbolicLink() || !entry.isFile()) {
+            throw new Error(`Only regular Allure result files are allowed: ${entry.name}`);
+        }
+        const stat = fs.lstatSync(file);
+        if (stat.nlink > 1)
+            throw new Error(`Hard-linked Allure result files are not allowed: ${entry.name}`);
+        if (stat.size > MAX_SOURCE_FILE_BYTES)
+            throw new Error(`Allure result file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${entry.name}`);
+        totalBytes += stat.size;
+        if (regular.size >= MAX_SANITIZED_FILES || totalBytes > MAX_SANITIZED_BYTES) {
+            throw new Error('Allure result inputs exceed count or byte limits');
+        }
+        const data = fs.readFileSync(file);
+        if (entry.name.endsWith('-result.json') || entry.name.endsWith('-container.json')) {
+            let document;
+            try {
+                document = JSON.parse(data.toString('utf8'));
+            }
+            catch (error) {
+                throw new Error(`Malformed Allure input JSON ${entry.name}: ${error.message}`);
+            }
+            if (!document || typeof document !== 'object' || Array.isArray(document)) {
+                throw new Error(`Allure input must be a JSON object: ${entry.name}`);
+            }
+            if (entry.name.endsWith('-result.json')) {
+                const attachments = document.attachments;
+                if (attachments !== undefined && !Array.isArray(attachments))
+                    throw new Error(`Malformed attachment references: ${entry.name}`);
+                for (const attachment of (attachments ?? [])) {
+                    if (!attachment ||
+                        typeof attachment.source !== 'string' ||
+                        !safeResultName(attachment.source)) {
+                        throw new Error(`Malformed attachment reference in ${entry.name}`);
+                    }
+                    referenced.add(attachment.source);
+                }
+            }
+        }
+        regular.set(entry.name, data);
+    }
+    if (![...regular.keys()].some(name => name.endsWith('-result.json'))) {
+        throw new Error('No Allure result JSON files found in downloaded artifact');
+    }
+    for (const reference of referenced) {
+        if (!regular.has(reference))
+            throw new Error(`Missing Allure attachment referenced by result: ${reference}`);
+    }
+    for (const [name, data] of regular) {
+        if (referenced.has(name))
+            rejectActiveAttachment(name, data);
+        if (!name.endsWith('-result.json') &&
+            !name.endsWith('-container.json') &&
+            !name.endsWith('.json') &&
+            !name.endsWith('.properties')) {
+            if (!referenced.has(name))
+                throw new Error(`Unreferenced Allure attachment is not allowed: ${name}`);
+        }
+    }
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    const temporary = fs.mkdtempSync(path.join(path.dirname(output), `.${path.basename(output)}-sanitize-`));
+    try {
+        for (const [name, data] of regular)
+            fs.writeFileSync(path.join(temporary, name), data, { flag: 'wx', mode: 0o600 });
+        fs.rmSync(output, { recursive: true, force: true });
+        fs.renameSync(temporary, output);
+    }
+    catch (error) {
+        fs.rmSync(temporary, { recursive: true, force: true });
+        throw error;
+    }
 }
 /**
  * Prepares attributed results from source directories

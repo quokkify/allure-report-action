@@ -12,15 +12,45 @@ permissions:
 jobs:
   publish:
     name: Publish report from trusted code
+    concurrency:
+      group: publish-pr-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: true
     if: >-
       ${{ github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
-      github.event.workflow_run.head_repository.fork == false &&
-      github.event.workflow_run.pull_requests[0].number != null }}
+      github.event.workflow_run.head_repository.fork == false }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Resolve and fence the current pull request
+        id: identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          RUN_HEAD_REF: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          set -euo pipefail
+          owner="${REPOSITORY%%/*}"
+          pulls="$(gh api --paginate "/repos/${REPOSITORY}/pulls?state=open&base=${DEFAULT_BRANCH}&head=${owner}:${RUN_HEAD_REF}")"
+          count="$(jq 'length' <<<"$pulls")"
+          [[ "$count" == 1 ]] || { echo "Expected exactly one open PR, found $count" >&2; exit 1; }
+          pr="$(jq '.[0]' <<<"$pulls")"
+          [[ "$(jq -r .base.ref <<<"$pr")" == "$DEFAULT_BRANCH" ]] || { echo 'Unexpected PR base branch' >&2; exit 1; }
+          [[ "$(jq -r .head.repo.full_name <<<"$pr")" == "$REPOSITORY" ]] || { echo 'Unexpected PR head repository' >&2; exit 1; }
+          [[ "$(jq -r .head.ref <<<"$pr")" == "$RUN_HEAD_REF" ]] || { echo 'Unexpected PR head ref' >&2; exit 1; }
+          [[ "$(jq -r .head.sha <<<"$pr")" == "$RUN_HEAD_SHA" ]] || { echo 'Stale workflow run head SHA' >&2; exit 1; }
+          [[ "$RUN_HEAD_REPOSITORY" == "$REPOSITORY" ]] || { echo 'Workflow run repository mismatch' >&2; exit 1; }
+          run_record="$(gh api "/repos/${REPOSITORY}/actions/runs/${RUN_ID}")"
+          [[ "$(jq -r .id <<<"$run_record")" == "$RUN_ID" ]] || { echo 'Workflow run identity mismatch' >&2; exit 1; }
+          [[ "$(jq -r .head_sha <<<"$run_record")" == "$RUN_HEAD_SHA" ]] || { echo 'Workflow run API head SHA mismatch' >&2; exit 1; }
+          printf 'number=%s\nhead_sha=%s\nrun_id=%s\n' "$(jq -r .number <<<"$pr")" "$RUN_HEAD_SHA" "$RUN_ID" >> "$GITHUB_OUTPUT"
+
       - name: Check out trusted default branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -32,25 +62,28 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: allure-results
-          path: artifacts/allure-results
+          path: artifacts/raw-allure-results
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ steps.identity.outputs.run_id }}
+
+      - name: Sanitize untrusted Allure result data
+        shell: bash
+        run: node "${GITHUB_WORKSPACE}/dist/cli.cjs" sanitize-results --input artifacts/raw-allure-results --output artifacts/sanitized-allure-results
 
       - name: Generate and publish trusted report
         uses: ./
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          results-directory: artifacts/allure-results
-          source-artifacts-directory: ""
+          results-directory: artifacts/sanitized-allure-results
           config-file: allurerc.mjs
           report-directory: allure-report
           comment-file: ${{ github.workspace }}/allure-pr-comment.md
-          pr-number: ${{ github.event.workflow_run.pull_requests[0].number }}
-          comment-marker: "<!-- allure-report-action-ci -->"
+          pr-number: ${{ steps.identity.outputs.number }}
+          comment-marker: '<!-- allure-report-action-ci -->'
           publish-pages: true
           fork-pr: false
-          source-run-id: ${{ github.event.workflow_run.id }}
-          pages-destination-directory: allure/pr-${{ github.event.workflow_run.pull_requests[0].number }}
+          source-run-id: ${{ steps.identity.outputs.run_id }}
+          pages-destination-directory: allure/pr-${{ steps.identity.outputs.number }}
           pages-branch: gh-pages
           pages-retention-count: 5

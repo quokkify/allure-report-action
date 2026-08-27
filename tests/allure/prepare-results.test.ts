@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { prepareAttributedResults } from '../../src/allure/prepare-results.js';
+import { prepareAttributedResults, sanitizeResults } from '../../src/allure/prepare-results.js';
 
 describe('Prepare Results', () => {
   let tempDir: string;
@@ -336,22 +336,34 @@ describe('Prepare Results', () => {
     expect(fs.readFileSync(path.join(resultsDir, 'sentinel.txt'), 'utf8')).toBe('unchanged\n');
   });
 
-  it('rejects symlinks', async () => {
-    const source = path.join(tempDir, 'artifacts', 'test-report', 'allure-results');
-    fs.mkdirSync(source, { recursive: true });
+  it('sanitizes passive inputs and rejects active attachment payloads', () => {
+    const input = path.join(tempDir, 'downloaded');
+    const output = path.join(tempDir, 'sanitized');
+    fs.mkdirSync(input);
+    writeResult(input, 'case', {
+      uuid: 'case',
+      attachments: [{ name: 'evidence', source: 'evil.html', type: 'text/html' }],
+    });
+    fs.writeFileSync(path.join(input, 'evil.html'), '<script>alert(1)</script>');
+    expect(() => sanitizeResults({ inputDir: input, outputDir: output })).toThrow(
+      'Active Allure attachment'
+    );
+    expect(fs.existsSync(output)).toBe(false);
+  });
 
-    const target = path.join(tempDir, 'outside-result.json');
-    fs.writeFileSync(target, JSON.stringify({ uuid: 'outside' }));
-    fs.symlinkSync(target, path.join(source, 'linked-result.json'));
-    writeFragment(source, 'Suite.Module=module-a\n');
-
-    expect(() => {
-      prepareAttributedResults({
-        sourceRoot: path.join(tempDir, 'artifacts'),
-        resultsDir,
-        moduleLabel: 'module',
-        autoMode: false,
-      });
-    }).toThrow('Only regular files are allowed');
+  it('rejects traversal references and symlinked downloaded files', () => {
+    const input = path.join(tempDir, 'downloaded');
+    fs.mkdirSync(input);
+    writeResult(input, 'case', { uuid: 'case', attachments: [{ source: '../escape.txt' }] });
+    expect(() =>
+      sanitizeResults({ inputDir: input, outputDir: path.join(tempDir, 'sanitized') })
+    ).toThrow('Malformed attachment reference');
+    fs.rmSync(input, { recursive: true, force: true });
+    fs.mkdirSync(input);
+    writeResult(input, 'case', { uuid: 'case' });
+    fs.symlinkSync(path.join(input, 'case-result.json'), path.join(input, 'linked.txt'));
+    expect(() =>
+      sanitizeResults({ inputDir: input, outputDir: path.join(tempDir, 'sanitized') })
+    ).toThrow('Only regular Allure result files');
   });
 });

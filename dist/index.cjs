@@ -21056,12 +21056,12 @@ async function hook2(token, request2, route, parameters) {
   endpoint2.headers.authorization = withAuthorizationPrefix2(token);
   return request2(endpoint2);
 }
-var b64url2, sep3, jwtRE2, isJWT2, createTokenAuth3;
+var b64url2, sep4, jwtRE2, isJWT2, createTokenAuth3;
 var init_dist_bundle4 = __esm({
   "node_modules/@actions/github/node_modules/@octokit/auth-token/dist-bundle/index.js"() {
     b64url2 = "(?:[a-zA-Z0-9_-]+)";
-    sep3 = "\\.";
-    jwtRE2 = new RegExp(`^${b64url2}${sep3}${b64url2}${sep3}${b64url2}$`);
+    sep4 = "\\.";
+    jwtRE2 = new RegExp(`^${b64url2}${sep4}${b64url2}${sep4}${b64url2}$`);
     isJWT2 = jwtRE2.test.bind(jwtRE2);
     createTokenAuth3 = function createTokenAuth22(token) {
       if (!token) {
@@ -25455,6 +25455,7 @@ var MAX_FRAGMENT_VARIABLE_BYTES2 = 4 * 1024 * 1024;
 var MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
 var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
 var MODULE_VARIABLES_METADATA2 = ".allure-module-variables.json";
+var MAX_SANITIZED_BYTES = 2 * 1024 * 1024 * 1024;
 function parseModuleFragment(fragmentPath) {
   const stat2 = fs8.lstatSync(fragmentPath);
   if (!stat2.isFile() || stat2.isSymbolicLink()) {
@@ -26140,8 +26141,8 @@ function withCustomRequest(customRequest) {
 
 // node_modules/@octokit/rest/node_modules/@octokit/auth-token/dist-bundle/index.js
 var b64url = "(?:[a-zA-Z0-9_-]+)";
-var sep2 = "\\.";
-var jwtRE = new RegExp(`^${b64url}${sep2}${b64url}${sep2}${b64url}$`);
+var sep3 = "\\.";
+var jwtRE = new RegExp(`^${b64url}${sep3}${b64url}${sep3}${b64url}$`);
 var isJWT = jwtRE.test.bind(jwtRE);
 async function auth(token) {
   const isApp = isJWT(token);
