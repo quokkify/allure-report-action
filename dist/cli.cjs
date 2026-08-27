@@ -48,6 +48,13 @@ var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"]
 var MODULE_VARIABLES_METADATA = ".allure-module-variables.json";
 var MAX_SANITIZED_FILES = 1e5;
 var MAX_SANITIZED_BYTES = 2 * 1024 * 1024 * 1024;
+function normalizeResultTimestamps(document) {
+  const start = typeof document.start === "number" && document.start > 0 ? document.start : 1;
+  const normalizedStart = Math.floor(start);
+  const stop = typeof document.stop === "number" && document.stop > 0 ? document.stop : start + 1;
+  document.start = normalizedStart;
+  document.stop = Math.max(normalizedStart + 1, Math.ceil(stop));
+}
 var ACTIVE_ATTACHMENT_EXTENSIONS = /* @__PURE__ */ new Set([
   ".cjs",
   ".htm",
@@ -143,13 +150,7 @@ function attributedResultBuffer(file, moduleName, moduleLabel) {
   const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
   labels.push({ name: moduleLabel, value: moduleName });
   document.labels = labels;
-  const now = Date.now();
-  if (typeof document.start !== "number" || document.start <= 0) {
-    document.start = now;
-  }
-  if (typeof document.stop !== "number" || document.stop <= 0) {
-    document.stop = document.start + 1;
-  }
+  normalizeResultTimestamps(document);
   return Buffer.from(`${JSON.stringify(document)}
 `, "utf8");
 }
@@ -235,6 +236,9 @@ function sanitizeResults(options) {
         throw new Error(`Allure input must be a JSON object: ${entry.name}`);
       }
       if (entry.name.endsWith("-result.json")) {
+        normalizeResultTimestamps(document);
+        regular.set(entry.name, Buffer.from(`${JSON.stringify(document)}
+`, "utf8"));
         collectAttachmentReferences(document, entry.name, referenced);
       } else {
         const container = document;
@@ -249,7 +253,8 @@ function sanitizeResults(options) {
         }
       }
     }
-    regular.set(entry.name, data);
+    if (!entry.name.endsWith("-result.json"))
+      regular.set(entry.name, data);
   }
   if (![...regular.keys()].some((name) => name.endsWith("-result.json"))) {
     throw new Error("No Allure result JSON files found in downloaded artifact");

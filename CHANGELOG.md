@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.1](https://github.com/quokkify/allure-report-action/compare/v0.4.0...v0.4.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **deps:** update @actions/github to v9 ([#45](https://github.com/quokkify/allure-report-action/issues/45)) ([60dfa82](https://github.com/quokkify/allure-report-action/commit/60dfa82729b680fcb965f6250e34d5226e94d45c))
+* **deps:** update @octokit/core to v7 ([#46](https://github.com/quokkify/allure-report-action/issues/46)) ([46da3f6](https://github.com/quokkify/allure-report-action/commit/46da3f67b4827bad0d3af57715fd251dec319a05))
+* **deps:** update @octokit/plugin-paginate-rest to v12 ([#41](https://github.com/quokkify/allure-report-action/issues/41)) ([517cbc9](https://github.com/quokkify/allure-report-action/commit/517cbc9b2ff15f50753df604e5a5d2b6602cdee9))
+* **deps:** update @octokit/plugin-paginate-rest to v14 ([#43](https://github.com/quokkify/allure-report-action/issues/43)) ([88e1ff8](https://github.com/quokkify/allure-report-action/commit/88e1ff8da41679a6390330f75aeb8cf5117442c4))
+* **deps:** update @octokit/plugin-paginate-rest to v15 ([#47](https://github.com/quokkify/allure-report-action/issues/47)) ([f98043b](https://github.com/quokkify/allure-report-action/commit/f98043b2ecd2fcbb854b2a1e3d11192e975f4239))
+* **deps:** update @octokit/plugin-rest-endpoint-methods to v16 ([#42](https://github.com/quokkify/allure-report-action/issues/42)) ([20a1e06](https://github.com/quokkify/allure-report-action/commit/20a1e06b6493a3feccdc752b5110708f5d49c126))
+* **deps:** update @octokit/plugin-rest-endpoint-methods to v17 ([#48](https://github.com/quokkify/allure-report-action/issues/48)) ([d6e8e25](https://github.com/quokkify/allure-report-action/commit/d6e8e25e609786b017169f30099078e51dd7fb39))
+* **deps:** update @octokit/plugin-rest-endpoint-methods to v18 ([#51](https://github.com/quokkify/allure-report-action/issues/51)) ([d3fb18e](https://github.com/quokkify/allure-report-action/commit/d3fb18e6f3702d1c54514487fb5c09a0e0aef2b2))
+* ensure valid start/stop timestamps to prevent plugin-awesome duration chart errors ([#52](https://github.com/quokkify/allure-report-action/issues/52)) ([73275e6](https://github.com/quokkify/allure-report-action/commit/73275e6e99d815b2f73af830f9b540e451dba75c))
+
 ## [0.4.0](https://github.com/quokkify/allure-report-action/compare/v0.3.0...v0.4.0) (2026-08-27)
 
 

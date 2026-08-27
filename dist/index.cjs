@@ -25056,6 +25056,13 @@ var MAX_PRESERVED_METADATA_BYTES = 16 * 1024 * 1024;
 var PRESERVED_DESTINATION_METADATA = ["environment.properties", "executor.json"];
 var MODULE_VARIABLES_METADATA2 = ".allure-module-variables.json";
 var MAX_SANITIZED_BYTES = 2 * 1024 * 1024 * 1024;
+function normalizeResultTimestamps(document) {
+  const start = typeof document.start === "number" && document.start > 0 ? document.start : 1;
+  const normalizedStart = Math.floor(start);
+  const stop = typeof document.stop === "number" && document.stop > 0 ? document.stop : start + 1;
+  document.start = normalizedStart;
+  document.stop = Math.max(normalizedStart + 1, Math.ceil(stop));
+}
 function parseModuleFragment(fragmentPath) {
   const stat2 = fs8.lstatSync(fragmentPath);
   if (!stat2.isFile() || stat2.isSymbolicLink()) {
@@ -25142,13 +25149,7 @@ function attributedResultBuffer(file, moduleName, moduleLabel) {
   const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
   labels.push({ name: moduleLabel, value: moduleName });
   document.labels = labels;
-  const now = Date.now();
-  if (typeof document.start !== "number" || document.start <= 0) {
-    document.start = now;
-  }
-  if (typeof document.stop !== "number" || document.stop <= 0) {
-    document.stop = document.start + 1;
-  }
+  normalizeResultTimestamps(document);
   return Buffer.from(`${JSON.stringify(document)}
 `, "utf8");
 }
@@ -28205,9 +28206,9 @@ async function run() {
       });
     }
     if (config.categoriesFile) {
-      const fs11 = await import("node:fs");
+      const fs12 = await import("node:fs");
       const path8 = await import("node:path");
-      fs11.cpSync(config.categoriesFile, path8.join(config.resultsDirectory, "categories.json"), {
+      fs12.cpSync(config.categoriesFile, path8.join(config.resultsDirectory, "categories.json"), {
         force: true
       });
     }
@@ -28238,6 +28239,10 @@ async function run() {
     ], { stdio: "inherit" });
     if (allureGenerate.status !== 0) {
       throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
+    }
+    const fs11 = await import("node:fs");
+    if (!fs11.existsSync(import_node_path.default.join(config.reportDirectory, "index.html"))) {
+      throw new Error(`Allure generate did not produce ${import_node_path.default.join(config.reportDirectory, "index.html")}`);
     }
     runBadges({
       resultsDir: config.resultsDirectory,
