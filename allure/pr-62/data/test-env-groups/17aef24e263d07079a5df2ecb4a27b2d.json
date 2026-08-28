@@ -1,0 +1,1 @@
+{"id":"17aef24e263d07079a5df2ecb4a27b2d","fullName":"quokkify/allure-report-action:tests/config/action-yml.test.ts#Action.yml Metadata forwards every runtime input through INPUT_* environment variables","name":"forwards every runtime input through INPUT_* environment variables","status":"passed","testResultsByEnv":{"default":"ebb0aab6d04bf4e39c4a33b9f9278764"}}

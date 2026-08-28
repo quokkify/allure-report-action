@@ -1,0 +1,1 @@
+{"id":"a0b77b1dfb025372d4171491fc5d6dc0","fullName":"quokkify/allure-report-action:tests/allure/prepare-results.test.ts#Prepare Results rejects traversal references and symlinked downloaded files","name":"rejects traversal references and symlinked downloaded files","status":"passed","testResultsByEnv":{"default":"6c0671d80c1ed90c6c335595c9207df1"}}
