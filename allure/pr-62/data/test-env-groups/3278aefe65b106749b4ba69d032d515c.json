@@ -1,1 +1,1 @@
-{"id":"3278aefe65b106749b4ba69d032d515c","fullName":"quokkify/allure-report-action:tests/config/loader.test.ts#Config Loader parses numeric inputs correctly","name":"parses numeric inputs correctly","status":"passed","testResultsByEnv":{"default":"20eb3d5b6739385360fddfc019fa1e29"}}
+{"id":"3278aefe65b106749b4ba69d032d515c","fullName":"quokkify/allure-report-action:tests/config/loader.test.ts#Config Loader parses numeric inputs correctly","name":"parses numeric inputs correctly","status":"passed","testResultsByEnv":{"default":"598dd36bb40811028ac4b395df3a5de3"}}
