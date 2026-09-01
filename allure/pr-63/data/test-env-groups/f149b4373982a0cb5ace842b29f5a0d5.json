@@ -1,1 +1,1 @@
-{"id":"f149b4373982a0cb5ace842b29f5a0d5","fullName":"quokkify/allure-report-action:tests/allure/prepare-results.test.ts#Prepare Results deduplicates identical files","name":"deduplicates identical files","status":"passed","testResultsByEnv":{"default":"561574ab623f970b974eaa9db8775d6a"}}
+{"id":"f149b4373982a0cb5ace842b29f5a0d5","fullName":"quokkify/allure-report-action:tests/allure/prepare-results.test.ts#Prepare Results deduplicates identical files","name":"deduplicates identical files","status":"passed","testResultsByEnv":{"default":"20ddaadf79b192485db169daab6aee77"}}
