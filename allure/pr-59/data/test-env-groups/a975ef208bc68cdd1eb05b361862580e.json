@@ -1,1 +1,0 @@
-{"id":"a975ef208bc68cdd1eb05b361862580e","fullName":"quokkify/allure-report-action:tests/renderer/pyramid.test.ts#Pyramid Renderer evaluatePyramidQualityGates warns when e2e share is too high","name":"warns when e2e share is too high","status":"passed","testResultsByEnv":{"default":"be97b23503d45616889629e77320fe6a"}}

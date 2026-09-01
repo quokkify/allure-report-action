@@ -1,1 +1,0 @@
-{"id":"404ad10dd9c551ca5702a2faf1da8d34","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser getLabelValue returns empty string when label not found","name":"returns empty string when label not found","status":"passed","testResultsByEnv":{"default":"1fd4cddc645860001b30af6a68623674"}}

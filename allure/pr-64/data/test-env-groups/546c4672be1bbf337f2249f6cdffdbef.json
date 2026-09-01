@@ -1,0 +1,1 @@
+{"id":"546c4672be1bbf337f2249f6cdffdbef","fullName":"quokkify/allure-report-action:tests/cli.test.ts#sanitize-results CLI rejects missing input without filesystem mutation","name":"rejects missing input without filesystem mutation","status":"passed","testResultsByEnv":{"default":"8693fc04072e49018a8584dc753c27fb"}}
