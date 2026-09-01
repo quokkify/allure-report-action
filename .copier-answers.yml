@@ -1,7 +1,8 @@
-_commit: v2.17.0
+_commit: v2.18.1
 _src_path: https://github.com/quokkify/project-toolkit.git
 allure_report: false
 codeql: true
+codeql_languages: []
 components: []
 docker: false
 project_name: Allure Report Action
@@ -11,4 +12,4 @@ renovate_config_repository: quokkify/renovate-presets
 renovate_presets:
   - default
   - github-actions
-toolkit_version: v2.17.0
+toolkit_version: v2.18.1
