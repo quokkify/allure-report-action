@@ -23,5 +23,12 @@
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "quokkify/project-toolkit"
     }
+  ],
+  "packageRules": [
+    {
+      "description": "Disable competing updates inside template-owned workflows; project-toolkit owns those versions and delivers them through copier update.",
+      "matchFileNames": [".github/workflows/codeql.yml", ".github/workflows/copier-update.yml", ".github/workflows/gitleaks.yml", ".github/workflows/release.yml", ".github/workflows/validate.yml"],
+      "enabled": false
+    }
   ]
 }
