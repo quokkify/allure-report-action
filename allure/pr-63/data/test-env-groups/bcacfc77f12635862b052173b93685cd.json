@@ -1,0 +1,1 @@
+{"id":"bcacfc77f12635862b052173b93685cd","fullName":"quokkify/allure-report-action:tests/cli.test.ts#sanitize-results CLI rejects empty output without filesystem mutation","name":"rejects empty output without filesystem mutation","status":"passed","testResultsByEnv":{"default":"beca67c7cbfaad3137bd104eb823f56c"}}

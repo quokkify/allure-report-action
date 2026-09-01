@@ -1,0 +1,1 @@
+{"id":"7e62d6c100134d7ad2ccf8116e2eca28","fullName":"quokkify/allure-report-action:tests/allure/prepare-results.test.ts#Prepare Results rejects equal, parent, and child sanitizer paths before filesystem mutation","name":"rejects equal, parent, and child sanitizer paths before filesystem mutation","status":"passed","testResultsByEnv":{"default":"a06fd96f6a2f92f2ba7f7fa5b6d55380"}}
