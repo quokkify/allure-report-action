@@ -1,0 +1,1 @@
+{"id":"4ed08d4c98e340e437c29bdd6ec7a3f0","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser getEpicForResult returns 'other' when labels is undefined","name":"returns 'other' when labels is undefined","status":"passed","testResultsByEnv":{"default":"f40fb9071e33fb024c06de6afdb20535"}}

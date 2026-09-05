@@ -1,1 +1,0 @@
-{"id":"29763c6fc9e872e9c4b538104fb973d3","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser getEpicForResult returns 'other' when no labels","name":"returns 'other' when no labels","status":"passed","testResultsByEnv":{"default":"62665b1d254e526e44cebdf4306ef977"}}
