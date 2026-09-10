@@ -1,1 +1,0 @@
-{"id":"e3646b747e9a621fe7898babf69b5cca","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser listResultFiles returns empty array for non-existent directory","name":"returns empty array for non-existent directory","status":"passed","testResultsByEnv":{"default":"fccb1d77fd48c96c043166ac1b4098cb"}}
