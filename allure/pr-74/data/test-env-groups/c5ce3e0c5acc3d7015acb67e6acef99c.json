@@ -1,1 +1,1 @@
-{"id":"c5ce3e0c5acc3d7015acb67e6acef99c","fullName":"quokkify/allure-report-action:tests/config/loader.test.ts#Config Loader parses boolean inputs correctly","name":"parses boolean inputs correctly","status":"passed","testResultsByEnv":{"default":"175e8618b4f4ebb459f2903cd8232c4b"}}
+{"id":"c5ce3e0c5acc3d7015acb67e6acef99c","fullName":"quokkify/allure-report-action:tests/config/loader.test.ts#Config Loader parses boolean inputs correctly","name":"parses boolean inputs correctly","status":"passed","testResultsByEnv":{"default":"250be17e669c9a36affc35c2a6868647"}}
