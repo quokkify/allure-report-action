@@ -1,1 +1,0 @@
-{"id":"e22e80fb6bc656343dfded8d9c9a9265","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser readJsonSafe returns null for non-existent file","name":"returns null for non-existent file","status":"passed","testResultsByEnv":{"default":"97e61286aa57674ad69fa3c8ed0980db"}}
