@@ -1,1 +1,0 @@
-{"id":"d145b77a2277f6aa126d50ce26b28ce1","fullName":"quokkify/allure-report-action:tests/report/pr-summary.test.ts#PR Summary Edge Cases does not drop unknown result when widget reports zero","name":"does not drop unknown result when widget reports zero","status":"passed","testResultsByEnv":{"default":"e2e6ada50b425d3d424704fc1d3c3b9d"}}
