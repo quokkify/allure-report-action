@@ -43,6 +43,7 @@ async function run(): Promise<void> {
         sourceRoot,
         resultsDir: config.resultsDirectory,
         moduleLabel: config.moduleEnvironmentLabel,
+        environmentLabel: config.environmentLabel,
         autoMode,
       });
     }
@@ -70,6 +71,7 @@ async function run(): Promise<void> {
         configFile: config.configFile,
         outputFile: effectiveConfigFile,
         moduleLabel: config.moduleEnvironmentLabel,
+        environmentLabel: config.environmentLabel,
       });
     }
 

@@ -73,6 +73,7 @@ function parseModuleFragment(fragmentPath) {
     throw new Error(`Module provenance exceeds ${MAX_FRAGMENT_BYTES} bytes: ${fragmentPath}`);
   }
   const modules = /* @__PURE__ */ new Set();
+  const environments = /* @__PURE__ */ new Set();
   const variables = /* @__PURE__ */ new Map();
   for (const rawLine of fs.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
     const line = rawLine.trim();
@@ -91,13 +92,20 @@ function parseModuleFragment(fragmentPath) {
     variables.set(key, value);
     if ((key === "Module" || key.endsWith(".Module")) && value)
       modules.add(value);
+    if ((key === "Environment" || key.endsWith(".Environment")) && value)
+      environments.add(value);
   }
   if (modules.size !== 1) {
     const detail = modules.size === 0 ? "none" : [...modules].sort().join(", ");
     throw new Error(`Expected exactly one module value in ${fragmentPath}; found ${detail}`);
   }
   const moduleArray = [...modules];
-  return { moduleName: moduleArray[0], variables };
+  return {
+    moduleName: moduleArray[0],
+    environmentName: environments.size === 1 ? [...environments][0] : moduleArray[0],
+    hasEnvironment: environments.size === 1,
+    variables
+  };
 }
 function findSourceResultDirectories(sourceRoot, resultsDir) {
   const root = path.resolve(sourceRoot);
@@ -134,7 +142,7 @@ function findSourceResultDirectories(sourceRoot, resultsDir) {
 function sha256(buffer) {
   return (0, import_node_crypto.createHash)("sha256").update(buffer).digest("hex");
 }
-function attributedResultBuffer(file, moduleName, moduleLabel) {
+function attributedResultBuffer(file, moduleName, environmentName, hasEnvironment, moduleLabel, environmentLabel) {
   let document;
   try {
     document = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -149,6 +157,8 @@ function attributedResultBuffer(file, moduleName, moduleLabel) {
   }
   const labels = (document.labels || []).filter((label) => !label || label.name !== moduleLabel);
   labels.push({ name: moduleLabel, value: moduleName });
+  if (hasEnvironment)
+    labels.push({ name: environmentLabel, value: environmentName });
   document.labels = labels;
   normalizeResultTimestamps(document);
   return Buffer.from(`${JSON.stringify(document)}
@@ -284,11 +294,13 @@ function sanitizeResults(options) {
   }
 }
 function prepareAttributedResults(options) {
-  const { sourceRoot, resultsDir, moduleLabel, autoMode } = options;
+  const { sourceRoot, resultsDir, moduleLabel, environmentLabel = "environment", autoMode } = options;
   if (!sourceRoot.trim())
     throw new Error("--source-root must not be empty");
   if (!moduleLabel.trim())
     throw new Error("--module-label must not be empty in attributed mode");
+  if (!environmentLabel.trim())
+    throw new Error("--environment-label must not be empty in attributed mode");
   const destination = path.resolve(resultsDir);
   const parent = path.dirname(destination);
   fs.mkdirSync(parent, { recursive: true });
@@ -352,9 +364,10 @@ function prepareAttributedResults(options) {
       if (!fs.existsSync(fragment)) {
         throw new Error(`Missing module provenance: ${fragment}`);
       }
-      const { moduleName, variables } = parseModuleFragment(fragment);
+      const { moduleName, environmentName, hasEnvironment, variables } = parseModuleFragment(fragment);
       for (const [key, value] of variables) {
-        const previous = fragmentVariables.get(key);
+        const scopedKey = hasEnvironment ? `${environmentName}::${key}` : key;
+        const previous = fragmentVariables.get(scopedKey);
         if (previous !== void 0 && previous !== value) {
           throw new Error(`Conflicting environment variable ${key} across source fragments`);
         }
@@ -363,7 +376,7 @@ function prepareAttributedResults(options) {
           if (fragmentVariables.size >= MAX_FRAGMENT_VARIABLES || fragmentVariableBytes > MAX_FRAGMENT_VARIABLE_BYTES) {
             throw new Error("Module environment variables exceed count or byte limits");
           }
-          fragmentVariables.set(key, value);
+          fragmentVariables.set(scopedKey, value);
         }
       }
       for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -385,7 +398,7 @@ function prepareAttributedResults(options) {
         if (sourceFiles > MAX_SOURCE_FILES || sourceBytes > MAX_SOURCE_BYTES) {
           throw new Error(`Source results exceed limits (${MAX_SOURCE_FILES} files / ${MAX_SOURCE_BYTES} bytes)`);
         }
-        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, moduleLabel) : fs.readFileSync(file);
+        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, environmentName, hasEnvironment, moduleLabel, environmentLabel) : fs.readFileSync(file);
         if (entry.name.endsWith("-result.json"))
           attributedResults += 1;
         stage(entry.name, data, stat.mode & 511, file);
@@ -835,7 +848,7 @@ function readModuleVariables(resultsDir) {
   return document;
 }
 async function generateModuleConfig(options) {
-  const { resultsDir, configFile, outputFile, moduleLabel } = options;
+  const { resultsDir, configFile, outputFile, moduleLabel, environmentLabel = "environment" } = options;
   if (!moduleLabel.trim()) {
     throw new Error("--module-label must not be empty");
   }
@@ -844,6 +857,7 @@ async function generateModuleConfig(options) {
     throw new Error(`Allure config not found: ${configFile}`);
   }
   const moduleNames = /* @__PURE__ */ new Set();
+  const environmentNames = /* @__PURE__ */ new Set();
   let unmatchedResults = 0;
   for (const file of listResultFiles(resultsDir)) {
     const doc = readJsonSafe(file);
@@ -852,13 +866,16 @@ async function generateModuleConfig(options) {
       moduleNames.add(moduleName);
     else
       unmatchedResults += 1;
+    const environmentName = getLabelValue(doc?.labels, environmentLabel);
+    if (environmentName)
+      environmentNames.add(environmentName);
   }
   const configUrl = (0, import_node_url.pathToFileURL)(configPath).href;
   const baseConfigModule = await import(configUrl);
   const baseConfig = baseConfigModule.default || {};
   const allVariables = { ...baseConfig.variables || {} };
-  const environments = baseConfig.environments || {};
-  for (const descriptor of Object.values(environments)) {
+  const baseEnvironments = baseConfig.environments || {};
+  for (const descriptor of Object.values(baseEnvironments)) {
     Object.assign(allVariables, descriptor?.variables || {});
   }
   Object.assign(allVariables, readModuleVariables(resultsDir));
@@ -887,6 +904,13 @@ export default baseConfig;
     variables: {}
   }));
   const modulesByName = new Map(modules.map((m) => [m.name, m]));
+  const usedEnvironmentIds = /* @__PURE__ */ new Set(["default"]);
+  const environments = [...environmentNames].sort((a, b) => a.localeCompare(b)).map((name) => ({
+    id: generateEnvironmentId(name, usedEnvironmentIds),
+    name,
+    variables: {}
+  }));
+  const environmentsByName = new Map(environments.map((environment) => [environment.name, environment]));
   const modulesByVariablePrefix = /* @__PURE__ */ new Map();
   for (const [key, value] of Object.entries(allVariables)) {
     const parts = parseVariableParts(key);
@@ -903,7 +927,14 @@ export default baseConfig;
   }
   const globalVariables = {};
   for (const [key, value] of Object.entries(allVariables)) {
-    const parts = parseVariableParts(key);
+    const separator = key.indexOf("::");
+    const environment = separator > 0 ? environmentsByName.get(key.slice(0, separator)) : void 0;
+    const unscopedKey = separator > 0 ? key.slice(separator + 2) : key;
+    if (environment) {
+      environment.variables[unscopedKey] = String(value);
+      continue;
+    }
+    const parts = parseVariableParts(unscopedKey);
     const declaredModule = parts ? modulesByVariablePrefix.get(parts.prefix) : null;
     const exactMatches = parts && !declaredModule ? modules.filter((candidate) => tokensEqual(candidate.tokens, parts.moduleTokens)) : [];
     const suffixMatches = parts && !declaredModule && exactMatches.length === 0 ? modules.filter((candidate) => tokensEndWith(candidate.tokens, parts.moduleTokens) || tokensEndWith(parts.moduleTokens, candidate.tokens)) : [];
@@ -912,23 +943,32 @@ export default baseConfig;
     if (module2 && parts?.name)
       module2.variables[parts.name] = String(value);
     else
-      globalVariables[key] = String(value);
+      globalVariables[unscopedKey] = String(value);
   }
   const serializedModules = modules.map(({ id, name, variables }) => ({ id, name, variables }));
+  const serializedEnvironments = environments.map(({ id, name, variables }) => ({ id, name, variables }));
   const source = `import baseConfig from ${JSON.stringify(configUrl)};
 const moduleLabel = ${JSON.stringify(moduleLabel)};
+const environmentLabel = ${JSON.stringify(environmentLabel)};
 const modules = ${JSON.stringify(serializedModules, null, 2)};
-const environments = Object.fromEntries(modules.map(({ id, name, variables }) => [id, {
+const moduleEnvironments = Object.fromEntries(modules.map(({ id, name, variables }) => [id, {
   name,
   variables,
   matcher: ({ labels }) => Array.isArray(labels) && labels.some(
     (label) => label?.name === moduleLabel && String(label?.value || "").trim() === name,
   ),
 }]));
+const environments = Object.fromEntries(${JSON.stringify(serializedEnvironments)}.map(({ id, name, variables }) => [id, {
+  name,
+  variables,
+  matcher: ({ labels }) => Array.isArray(labels) && labels.some(
+    (label) => label?.name === environmentLabel && String(label?.value || "").trim() === name,
+  ),
+}]));
 export default {
   ...baseConfig,
   variables: ${JSON.stringify(globalVariables, null, 2)},
-  environments,
+  environments: Object.keys(environments).length > 0 ? environments : moduleEnvironments,
 };
 `;
   fs5.mkdirSync(path5.dirname(outputFile), { recursive: true });

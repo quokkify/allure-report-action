@@ -20,6 +20,12 @@ interface ModuleInfo {
   variables: Record<string, string>;
 }
 
+interface EnvironmentInfo {
+  id: string;
+  name: string;
+  variables: Record<string, string>;
+}
+
 interface VariableParts {
   prefix: string;
   moduleTokens: string[];
@@ -116,13 +122,14 @@ export interface ModuleConfigOptions {
   configFile: string;
   outputFile: string;
   moduleLabel: string;
+  environmentLabel?: string;
 }
 
 /**
  * Generates module-scoped Allure configuration
  */
 export async function generateModuleConfig(options: ModuleConfigOptions): Promise<void> {
-  const { resultsDir, configFile, outputFile, moduleLabel } = options;
+  const { resultsDir, configFile, outputFile, moduleLabel, environmentLabel = 'environment' } = options;
 
   if (!moduleLabel.trim()) {
     throw new Error('--module-label must not be empty');
@@ -134,12 +141,15 @@ export async function generateModuleConfig(options: ModuleConfigOptions): Promis
 
   // Collect module names from results
   const moduleNames = new Set<string>();
+  const environmentNames = new Set<string>();
   let unmatchedResults = 0;
   for (const file of listResultFiles(resultsDir)) {
     const doc = readJsonSafe<AllureResult>(file);
     const moduleName = getLabelValue(doc?.labels, moduleLabel);
     if (moduleName) moduleNames.add(moduleName);
     else unmatchedResults += 1;
+    const environmentName = getLabelValue(doc?.labels, environmentLabel);
+    if (environmentName) environmentNames.add(environmentName);
   }
 
   // Load base config
@@ -149,11 +159,11 @@ export async function generateModuleConfig(options: ModuleConfigOptions): Promis
 
   // Merge all variables
   const allVariables: Record<string, string> = { ...(baseConfig.variables || {}) };
-  const environments = (baseConfig.environments || {}) as Record<
+  const baseEnvironments = (baseConfig.environments || {}) as Record<
     string,
     { variables?: Record<string, string> }
   >;
-  for (const descriptor of Object.values(environments)) {
+  for (const descriptor of Object.values(baseEnvironments)) {
     Object.assign(allVariables, descriptor?.variables || {});
   }
   Object.assign(allVariables, readModuleVariables(resultsDir));
@@ -187,6 +197,13 @@ export async function generateModuleConfig(options: ModuleConfigOptions): Promis
     variables: {},
   }));
   const modulesByName = new Map(modules.map(m => [m.name, m]));
+  const usedEnvironmentIds = new Set(['default']);
+  const environments: EnvironmentInfo[] = [...environmentNames].sort((a, b) => a.localeCompare(b)).map(name => ({
+    id: generateEnvironmentId(name, usedEnvironmentIds),
+    name,
+    variables: {},
+  }));
+  const environmentsByName = new Map(environments.map(environment => [environment.name, environment]));
 
   // Map variable prefixes to modules
   const modulesByVariablePrefix = new Map<string, ModuleInfo>();
@@ -205,7 +222,14 @@ export async function generateModuleConfig(options: ModuleConfigOptions): Promis
   // Distribute variables
   const globalVariables: Record<string, string> = {};
   for (const [key, value] of Object.entries(allVariables)) {
-    const parts = parseVariableParts(key);
+    const separator = key.indexOf('::');
+    const environment = separator > 0 ? environmentsByName.get(key.slice(0, separator)) : undefined;
+    const unscopedKey = separator > 0 ? key.slice(separator + 2) : key;
+    if (environment) {
+      environment.variables[unscopedKey] = String(value);
+      continue;
+    }
+    const parts = parseVariableParts(unscopedKey);
     const declaredModule = parts ? modulesByVariablePrefix.get(parts.prefix) : null;
     const exactMatches =
       parts && !declaredModule
@@ -222,25 +246,34 @@ export async function generateModuleConfig(options: ModuleConfigOptions): Promis
     const matches = exactMatches.length > 0 ? exactMatches : suffixMatches;
     const module = declaredModule || (matches.length === 1 ? matches[0] : null);
     if (module && parts?.name) module.variables[parts.name] = String(value);
-    else globalVariables[key] = String(value);
+    else globalVariables[unscopedKey] = String(value);
   }
 
   // Generate config
   const serializedModules = modules.map(({ id, name, variables }) => ({ id, name, variables }));
+  const serializedEnvironments = environments.map(({ id, name, variables }) => ({ id, name, variables }));
   const source = `import baseConfig from ${JSON.stringify(configUrl)};
 const moduleLabel = ${JSON.stringify(moduleLabel)};
+const environmentLabel = ${JSON.stringify(environmentLabel)};
 const modules = ${JSON.stringify(serializedModules, null, 2)};
-const environments = Object.fromEntries(modules.map(({ id, name, variables }) => [id, {
+const moduleEnvironments = Object.fromEntries(modules.map(({ id, name, variables }) => [id, {
   name,
   variables,
   matcher: ({ labels }) => Array.isArray(labels) && labels.some(
     (label) => label?.name === moduleLabel && String(label?.value || "").trim() === name,
   ),
 }]));
+const environments = Object.fromEntries(${JSON.stringify(serializedEnvironments)}.map(({ id, name, variables }) => [id, {
+  name,
+  variables,
+  matcher: ({ labels }) => Array.isArray(labels) && labels.some(
+    (label) => label?.name === environmentLabel && String(label?.value || "").trim() === name,
+  ),
+}]));
 export default {
   ...baseConfig,
   variables: ${JSON.stringify(globalVariables, null, 2)},
-  environments,
+  environments: Object.keys(environments).length > 0 ? environments : moduleEnvironments,
 };
 `;
   fs.mkdirSync(path.dirname(outputFile), { recursive: true });
