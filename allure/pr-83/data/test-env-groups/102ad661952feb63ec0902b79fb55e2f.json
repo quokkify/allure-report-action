@@ -1,0 +1,1 @@
+{"id":"102ad661952feb63ec0902b79fb55e2f","fullName":"quokkify/allure-report-action:tests/config/loader.test.ts#Config Loader throws error for missing pages destination when publish-pages is true","name":"throws error for missing pages destination when publish-pages is true","status":"passed","testResultsByEnv":{"default":"ea0983fa8cfab6f71f543121e1962b24"}}
