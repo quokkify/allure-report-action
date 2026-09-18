@@ -1,1 +1,0 @@
-{"id":"c8d81fd8382d98850c3c117363bc905f","fullName":"quokkify/allure-report-action:tests/allure/prepare-results.test.ts#Prepare Results deduplicates identical fragment variables deterministically","name":"deduplicates identical fragment variables deterministically","status":"passed","testResultsByEnv":{"default":"4a10d9359d76b6bbad1fa3bf06cb8637"}}
