@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/quokkify/allure-report-action/compare/v0.5.0...v0.5.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* **allure:** deduplicate environment variables ([#87](https://github.com/quokkify/allure-report-action/issues/87)) ([280bd6b](https://github.com/quokkify/allure-report-action/commit/280bd6b31178c38362d00f7a998633da73d19c66))
+
 ## [0.5.0](https://github.com/quokkify/allure-report-action/compare/v0.4.1...v0.5.0) (2026-09-18)
 
 <!-- project-toolkit:rich-block:start -->
