@@ -24710,6 +24710,7 @@ var import_node_url = require("node:url");
 var MODULE_VARIABLES_METADATA = ".allure-module-variables.json";
 var MAX_FRAGMENT_VARIABLES = 1e4;
 var MAX_FRAGMENT_VARIABLE_BYTES = 4 * 1024 * 1024;
+var HIDDEN_ENVIRONMENT_VARIABLES = /* @__PURE__ */ new Set(["module", "environment", "job", "runner"]);
 function normalizeModuleTokens(value) {
   return String(value || "").normalize("NFKD").toLowerCase().replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((token) => token && token !== "utils");
 }
@@ -24853,12 +24854,21 @@ export default baseConfig;
     modulesByVariablePrefix.set(parts.prefix, module2);
   }
   const globalVariables = {};
+  const environmentVariableValues = /* @__PURE__ */ new Map();
   for (const [key, value] of Object.entries(allVariables)) {
     const separator = key.indexOf("::");
     const environment = separator > 0 ? environmentsByName.get(key.slice(0, separator)) : void 0;
     const unscopedKey = separator > 0 ? key.slice(separator + 2) : key;
     if (environment) {
-      environment.variables[unscopedKey] = String(value);
+      const parts2 = parseVariableParts(unscopedKey);
+      const variableName = parts2?.name || unscopedKey;
+      if (!HIDDEN_ENVIRONMENT_VARIABLES.has(variableName.toLowerCase())) {
+        const values = environmentVariableValues.get(environment.name) || /* @__PURE__ */ new Map();
+        const distinctValues = values.get(variableName) || /* @__PURE__ */ new Set();
+        distinctValues.add(String(value));
+        values.set(variableName, distinctValues);
+        environmentVariableValues.set(environment.name, values);
+      }
       continue;
     }
     const parts = parseVariableParts(unscopedKey);
@@ -24871,6 +24881,15 @@ export default baseConfig;
       module2.variables[parts.name] = String(value);
     else
       globalVariables[unscopedKey] = String(value);
+  }
+  for (const environment of environments) {
+    const values = environmentVariableValues.get(environment.name);
+    if (!values)
+      continue;
+    for (const [name, distinctValues] of values) {
+      if (distinctValues.size === 1)
+        environment.variables[name] = [...distinctValues][0];
+    }
   }
   const serializedModules = modules.map(({ id, name, variables }) => ({ id, name, variables }));
   const serializedEnvironments = environments.map(({ id, name, variables }) => ({ id, name, variables }));

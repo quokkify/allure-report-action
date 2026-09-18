@@ -98,7 +98,20 @@ describe('Module Config Generator', () => {
       JSON.stringify({
         'ubuntu-24.04::common-utils.core.Module': 'common-utils.core',
         'ubuntu-24.04::common-utils.core.Environment': 'ubuntu-24.04',
+        'ubuntu-24.04::common-utils.core.Ubuntu ID': 'ubuntu',
         'ubuntu-24.04::common-utils.core.Ubuntu VERSION_ID': '24.04',
+        'ubuntu-24.04::common-utils.core.Java': '17.0.20.1',
+        'ubuntu-24.04::common-utils.core.Gradle': '9.7.1',
+        'ubuntu-24.04::common-utils.core.Suite': 'Gradle TestNG',
+        'ubuntu-24.04::common-utils.core.Job': 'test-common',
+        'ubuntu-24.04::common-utils.core.Runner': 'runner-a',
+        'ubuntu-24.04::other.Module': 'other',
+        'ubuntu-24.04::other.Environment': 'ubuntu-24.04',
+        'ubuntu-24.04::other.Java': '17.0.20.1',
+        'ubuntu-24.04::other.Gradle': '9.7.1',
+        'ubuntu-24.04::other.Suite': 'Gradle TestNG',
+        'ubuntu-24.04::other.Job': 'test-other',
+        'ubuntu-24.04::other.Runner': 'runner-b',
       })
     );
 
@@ -117,9 +130,16 @@ describe('Module Config Generator', () => {
       environments[0].matcher({ labels: [{ name: 'environment', value: 'ubuntu-24.04' }] })
     ).toBe(true);
     expect(environments[0].variables).toMatchObject({
-      'common-utils.core.Environment': 'ubuntu-24.04',
-      'common-utils.core.Ubuntu VERSION_ID': '24.04',
+      'Ubuntu ID': 'ubuntu',
+      'Ubuntu VERSION_ID': '24.04',
+      Java: '17.0.20.1',
+      Gradle: '9.7.1',
+      Suite: 'Gradle TestNG',
     });
+    expect(Object.keys(environments[0].variables)).toHaveLength(5);
+    expect(environments[0].variables).not.toHaveProperty('Module');
+    expect(environments[0].variables).not.toHaveProperty('Job');
+    expect(environments[0].variables).not.toHaveProperty('Runner');
   });
 
   it('keeps legacy already merged mode when no provenance', async () => {

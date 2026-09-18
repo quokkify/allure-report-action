@@ -8,6 +8,7 @@ import { getLabelValue, listResultFiles, readJsonSafe } from './parser.js';
 const MODULE_VARIABLES_METADATA = '.allure-module-variables.json';
 const MAX_FRAGMENT_VARIABLES = 10_000;
 const MAX_FRAGMENT_VARIABLE_BYTES = 4 * 1024 * 1024;
+const HIDDEN_ENVIRONMENT_VARIABLES = new Set(['module', 'environment', 'job', 'runner']);
 function normalizeModuleTokens(value) {
     return String(value || '')
         .normalize('NFKD')
@@ -183,12 +184,21 @@ export async function generateModuleConfig(options) {
     }
     // Distribute variables
     const globalVariables = {};
+    const environmentVariableValues = new Map();
     for (const [key, value] of Object.entries(allVariables)) {
         const separator = key.indexOf('::');
         const environment = separator > 0 ? environmentsByName.get(key.slice(0, separator)) : undefined;
         const unscopedKey = separator > 0 ? key.slice(separator + 2) : key;
         if (environment) {
-            environment.variables[unscopedKey] = String(value);
+            const parts = parseVariableParts(unscopedKey);
+            const variableName = parts?.name || unscopedKey;
+            if (!HIDDEN_ENVIRONMENT_VARIABLES.has(variableName.toLowerCase())) {
+                const values = environmentVariableValues.get(environment.name) || new Map();
+                const distinctValues = values.get(variableName) || new Set();
+                distinctValues.add(String(value));
+                values.set(variableName, distinctValues);
+                environmentVariableValues.set(environment.name, values);
+            }
             continue;
         }
         const parts = parseVariableParts(unscopedKey);
@@ -206,6 +216,15 @@ export async function generateModuleConfig(options) {
             module.variables[parts.name] = String(value);
         else
             globalVariables[unscopedKey] = String(value);
+    }
+    for (const environment of environments) {
+        const values = environmentVariableValues.get(environment.name);
+        if (!values)
+            continue;
+        for (const [name, distinctValues] of values) {
+            if (distinctValues.size === 1)
+                environment.variables[name] = [...distinctValues][0];
+        }
     }
     // Generate config
     const serializedModules = modules.map(({ id, name, variables }) => ({ id, name, variables }));
