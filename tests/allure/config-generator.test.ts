@@ -84,6 +84,44 @@ describe('Module Config Generator', () => {
     });
   });
 
+  it('uses provenance environment values for the top-level selector', async () => {
+    const config = path.join(tempDir, 'allurerc.mjs');
+    fs.writeFileSync(config, 'export default {};\n');
+    writeResult('module', {
+      uuid: 'module',
+      name: 'module',
+      status: 'passed',
+      labels: [{ name: 'module', value: 'common-utils.core' }],
+    });
+    fs.writeFileSync(
+      path.join(resultsDir, '.allure-module-variables.json'),
+      JSON.stringify({
+        'ubuntu-24.04::common-utils.core.Module': 'common-utils.core',
+        'ubuntu-24.04::common-utils.core.Environment': 'ubuntu-24.04',
+        'ubuntu-24.04::common-utils.core.Ubuntu VERSION_ID': '24.04',
+      })
+    );
+
+    const effective = path.join(tempDir, 'effective-environment.mjs');
+    await generateModuleConfig({
+      resultsDir,
+      configFile: config,
+      outputFile: effective,
+      moduleLabel: 'module',
+    });
+
+    const generated = await import(effective);
+    const environments = Object.values(generated.default.environments) as any[];
+    expect(environments.map(environment => environment.name)).toEqual(['ubuntu-24.04']);
+    expect(
+      environments[0].matcher({ labels: [{ name: 'environment', value: 'ubuntu-24.04' }] })
+    ).toBe(true);
+    expect(environments[0].variables).toMatchObject({
+      'common-utils.core.Environment': 'ubuntu-24.04',
+      'common-utils.core.Ubuntu VERSION_ID': '24.04',
+    });
+  });
+
   it('keeps legacy already merged mode when no provenance', async () => {
     const config = path.join(tempDir, 'allurerc.mjs');
     fs.writeFileSync(config, 'export default {};\n');
