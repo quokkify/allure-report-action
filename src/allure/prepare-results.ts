@@ -48,6 +48,8 @@ const ACTIVE_ATTACHMENT_EXTENSIONS = new Set([
 
 interface ParsedFragment {
   moduleName: string;
+  environmentName: string;
+  hasEnvironment: boolean;
   variables: Map<string, string>;
 }
 
@@ -68,6 +70,7 @@ function parseModuleFragment(fragmentPath: string): ParsedFragment {
     throw new Error(`Module provenance exceeds ${MAX_FRAGMENT_BYTES} bytes: ${fragmentPath}`);
   }
   const modules = new Set<string>();
+  const environments = new Set<string>();
   const variables = new Map<string, string>();
   for (const rawLine of fs.readFileSync(fragmentPath, 'utf8').split(/\r?\n/)) {
     const line = rawLine.trim();
@@ -91,13 +94,19 @@ function parseModuleFragment(fragmentPath: string): ParsedFragment {
     }
     variables.set(key, value);
     if ((key === 'Module' || key.endsWith('.Module')) && value) modules.add(value);
+    if ((key === 'Environment' || key.endsWith('.Environment')) && value) environments.add(value);
   }
   if (modules.size !== 1) {
     const detail = modules.size === 0 ? 'none' : [...modules].sort().join(', ');
     throw new Error(`Expected exactly one module value in ${fragmentPath}; found ${detail}`);
   }
   const moduleArray = [...modules];
-  return { moduleName: moduleArray[0]!, variables };
+  return {
+    moduleName: moduleArray[0]!,
+    environmentName: environments.size === 1 ? [...environments][0]! : moduleArray[0]!,
+    hasEnvironment: environments.size === 1,
+    variables,
+  };
 }
 
 /**
@@ -142,7 +151,7 @@ function sha256(buffer: Buffer): string {
 /**
  * Creates attributed result buffer with module label
  */
-function attributedResultBuffer(file: string, moduleName: string, moduleLabel: string): Buffer {
+function attributedResultBuffer(file: string, moduleName: string, environmentName: string, hasEnvironment: boolean, moduleLabel: string, environmentLabel: string): Buffer {
   let document: AllureResult;
   try {
     document = JSON.parse(fs.readFileSync(file, 'utf8')) as AllureResult;
@@ -157,6 +166,8 @@ function attributedResultBuffer(file: string, moduleName: string, moduleLabel: s
   }
   const labels = (document.labels || []).filter(label => !label || label.name !== moduleLabel);
   labels.push({ name: moduleLabel, value: moduleName });
+  if (hasEnvironment)
+    labels.push({ name: environmentLabel, value: environmentName });
   document.labels = labels;
   normalizeResultTimestamps(document);
   return Buffer.from(`${JSON.stringify(document)}\n`, 'utf8');
@@ -323,6 +334,7 @@ export interface PrepareResultsOptions {
   sourceRoot: string;
   resultsDir: string;
   moduleLabel: string;
+  environmentLabel?: string;
   autoMode: boolean;
 }
 
@@ -330,10 +342,11 @@ export interface PrepareResultsOptions {
  * Prepares attributed results from source directories
  */
 export function prepareAttributedResults(options: PrepareResultsOptions): void {
-  const { sourceRoot, resultsDir, moduleLabel, autoMode } = options;
+  const { sourceRoot, resultsDir, moduleLabel, environmentLabel = 'environment', autoMode } = options;
 
   if (!sourceRoot.trim()) throw new Error('--source-root must not be empty');
   if (!moduleLabel.trim()) throw new Error('--module-label must not be empty in attributed mode');
+  if (!environmentLabel.trim()) throw new Error('--environment-label must not be empty in attributed mode');
 
   const destination = path.resolve(resultsDir);
   const parent = path.dirname(destination);
@@ -412,9 +425,10 @@ export function prepareAttributedResults(options: PrepareResultsOptions): void {
       if (!fs.existsSync(fragment)) {
         throw new Error(`Missing module provenance: ${fragment}`);
       }
-      const { moduleName, variables } = parseModuleFragment(fragment);
+      const { moduleName, environmentName, hasEnvironment, variables } = parseModuleFragment(fragment);
       for (const [key, value] of variables) {
-        const previous = fragmentVariables.get(key);
+        const scopedKey = hasEnvironment ? `${environmentName}::${key}` : key;
+        const previous = fragmentVariables.get(scopedKey);
         if (previous !== undefined && previous !== value) {
           throw new Error(`Conflicting environment variable ${key} across source fragments`);
         }
@@ -426,7 +440,7 @@ export function prepareAttributedResults(options: PrepareResultsOptions): void {
           ) {
             throw new Error('Module environment variables exceed count or byte limits');
           }
-          fragmentVariables.set(key, value);
+          fragmentVariables.set(scopedKey, value);
         }
       }
       for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -450,7 +464,7 @@ export function prepareAttributedResults(options: PrepareResultsOptions): void {
           );
         }
         const data = entry.name.endsWith('-result.json')
-          ? attributedResultBuffer(file, moduleName, moduleLabel)
+          ? attributedResultBuffer(file, moduleName, environmentName, hasEnvironment, moduleLabel, environmentLabel)
           : fs.readFileSync(file);
         if (entry.name.endsWith('-result.json')) attributedResults += 1;
         stage(entry.name, data, stat.mode & 0o777, file);

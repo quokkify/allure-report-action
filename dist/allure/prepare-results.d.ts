@@ -8,6 +8,7 @@ export interface PrepareResultsOptions {
     sourceRoot: string;
     resultsDir: string;
     moduleLabel: string;
+    environmentLabel?: string;
     autoMode: boolean;
 }
 /**

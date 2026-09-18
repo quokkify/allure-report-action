@@ -39,6 +39,7 @@ async function run() {
                 sourceRoot,
                 resultsDir: config.resultsDirectory,
                 moduleLabel: config.moduleEnvironmentLabel,
+                environmentLabel: config.environmentLabel,
                 autoMode,
             });
         }
@@ -61,6 +62,7 @@ async function run() {
                 configFile: config.configFile,
                 outputFile: effectiveConfigFile,
                 moduleLabel: config.moduleEnvironmentLabel,
+                environmentLabel: config.environmentLabel,
             });
         }
         // Step 4: Run Allure generate using the effective config file

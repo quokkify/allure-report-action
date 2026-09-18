@@ -27,6 +27,10 @@ inputs:
     description: Allure result label whose distinct values become module-scoped environments; empty preserves caller environments
     required: false
     default: "module"
+  environment-label:
+    description: Result label whose values become top-level Allure environments
+    required: false
+    default: "environment"
   source-artifacts-directory:
     description: Source root, auto for parent-directory detection, or empty for legacy pre-merged results
     required: false
@@ -38,7 +42,7 @@ inputs:
   allure-version:
     description: Exact Allure CLI version
     required: false
-    default: "3.16.0"
+    default: "3.17.0"
   pr-number:
     description: Pull request number to comment on; an empty value skips the comment
     required: false

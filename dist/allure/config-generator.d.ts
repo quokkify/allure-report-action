@@ -3,6 +3,7 @@ export interface ModuleConfigOptions {
     configFile: string;
     outputFile: string;
     moduleLabel: string;
+    environmentLabel?: string;
 }
 /**
  * Generates module-scoped Allure configuration

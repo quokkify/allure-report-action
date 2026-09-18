@@ -7,6 +7,7 @@ export interface ActionConfig {
     reportDirectory: string;
     configFile: string;
     moduleEnvironmentLabel: string;
+    environmentLabel: string;
     sourceArtifactsDirectory: string;
     categoriesFile: string;
     allureVersion: string;

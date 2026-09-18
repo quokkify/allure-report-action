@@ -8,6 +8,7 @@ export interface ModuleConfigCommandOptions {
   configFile: string;
   outputFile: string;
   moduleLabel: string;
+  environmentLabel?: string;
 }
 
 /**

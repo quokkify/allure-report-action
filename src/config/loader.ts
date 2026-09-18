@@ -17,6 +17,7 @@ export function loadConfig(): ActionConfig {
     // The action metadata supplies the default when omitted; preserve an
     // explicit empty value because it disables module normalization.
     moduleEnvironmentLabel: core.getInput('module-environment-label'),
+    environmentLabel: core.getInput('environment-label') || 'environment',
     sourceArtifactsDirectory: core.getInput('source-artifacts-directory') || '',
     categoriesFile: core.getInput('categories-file') || '',
     allureVersion: core.getInput('allure-version') || '3.15.0',
