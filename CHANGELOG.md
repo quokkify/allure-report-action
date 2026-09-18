@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.5.0](https://github.com/quokkify/allure-report-action/compare/v0.4.1...v0.5.0) (2026-09-18)
+
+<!-- project-toolkit:rich-block:start -->
+### 📦 Dependencies
+- update vitest to v4 ([#49](https://github.com/quokkify/allure-report-action/pull/49)) ([59badb2](https://github.com/quokkify/allure-report-action/commit/59badb2c22d2c26a958e2abf41a0791c95476526)) <!-- project-toolkit:rich-release-notes pr=49 -->
+- update esbuild to ^0.28.0 ([#57](https://github.com/quokkify/allure-report-action/pull/57)) ([672ac42](https://github.com/quokkify/allure-report-action/commit/672ac42f158251528e3c278ea9d3deb0d870de15)) <!-- project-toolkit:rich-release-notes pr=57 -->
+- update @types/node to v24 ([#58](https://github.com/quokkify/allure-report-action/pull/58)) ([a3c4ba5](https://github.com/quokkify/allure-report-action/commit/a3c4ba5d7de4aa5fca2dce78781bf124a784b3f5)) <!-- project-toolkit:rich-release-notes pr=58 -->
+- update @octokit/core to v7.0.8 ([#69](https://github.com/quokkify/allure-report-action/pull/69)) ([48a6152](https://github.com/quokkify/allure-report-action/commit/48a6152b53d50cfb88253bfae72dcf5e0c136b84)) <!-- project-toolkit:rich-release-notes pr=69 -->
+- update typescript-eslint monorepo to ^8.68.0 ([#70](https://github.com/quokkify/allure-report-action/pull/70)) ([b0a5fe6](https://github.com/quokkify/allure-report-action/commit/b0a5fe66a6b3ffd02b2eb992dd61967a0fb56010)) <!-- project-toolkit:rich-release-notes pr=70 -->
+- update allure to v3.16.1 ([#73](https://github.com/quokkify/allure-report-action/pull/73)) ([2ec1ebd](https://github.com/quokkify/allure-report-action/commit/2ec1ebd82ac5c299bff154ebdf2b60090f6803bc)) <!-- project-toolkit:rich-release-notes pr=73 -->
+- update typescript-eslint monorepo to ^8.69.0 ([#75](https://github.com/quokkify/allure-report-action/pull/75)) ([ed85ace](https://github.com/quokkify/allure-report-action/commit/ed85acedb4c3c8a2a9add12183f14f5c9158505e)) <!-- project-toolkit:rich-release-notes pr=75 -->
+- pin dependencies ([#76](https://github.com/quokkify/allure-report-action/pull/76)) ([e88f807](https://github.com/quokkify/allure-report-action/commit/e88f8075f82994ca7c19f6c45dfadc3a9f3a5516)) <!-- project-toolkit:rich-release-notes pr=76 -->
+- update @types/node to v24.13.4 ([#77](https://github.com/quokkify/allure-report-action/pull/77)) ([a67ac12](https://github.com/quokkify/allure-report-action/commit/a67ac126eb28133e5a6ac2512361545a1d0ab640)) <!-- project-toolkit:rich-release-notes pr=77 -->
+- update allure to v3.17.0 ([#78](https://github.com/quokkify/allure-report-action/pull/78)) ([b67ceb4](https://github.com/quokkify/allure-report-action/commit/b67ceb4c9f74d01dec89b070e1c14d532476686a)) <!-- project-toolkit:rich-release-notes pr=78 -->
+- update vitest to v5 ([#79](https://github.com/quokkify/allure-report-action/pull/79)) ([be6912f](https://github.com/quokkify/allure-report-action/commit/be6912fabc13e44ac8667213011f68662c8a8fa9)) <!-- project-toolkit:rich-release-notes pr=79 -->
+- update allure-vitest to v3.12.1 ([#81](https://github.com/quokkify/allure-report-action/pull/81)) ([f834ac2](https://github.com/quokkify/allure-report-action/commit/f834ac2cd23b17c0e4cf2a05a252145b689221ed)) <!-- project-toolkit:rich-release-notes pr=81 -->
+<!-- project-toolkit:rich-block:end -->
+
+### Features
+
+* **allure:** scope provenance by environment and module ([#84](https://github.com/quokkify/allure-report-action/issues/84)) ([78b4b36](https://github.com/quokkify/allure-report-action/commit/78b4b3615d60d59c4311bdad21242522c5366079))
+
+
+### Bug Fixes
+
+* keep top-level environments by provenance ([#86](https://github.com/quokkify/allure-report-action/issues/86)) ([7fe5bb6](https://github.com/quokkify/allure-report-action/commit/7fe5bb667e1dda74f23c7edf1535e3a9c29f7856))
+
 ## [0.4.1](https://github.com/quokkify/allure-report-action/compare/v0.4.0...v0.4.1) (2026-08-27)
 
 
