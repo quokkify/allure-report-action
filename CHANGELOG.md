@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/quokkify/allure-report-action/compare/v0.4.1...v0.5.0) (2026-09-18)
+
+
+### Features
+
+* **allure:** scope provenance by environment and module ([#84](https://github.com/quokkify/allure-report-action/issues/84)) ([78b4b36](https://github.com/quokkify/allure-report-action/commit/78b4b3615d60d59c4311bdad21242522c5366079))
+
+
+### Bug Fixes
+
+* keep top-level environments by provenance ([#86](https://github.com/quokkify/allure-report-action/issues/86)) ([7fe5bb6](https://github.com/quokkify/allure-report-action/commit/7fe5bb667e1dda74f23c7edf1535e3a9c29f7856))
+
 ## [0.4.1](https://github.com/quokkify/allure-report-action/compare/v0.4.0...v0.4.1) (2026-08-27)
 
 
