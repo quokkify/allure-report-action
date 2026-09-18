@@ -124,6 +124,15 @@ export async function generateModuleConfig(options) {
         Object.assign(allVariables, descriptor?.variables || {});
     }
     Object.assign(allVariables, readModuleVariables(resultsDir));
+    // Provenance metadata is authoritative for environment names as well as variables.
+    // Result labels may be absent in legacy or partially attributed inputs; falling back
+    // to module-scoped environments would put module names in Allure's top-level
+    // Environment selector. Keep the selector keyed by the actual environment value.
+    for (const [key, value] of Object.entries(allVariables)) {
+        if (key.toLowerCase().endsWith('.environment') && String(value || '').trim()) {
+            environmentNames.add(String(value).trim());
+        }
+    }
     // Also check for module variables in labels
     if (moduleNames.size > 0) {
         for (const [key, value] of Object.entries(allVariables)) {

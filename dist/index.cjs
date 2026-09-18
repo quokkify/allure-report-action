@@ -24801,6 +24801,11 @@ async function generateModuleConfig(options) {
     Object.assign(allVariables, descriptor?.variables || {});
   }
   Object.assign(allVariables, readModuleVariables(resultsDir));
+  for (const [key, value] of Object.entries(allVariables)) {
+    if (key.toLowerCase().endsWith(".environment") && String(value || "").trim()) {
+      environmentNames.add(String(value).trim());
+    }
+  }
   if (moduleNames.size > 0) {
     for (const [key, value] of Object.entries(allVariables)) {
       if (key.toLowerCase().endsWith(".module") && String(value || "").trim()) {
