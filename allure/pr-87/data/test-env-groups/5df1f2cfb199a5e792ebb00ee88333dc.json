@@ -1,0 +1,1 @@
+{"id":"5df1f2cfb199a5e792ebb00ee88333dc","fullName":"quokkify/allure-report-action:tests/allure/prepare-results.test.ts#Prepare Results rejects missing module and malformed JSON","name":"rejects missing module and malformed JSON","status":"passed","testResultsByEnv":{"default":"b4a686306fd7f05b0e6a3b2a53d866bd"}}
