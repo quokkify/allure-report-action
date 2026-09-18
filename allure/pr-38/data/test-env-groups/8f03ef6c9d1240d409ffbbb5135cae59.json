@@ -1,1 +1,1 @@
-{"id":"8f03ef6c9d1240d409ffbbb5135cae59","fullName":"quokkify/allure-report-action:tests/report/pr-summary.test.ts#PR Summary Edge Cases statuses: failure, zero, unknown empty","name":"empty","status":"passed","testResultsByEnv":{"default":"a36edf218ca563a1e8feee7922e11539"}}
+{"id":"8f03ef6c9d1240d409ffbbb5135cae59","fullName":"quokkify/allure-report-action:tests/report/pr-summary.test.ts#PR Summary Edge Cases statuses: failure, zero, unknown empty","name":"empty","status":"passed","testResultsByEnv":{"default":"d8a228cd104c0dba2c494fa9f368a02f"}}
