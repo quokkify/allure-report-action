@@ -42,7 +42,7 @@ inputs:
   allure-version:
     description: Exact Allure CLI version
     required: false
-    default: "3.17.0"
+    default: "3.18.0"
   pr-number:
     description: Pull request number to comment on; an empty value skips the comment
     required: false
