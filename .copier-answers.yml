@@ -5,6 +5,7 @@ codeql: true
 codeql_languages: []
 components: []
 docker: false
+gitleaks: true
 project_name: Allure Report Action
 release_mode: single
 release_please: true
