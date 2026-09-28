@@ -72,7 +72,7 @@ async function main() {
                 const sourceRunId = getArg(args, '--source-run-id') || '';
                 const actionVersion = getArg(args, '--action-version') || '';
                 const commentMarker = getArg(args, '--comment-marker') || '<!-- project-toolkit-allure-ci -->';
-                runPrBody({
+                await runPrBody({
                     resultsDir,
                     reportDir,
                     outputFile,

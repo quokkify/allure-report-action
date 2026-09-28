@@ -2,11 +2,49 @@
 
 For pull requests, the CI workflow publishes the Allure preview to GitHub Pages and links it from the test summary comment.
 
-Build an Allure 3 HTML report from an already-merged results directory, generate the existing outcome badges and optional test-pyramid files, optionally publish the report to a GitHub Pages subdirectory, and finally create or update one pull-request comment with total and passed test counts.
+Build an Allure 3 HTML report from an already-merged results directory, generate the existing outcome badges and optional test-pyramid files, optionally publish the report to a GitHub Pages subdirectory, and create or update one pull-request comment using the official Allure summary renderer.
 
-Tests do **not** need Allure `epic` metadata. Results without a recognized `epic` remain in the overall totals. The preserved CSP fallback classifies Playwright results as `E2E`; other unclassified results appear under `No epic assigned` so the missing relationship is explicit.
+Tests do **not** need Allure `epic` metadata. Standard comment statistics and environments come from the generated Allure report. The optional badges and pyramid outputs retain their existing raw-result classification, including the Playwright `E2E` fallback and `No epic assigned` category.
 
 Every generated pull-request comment ends with a link to this action, the bundled action version that generated it, and the latest release. This keeps immutable SHA pins visible while making upgrades discoverable.
+
+## Upstream Allure behavior
+
+Report generation is owned by the official `allure` CLI. The PR summary is read and
+rendered by the public `@allurereport/ci/report-context` and
+`@allurereport/ci/report-markdown` APIs, also used by
+[`allure-framework/allure-action`](https://github.com/allure-framework/allure-action).
+The CI library is pinned to `3.18.0` and bundled into this action; the default CLI
+version is also `3.18.0`. Library updates are adopted through dependency updates,
+not downloaded dynamically at runtime.
+
+This action keeps the integration needed by its callers: result preparation,
+module configuration, Pages deployment and retention, optional badges/pyramid,
+and comment upsert with an explicit PR number, marker, and author. The publisher
+continues to work in trusted `workflow_run` workflows. It does not invoke or patch
+the upstream GitHub action, which currently posts comments only on `pull_request`.
+Upstream GitHub Checks and separate `new`/`flaky`/`retry` comments are not added by
+this change.
+
+### Summary migration
+
+The comment now uses the official summary layout and generated report metadata,
+including environments and artifact information when available. The custom
+pass-rate heading and `Tests by layer` table are removed. Optional pyramid files
+and badges remain available; their raw-result counts may include attempts that
+Allure consolidates in the standard summary.
+
+The `pr-body` CLI requires an already generated Allure 3 report with plugin
+`summary.json` files. It no longer falls back to raw `*-result.json` files or
+Allure 2 `widgets/summary.json`; missing plugin summaries fail with an explicit
+error. `--results` is still accepted for compatibility but does not affect the
+comment. Custom CLI versions must produce compatible Allure 3 report metadata.
+
+Existing inputs and outputs, comment markers, and the version footer are retained.
+`pages-url` overrides report URLs and supports nested report directories; the
+source run query parameter is added after resolving the report path. Fork PRs
+suppress report links, including URLs stored in report metadata. Existing comments
+are updated in place using their configured marker and author.
 
 ## Usage
 
@@ -22,7 +60,7 @@ steps:
       results-directory: artifacts/allure-results
       report-directory: allure-report
       config-file: scripts/allure/allurerc.mjs
-      allure-version: "3.15.0"
+      allure-version: "3.18.0"
       pr-number: ${{ github.event.pull_request.number }}
       comment-marker: "<!-- my-project-allure-ci -->"
 ```
@@ -97,7 +135,7 @@ Unknown or absent `epic` values emit an advisory warning only; they do not fail 
 | `module-environment-label` | no | `module` | Result label used to create one environment per module; empty disables normalization. |
 | `source-artifacts-directory` | no | `auto` | Source root, `auto` for compatible wrapper detection, or empty for legacy pre-merged results. |
 | `categories-file` | no | empty | Optional caller-owned `categories.json`. |
-| `allure-version` | no | `3.15.0` | Exact Allure CLI version. |
+| `allure-version` | no | `3.18.0` | Exact Allure CLI version. |
 | `pr-number` | no | empty | PR to comment on; empty skips the API mutation. |
 | `comment-marker` | no | `<!-- project-toolkit-allure-ci -->` | Hidden marker for idempotent updates. Existing comments are updated only when they were created by the identity behind `github-token`. |
 | `comment-author-login` | no | `github-actions[bot]` | Expected author for installation-token comments. PAT/user-token logins are resolved automatically; custom GitHub App installation tokens must pass `<app-slug>[bot]`. |
@@ -123,9 +161,9 @@ src/
 │   ├── badges.ts              # Shields.io badge generation
 │   ├── config-generator.ts    # Module-scoped Allure config
 │   └── prepare-results.ts     # Provenance-aware result merging
-├── report/                    # Report summary processing
+├── report/                    # Upstream summary adapter + pyramid domain
 ├── renderer/                  # Pure rendering (domain → Markdown/JSON)
-│   ├── markdown.ts            # PR comment rendering
+│   ├── markdown.ts            # Official summary + local footer and marker
 │   └── pyramid.ts             # Test pyramid + quality gates
 ├── github/                    # GitHub API integration
 │   └── comment-publisher.ts   # PR comment upsert (marker + author)
@@ -153,12 +191,12 @@ npm run build         # TypeScript compile + esbuild bundle
 npm run test:watch    # Watch mode for tests
 ```
 
-The test suite includes 86 tests covering:
+The test suite covers:
 - Configuration loading and validation
 - Allure result parsing and aggregation
 - Module-scoped environment generation
 - Provenance-aware result merging (conflicts, deduplication, atomicity)
-- PR comment markdown rendering
+- Official summary integration, report links, fork suppression, and comment metadata
 - Test pyramid markdown/JSON and quality gates
 - GitHub comment upsert logic (PAT, GITHUB_TOKEN, GitHub App tokens)
 - CLI command integration

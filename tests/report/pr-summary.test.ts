@@ -1,160 +1,149 @@
-/**
- * Tests for PR summary edge cases - ported from Python test_pr_summary_*
- */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 import * as os from 'node:os';
-import { aggregateResults } from '../../src/report/aggregation.js';
-import {
-  listResultFiles,
-  readJsonSafe,
-  getEpicForResult,
-  readWidgetSummary,
-  mergeSummary,
-} from '../../src/report/index.js';
+import * as path from 'node:path';
+import { readPrReportContext } from '../../src/report/summary.js';
 import { renderPrComment } from '../../src/renderer/markdown.js';
-describe('PR Summary Edge Cases', () => {
-  let tempDir: string;
-  let resultsDir: string;
+
+const options = { pagesUrl: '', forkPr: false, sourceRunId: '' };
+const summary = {
+  name: 'Awesome',
+  plugin: 'awesome',
+  status: 'passed',
+  duration: 1200,
+  stats: { total: 1, passed: 1, failed: 0, broken: 0, skipped: 0, unknown: 0 },
+  retryTests: ['case'],
+  flakyTests: ['case'],
+};
+
+describe('Allure report context', () => {
   let reportDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-summary-test-'));
-    resultsDir = path.join(tempDir, 'results');
-    reportDir = path.join(tempDir, 'report');
-    fs.mkdirSync(resultsDir, { recursive: true });
-    fs.mkdirSync(path.join(reportDir, 'widgets'), { recursive: true });
+    reportDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-summary-test-'));
   });
 
-  afterEach(() => {
-    fs.rmSync(tempDir, { recursive: true, force: true });
-  });
+  afterEach(() => fs.rmSync(reportDir, { recursive: true, force: true }));
 
-  const writeResult = (name: string, data: object) => {
-    fs.writeFileSync(path.join(resultsDir, `${name}-result.json`), JSON.stringify(data));
-  };
+  function writeJson(file: string, data: object) {
+    const target = path.join(reportDir, file);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, JSON.stringify(data));
+  }
 
-  const writeWidgetSummary = (data: object) => {
-    fs.writeFileSync(path.join(reportDir, 'widgets', 'summary.json'), JSON.stringify(data));
-  };
+  function writeSummary(directory: string, html = true, overrides: object = {}) {
+    writeJson(path.join(directory, 'summary.json'), { ...summary, ...overrides });
+    if (html) fs.writeFileSync(path.join(reportDir, directory, 'index.html'), '<html></html>');
+  }
 
-  it('246 passed fixture uses single footer separator', async () => {
-    for (let i = 0; i < 246; i++) {
-      writeResult(`${i}`, { status: 'passed', labels: [] });
-    }
-    writeWidgetSummary({
-      statistic: { total: 246, passed: 246, failed: 0, broken: 0, skipped: 0, unknown: 0 },
+  it('uses the generated registry instead of counting raw retry attempts', async () => {
+    writeSummary('awesome', true, { stats: { total: 99, failed: 99 } });
+    writeJson('test-results.json', {
+      byId: {
+        case: {
+          id: 'case',
+          name: 'Retried test',
+          status: 'passed',
+          duration: 1200,
+          environment: 'api',
+        },
+      },
     });
+    writeJson('raw/attempt-1-result.json', { uuid: 'first', historyId: 'same', status: 'failed' });
+    writeJson('raw/attempt-2-result.json', { uuid: 'second', historyId: 'same', status: 'passed' });
 
-    const files = listResultFiles(resultsDir);
-    const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
-    const widget = await readWidgetSummary(reportDir);
-    const summary = mergeSummary(widget, agg);
-
-    const markdown = renderPrComment({
-      summary,
-      aggregated: agg,
-      pagesUrl: 'https://quokkify.github.io/q4j/allure/pr-535/?run=32841209876',
-      forkPr: false,
-      sourceRunId: '32841209876',
-      actionVersion: '0.1.0',
-      commentMarker: '<!-- test-marker -->',
+    const context = await readPrReportContext(reportDir, options);
+    expect(context.totals.stats).toEqual({
+      total: 1,
+      passed: 1,
+      failed: 0,
+      broken: 0,
+      skipped: 0,
+      unknown: 0,
     });
-
-    expect(markdown).toContain('246 / 246 tests passed · 100% pass rate');
-    expect(markdown).toContain(
-      '| 246 | 246 | 0 | 0 | 0 | [View report ↗](https://quokkify.github.io/q4j/allure/pr-535/?run=32841209876) |'
-    );
-    expect(markdown).toContain('| No epic assigned | 246 | 246 | 0 | 0 | 0 |');
-    expect(markdown).toContain('| All layers | 246 | 246 | 0 | 0 | 0 |');
-    expect(markdown).not.toContain(
-      '| **All layers** | **246** | **246** | **0** | **0** | **0** |'
-    );
-    expect(markdown).toContain('</details>\n\n<sub>');
-    expect(markdown).not.toContain('</details>\n\n\n<sub>');
+    expect(context.totals.flags).toEqual({ new: 0, flaky: 1, retry: 1 });
+    expect(context.environments[0]).toMatchObject({ name: 'api', stats: { total: 1, passed: 1 } });
   });
 
-  describe('statuses: failure, zero, unknown', () => {
-    const cases = [
-      [
-        'failed',
-        { failed: 1, broken: 0, passed: 1, skipped: 0, unknown: 0 },
-        '## ❌ Allure Report — failures detected',
-        '1 failed',
-      ],
-      [
-        'empty',
-        { failed: 0, broken: 0, passed: 0, skipped: 0, unknown: 0 },
-        '## ⚪ Allure Report — no tests',
-        'No tests found · no pass rate',
-      ],
-      [
-        'unknown',
-        { failed: 0, broken: 0, passed: 1, skipped: 0, unknown: 1 },
-        'Unknown',
-        '1 unknown',
-      ],
-    ];
+  it('does not add together duplicate presentations of the same test run', async () => {
+    writeSummary('awesome');
+    writeSummary('classic', true, { name: 'Classic', plugin: 'classic' });
 
-    for (const [name, values, heading, detail] of cases) {
-      it(name, async () => {
-        const total = Object.values(values).reduce((a, b) => a + b, 0);
-        const statuses: string[] = [];
-        if (values.passed) for (let i = 0; i < values.passed; i++) statuses.push('passed');
-        if (values.failed) for (let i = 0; i < values.failed; i++) statuses.push('failed');
-        if (values.broken) for (let i = 0; i < values.broken; i++) statuses.push('broken');
-        if (values.skipped) for (let i = 0; i < values.skipped; i++) statuses.push('skipped');
-        if (values.unknown) for (let i = 0; i < values.unknown; i++) statuses.push('unknown');
+    const context = await readPrReportContext(reportDir, options);
+    expect(context.reports).toHaveLength(2);
+    expect(context.totals.stats.total).toBe(1);
+    expect(context.totals.stats.passed).toBe(1);
+    expect(context.totals.flags.retry).toBe(1);
+    expect(context.totals.duration).toBe(1200);
+  });
 
-        for (let i = 0; i < total; i++) {
-          writeResult(`${i}`, { status: statuses[i] });
-        }
+  it('rejects legacy widgets instead of silently reconstructing a summary', async () => {
+    writeJson('widgets/summary.json', { statistic: { total: 1, passed: 1 } });
+    await expect(readPrReportContext(reportDir, options)).rejects.toThrow(
+      'No Allure 3 plugin summaries found'
+    );
+  });
 
-        writeWidgetSummary({ statistic: { total, ...values } });
-
-        const files = listResultFiles(resultsDir);
-        const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
-        const widget = await readWidgetSummary(reportDir);
-        const summary = mergeSummary(widget, agg);
-
-        const markdown = renderPrComment({
-          summary,
-          aggregated: agg,
-          pagesUrl: '',
-          forkPr: false,
-          sourceRunId: '',
-          actionVersion: '0.1.0',
-          commentMarker: '<!-- marker -->',
-        });
-
-        expect(markdown).toContain(heading);
-        expect(markdown).toContain(detail);
+  it.each([
+    ['root HTML', '', true, 'https://example.com/pr-1/?existing=yes&run=42#section'],
+    [
+      'nested HTML',
+      'reports/awesome',
+      true,
+      'https://example.com/pr-1/reports/awesome?existing=yes&run=42#section',
+    ],
+    ['non-HTML plugin', 'csv', false, 'https://example.com/pr-1/?existing=yes&run=42#section'],
+  ])(
+    'builds the Pages URL for %s without moving query parameters into the path',
+    async (_name, directory, html, expected) => {
+      writeSummary(directory, html, {
+        remoteHref: 'https://old.example/report',
+        href: './index.html',
       });
+      const context = await readPrReportContext(reportDir, {
+        ...options,
+        pagesUrl: 'https://example.com/pr-1/?existing=yes&run=old#section',
+        sourceRunId: '42',
+      });
+      expect(context.reports[0].remoteHref).toBe(expected);
+      expect(context.reports[0].href).toBeUndefined();
     }
+  );
+
+  it('preserves upstream remote links when no Pages override is supplied', async () => {
+    writeSummary('', true, { remoteHref: 'https://upstream.example/report', href: './index.html' });
+    const context = await readPrReportContext(reportDir, options);
+    expect(context.reports[0].remoteHref).toBe('https://upstream.example/report');
+    expect(context.reports[0].href).toBeUndefined();
   });
 
-  it('does not drop unknown result when widget reports zero', async () => {
-    writeResult('unknown', { status: 'unknown' });
-    writeWidgetSummary({
-      statistic: { total: 1, passed: 0, failed: 0, broken: 0, skipped: 0, unknown: 0 },
+  it('suppresses metadata and override links for forks', async () => {
+    writeSummary('', true, {
+      remoteHref: 'https://metadata.example/report',
+      href: 'https://local.example/report',
     });
-    const files = listResultFiles(resultsDir);
-    const agg = aggregateResults(files, readJsonSafe, getEpicForResult);
-    const widget = await readWidgetSummary(reportDir);
-    const summary = mergeSummary(widget, agg);
-
-    const markdown = renderPrComment({
-      summary,
-      aggregated: agg,
-      pagesUrl: '',
-      forkPr: false,
-      sourceRunId: '',
-      actionVersion: '0.1.0',
-      commentMarker: '<!-- mismatch-marker -->',
+    const context = await readPrReportContext(reportDir, {
+      ...options,
+      forkPr: true,
+      pagesUrl: 'https://pages.example/report',
     });
+    expect(context.reports[0].remoteHref).toBeUndefined();
+    expect(context.reports[0].href).toBeUndefined();
+    const body = renderPrComment({
+      context,
+      forkPr: true,
+      actionVersion: '1',
+      commentMarker: '<!-- marker -->',
+    });
+    for (const host of ['metadata.example', 'local.example', 'pages.example'])
+      expect(body).not.toContain(host);
+    expect(body).toContain('GitHub Pages previews are disabled for fork pull requests');
+  });
 
-    expect(markdown).toContain('0 / 1 tests passed · 0% pass rate · 1 unknown');
-    expect(markdown).toContain('| 1 | 0 | 0 | 0 | 0 | 1 | — |');
+  it('rejects non-HTTP Pages URLs', async () => {
+    writeSummary('');
+    await expect(
+      readPrReportContext(reportDir, { ...options, pagesUrl: 'javascript:alert(1)' })
+    ).rejects.toThrow('pages-url must be an HTTP or HTTPS URL');
   });
 });

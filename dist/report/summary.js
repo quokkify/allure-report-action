@@ -1,32 +1,33 @@
-/**
- * Reads widget summary from Allure report
- */
-export async function readWidgetSummary(reportDir) {
-    try {
-        const fs = await import('node:fs');
-        const path = await import('node:path');
-        return JSON.parse(fs.readFileSync(path.join(reportDir, 'widgets', 'summary.json'), 'utf8'));
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { createReportContext } from '@allurereport/ci/report-context';
+export async function readPrReportContext(reportDir, options) {
+    const context = await createReportContext(reportDir, { onError: console.warn });
+    if (!context.reports.length) {
+        throw new Error(`No Allure 3 plugin summaries found in ${reportDir}. Generate the report before creating the PR comment.`);
     }
-    catch {
-        return null;
-    }
-}
-/**
- * Merges widget summary with aggregated results
- * Widget summary is the source of truth for counts, but aggregated results
- * may have additional info (like unknown results that widget omits)
- */
-export function mergeSummary(widget, aggregated) {
-    if (!widget?.statistic)
-        return aggregated.total;
-    const stat = widget.statistic;
-    return {
-        total: stat.total ?? aggregated.total.total,
-        passed: stat.passed ?? 0,
-        failed: stat.failed ?? 0,
-        broken: stat.broken ?? 0,
-        skipped: stat.skipped ?? 0,
-        unknown: Math.max(stat.unknown ?? 0, aggregated.total.unknown),
-    };
+    context.reports = context.reports.map(report => {
+        let remoteHref = options.forkPr ? undefined : report.remoteHref;
+        if (options.pagesUrl && !options.forkPr) {
+            const url = new URL(options.pagesUrl);
+            if (!['http:', 'https:'].includes(url.protocol)) {
+                throw new Error('pages-url must be an HTTP or HTTPS URL');
+            }
+            // Match allure-action: only append a plugin directory when it contains HTML.
+            if (report.summaryFile &&
+                existsSync(path.join(path.dirname(report.summaryFile), 'index.html'))) {
+                const suffix = report.reportPath;
+                if (suffix) {
+                    url.pathname = `${url.pathname.replace(/\/$/, '')}/${suffix}`;
+                }
+            }
+            if (options.sourceRunId)
+                url.searchParams.set('run', options.sourceRunId);
+            remoteHref = url.toString();
+        }
+        // Local report paths cannot be opened from a GitHub comment.
+        return { ...report, href: undefined, remoteHref };
+    });
+    return context;
 }
 //# sourceMappingURL=summary.js.map
