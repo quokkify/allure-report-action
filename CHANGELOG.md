@@ -2,6 +2,32 @@
 
 ## [0.5.2](https://github.com/quokkify/allure-report-action/compare/v0.5.1...v0.5.2) (2026-09-28)
 
+<!-- project-toolkit:rich-block:start -->
+### 📦 Dependencies
+- update eslint to v10 ([#38](https://github.com/quokkify/allure-report-action/pull/38)) ([c4c2ac2](https://github.com/quokkify/allure-report-action/commit/c4c2ac2a1a04260fc8df8a6e4d2585085422ef28)) <!-- project-toolkit:rich-release-notes pr=38 -->
+- lock file maintenance ([#95](https://github.com/quokkify/allure-report-action/pull/95)) ([89c3174](https://github.com/quokkify/allure-report-action/commit/89c3174831661ae9ccdf32929c18b652c3d5ef64)) <!-- project-toolkit:rich-release-notes pr=95 -->
+- update typescript-eslint monorepo to v8.70.1 ([#99](https://github.com/quokkify/allure-report-action/pull/99)) ([38bf880](https://github.com/quokkify/allure-report-action/commit/38bf880e0192b42d4d82bd5eb89468fc363e9ef2)) <!-- project-toolkit:rich-release-notes pr=99 -->
+- update prettier to v3.9.9 ([#93](https://github.com/quokkify/allure-report-action/pull/93) ([fa9b1c3](https://github.com/quokkify/allure-report-action/commit/fa9b1c354460ddc15466e501bcb3fb51f88b918b)), [#94](https://github.com/quokkify/allure-report-action/pull/94) ([7610c03](https://github.com/quokkify/allure-report-action/commit/7610c03953ffa3bba19723baf4f63b726e5c6a18)), [#101](https://github.com/quokkify/allure-report-action/pull/101) ([b9dfaf1](https://github.com/quokkify/allure-report-action/commit/b9dfaf190b08b078266fd9aa82a41af3284a6b5b))) <!-- project-toolkit:rich-release-notes pr=93 --> <!-- project-toolkit:rich-release-notes pr=94 --> <!-- project-toolkit:rich-release-notes pr=101 -->
+- lock file maintenance ([#102](https://github.com/quokkify/allure-report-action/pull/102)) ([76f6457](https://github.com/quokkify/allure-report-action/commit/76f64572a4dcc8ffe99908cd89cf6722d564cd07)) <!-- project-toolkit:rich-release-notes pr=102 -->
+- update vitest to v5.0.2 ([#90](https://github.com/quokkify/allure-report-action/pull/90) ([d7c882f](https://github.com/quokkify/allure-report-action/commit/d7c882fd1fdb3ecf04ae2785e5af6df71a337206)), [#104](https://github.com/quokkify/allure-report-action/pull/104) ([6d31a30](https://github.com/quokkify/allure-report-action/commit/6d31a30a794998b84d49ce0aa7ec56963e771e00))) <!-- project-toolkit:rich-release-notes pr=90 --> <!-- project-toolkit:rich-release-notes pr=104 -->
+- update @allurereport/ci to v3.19.0 ([#109](https://github.com/quokkify/allure-report-action/pull/109) ([b9c3faa](https://github.com/quokkify/allure-report-action/commit/b9c3faaf5e1be0e21a6e1bd7e96dc05bdd2c5f0e))) <!-- project-toolkit:rich-release-notes pr=109 -->
+- update @types/node to v24.19.0 ([#91](https://github.com/quokkify/allure-report-action/pull/91) ([61e515d](https://github.com/quokkify/allure-report-action/commit/61e515df074371535121ec9c777d6df59c95e492)), [#98](https://github.com/quokkify/allure-report-action/pull/98) ([42e6575](https://github.com/quokkify/allure-report-action/commit/42e6575a9208fe01361848f0cac1a506ce7bd5cf)), [#110](https://github.com/quokkify/allure-report-action/pull/110) ([a58f4da](https://github.com/quokkify/allure-report-action/commit/a58f4da7f560eddfe816aaad87ae28aaf74a8cd3))) <!-- project-toolkit:rich-release-notes pr=91 --> <!-- project-toolkit:rich-release-notes pr=98 --> <!-- project-toolkit:rich-release-notes pr=110 -->
+- update allure to v3.19.0 ([#97](https://github.com/quokkify/allure-report-action/pull/97) ([172cba4](https://github.com/quokkify/allure-report-action/commit/172cba421bf308f7a7f092ed92150055dfb970ca)), [#111](https://github.com/quokkify/allure-report-action/pull/111) ([88696c3](https://github.com/quokkify/allure-report-action/commit/88696c316cb407e4ddf1417439a161e004fc652f))) <!-- project-toolkit:rich-release-notes pr=97 --> <!-- project-toolkit:rich-release-notes pr=111 -->
+- update allure-vitest to v3.13.0 ([#92](https://github.com/quokkify/allure-report-action/pull/92) ([408ab96](https://github.com/quokkify/allure-report-action/commit/408ab9641105a36c2941ce8bfa9ce173aaf2da15)), [#112](https://github.com/quokkify/allure-report-action/pull/112) ([06a2f58](https://github.com/quokkify/allure-report-action/commit/06a2f58d193ecd72029454334b8e5d3db4d12591))) <!-- project-toolkit:rich-release-notes pr=92 --> <!-- project-toolkit:rich-release-notes pr=112 -->
+<!-- project-toolkit:rich-release-notes pr=103 -->
+#### refactor: delegate PR summaries to upstream Allure CI
+### Migration
+Existing workflow inputs and outputs remain available. The standard comment changes to the upstream layout; the custom pass-rate heading and `Tests by layer` table are removed. Optional badges/pyramid outputs remain separate and retain their raw-result semantics.
+
+Standalone `pr-body` now requires generated Allure 3 plugin summaries and fails clearly when they are missing. `--results` remains accepted but no longer supplies comment statistics. The bundled CI library and default CLI version are 3.18.0; other CLI versions must emit compatible report metadata.
+
+Blast radius: repositories adopting a new release/SHA of `quokkify/allure-report-action`; existing immutable pins are unaffected. This draft PR is the canary for the generated-report-to-comment integration. No release or merge is performed.
+
+<!-- project-toolkit:rich-release-notes pr=105 -->
+#### fix: restore config-driven releases and refactor notes
+### Migration
+Existing workflow mode stays single; no temporary manifest-mode workaround is required. Root releases keep componentless tags. Chore/deps commits remain hidden according to template policy.
+<!-- project-toolkit:rich-block:end -->
 
 ### 🐛 Bug Fixes
 
