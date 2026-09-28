@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.2](https://github.com/quokkify/allure-report-action/compare/v0.5.1...v0.5.2) (2026-09-28)
+
+
+### 🐛 Bug Fixes
+
+* **release:** sync dependency compaction helper ([#108](https://github.com/quokkify/allure-report-action/issues/108)) ([edc86b3](https://github.com/quokkify/allure-report-action/commit/edc86b3303e4a9109b33cb391706b418db9aa5d0))
+* restore config-driven releases and refactor notes ([#105](https://github.com/quokkify/allure-report-action/issues/105)) ([8182e74](https://github.com/quokkify/allure-report-action/commit/8182e744ab8168296b01ba6165bdfcf3f638f524))
+
+
+### ♻️ Refactoring
+
+* delegate PR summaries to upstream Allure CI ([#103](https://github.com/quokkify/allure-report-action/issues/103)) ([807fe83](https://github.com/quokkify/allure-report-action/commit/807fe8339a1ab0025e9a32bd4b04bfe9407481e4))
+
 ## [0.5.1](https://github.com/quokkify/allure-report-action/compare/v0.5.0...v0.5.1) (2026-09-18)
 
 
