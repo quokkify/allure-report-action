@@ -1,0 +1,1 @@
+{"id":"1b12a900614ae22a4b83f2bcf3246eb1","fullName":"quokkify/allure-report-action:tests/cli.test.ts#pr-body CLI reports a missing generated report as a handled command failure","name":"reports a missing generated report as a handled command failure","status":"passed","testResultsByEnv":{"default":"e25958f291264d21e840f651b299c566"}}
