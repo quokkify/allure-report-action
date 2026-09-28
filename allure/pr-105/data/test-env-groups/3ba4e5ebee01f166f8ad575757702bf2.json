@@ -1,0 +1,1 @@
+{"id":"3ba4e5ebee01f166f8ad575757702bf2","fullName":"quokkify/allure-report-action:tests/report/pr-summary.test.ts#Allure report context uses the generated registry instead of counting raw retry attempts","name":"uses the generated registry instead of counting raw retry attempts","status":"passed","testResultsByEnv":{"default":"5f02f27238ed41dd3fea6a2bac1beacb"}}
