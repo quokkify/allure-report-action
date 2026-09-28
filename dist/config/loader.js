@@ -17,7 +17,7 @@ export function loadConfig() {
         environmentLabel: core.getInput('environment-label') || 'environment',
         sourceArtifactsDirectory: core.getInput('source-artifacts-directory') || '',
         categoriesFile: core.getInput('categories-file') || '',
-        allureVersion: core.getInput('allure-version') || '3.15.0',
+        allureVersion: core.getInput('allure-version') || '3.18.0',
         prNumber: core.getInput('pr-number') || '',
         pagesUrl: core.getInput('pages-url') || '',
         forkPr: core.getBooleanInput('fork-pr'),

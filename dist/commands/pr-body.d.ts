@@ -1,4 +1,5 @@
 export interface PrBodyCommandOptions {
+    /** Accepted for CLI compatibility; summary data comes from the generated report. */
     resultsDir: string;
     reportDir: string;
     outputFile: string;
@@ -8,8 +9,5 @@ export interface PrBodyCommandOptions {
     actionVersion: string;
     commentMarker: string;
 }
-/**
- * Executes pr-body command
- */
 export declare function runPrBody(options: PrBodyCommandOptions): Promise<void>;
 //# sourceMappingURL=pr-body.d.ts.map

@@ -59,3 +59,25 @@ describe('sanitize-results CLI', () => {
     expect(fs.readFileSync(sentinel, 'utf8')).toBe('unchanged');
   });
 });
+
+describe('pr-body CLI', () => {
+  it('reports a missing generated report as a handled command failure', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-body-cli-test-'));
+    try {
+      const output = path.join(tempDir, 'comment.md');
+      const result = spawnSync(
+        process.execPath,
+        [cli, 'pr-body', '--report', path.join(tempDir, 'missing-report'), '--output', output],
+        { cwd: tempDir, encoding: 'utf8' }
+      );
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('No Allure 3 plugin summaries found');
+      expect(result.stderr).not.toContain('UnhandledPromiseRejection');
+      expect(result.stderr).not.toMatch(/\n\s+at /);
+      expect(fs.existsSync(output)).toBe(false);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+});

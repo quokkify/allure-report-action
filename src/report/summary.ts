@@ -1,45 +1,48 @@
-/**
- * Report summary - reads and processes Allure widget summary
- */
-import { AggregatedResults, TestSummary } from './model.js';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 
-export interface WidgetSummary {
-  statistic?: TestSummary;
+import { createReportContext, type ReportContext } from '@allurereport/ci/report-context';
+
+export interface ReportLinkOptions {
+  pagesUrl: string;
+  forkPr: boolean;
+  sourceRunId: string;
 }
 
-/**
- * Reads widget summary from Allure report
- */
-export async function readWidgetSummary(reportDir: string): Promise<WidgetSummary | null> {
-  try {
-    const fs = await import('node:fs');
-    const path = await import('node:path');
-    return JSON.parse(
-      fs.readFileSync(path.join(reportDir, 'widgets', 'summary.json'), 'utf8')
-    ) as WidgetSummary;
-  } catch {
-    return null;
+export async function readPrReportContext(
+  reportDir: string,
+  options: ReportLinkOptions
+): Promise<ReportContext> {
+  const context = await createReportContext(reportDir, { onError: console.warn });
+  if (!context.reports.length) {
+    throw new Error(
+      `No Allure 3 plugin summaries found in ${reportDir}. Generate the report before creating the PR comment.`
+    );
   }
-}
 
-/**
- * Merges widget summary with aggregated results
- * Widget summary is the source of truth for counts, but aggregated results
- * may have additional info (like unknown results that widget omits)
- */
-export function mergeSummary(
-  widget: WidgetSummary | null,
-  aggregated: AggregatedResults
-): TestSummary {
-  if (!widget?.statistic) return aggregated.total;
+  context.reports = context.reports.map(report => {
+    let remoteHref = options.forkPr ? undefined : report.remoteHref;
+    if (options.pagesUrl && !options.forkPr) {
+      const url = new URL(options.pagesUrl);
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('pages-url must be an HTTP or HTTPS URL');
+      }
+      // Match allure-action: only append a plugin directory when it contains HTML.
+      if (
+        report.summaryFile &&
+        existsSync(path.join(path.dirname(report.summaryFile), 'index.html'))
+      ) {
+        const suffix = report.reportPath;
+        if (suffix) {
+          url.pathname = `${url.pathname.replace(/\/$/, '')}/${suffix}`;
+        }
+      }
+      if (options.sourceRunId) url.searchParams.set('run', options.sourceRunId);
+      remoteHref = url.toString();
+    }
+    // Local report paths cannot be opened from a GitHub comment.
+    return { ...report, href: undefined, remoteHref };
+  });
 
-  const stat = widget.statistic;
-  return {
-    total: stat.total ?? aggregated.total.total,
-    passed: stat.passed ?? 0,
-    failed: stat.failed ?? 0,
-    broken: stat.broken ?? 0,
-    skipped: stat.skipped ?? 0,
-    unknown: Math.max(stat.unknown ?? 0, aggregated.total.unknown),
-  };
+  return context;
 }

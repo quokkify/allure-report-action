@@ -1,18 +1,8 @@
-/**
- * Report summary - reads and processes Allure widget summary
- */
-import { AggregatedResults, TestSummary } from './model.js';
-export interface WidgetSummary {
-    statistic?: TestSummary;
+import { type ReportContext } from '@allurereport/ci/report-context';
+export interface ReportLinkOptions {
+    pagesUrl: string;
+    forkPr: boolean;
+    sourceRunId: string;
 }
-/**
- * Reads widget summary from Allure report
- */
-export declare function readWidgetSummary(reportDir: string): Promise<WidgetSummary | null>;
-/**
- * Merges widget summary with aggregated results
- * Widget summary is the source of truth for counts, but aggregated results
- * may have additional info (like unknown results that widget omits)
- */
-export declare function mergeSummary(widget: WidgetSummary | null, aggregated: AggregatedResults): TestSummary;
+export declare function readPrReportContext(reportDir: string, options: ReportLinkOptions): Promise<ReportContext>;
 //# sourceMappingURL=summary.d.ts.map

@@ -84,7 +84,7 @@ async function main(): Promise<void> {
         const actionVersion = getArg(args, '--action-version') || '';
         const commentMarker =
           getArg(args, '--comment-marker') || '<!-- project-toolkit-allure-ci -->';
-        runPrBody({
+        await runPrBody({
           resultsDir,
           reportDir,
           outputFile,
