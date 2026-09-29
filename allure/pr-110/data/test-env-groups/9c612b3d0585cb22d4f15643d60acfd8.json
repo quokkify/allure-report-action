@@ -1,1 +1,0 @@
-{"id":"9c612b3d0585cb22d4f15643d60acfd8","fullName":"quokkify/allure-report-action:tests/report/pr-summary.test.ts#Allure report context rejects legacy widgets instead of silently reconstructing a summary","name":"rejects legacy widgets instead of silently reconstructing a summary","status":"passed","testResultsByEnv":{"default":"8d34a232c1a8f4e72f25c744f8303482"}}
