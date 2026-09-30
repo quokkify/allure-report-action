@@ -1,0 +1,1 @@
+{"id":"9be594c21eb9a62831d0dcabe20bd984.d41d8cd98f00b204e9800998ecf8427e","fullName":"quokkify/allure-report-action:tests/allure/parser.test.ts#Allure Parser getEpicForResult returns 'end-to-end' for Playwright framework","name":"returns 'end-to-end' for Playwright framework","status":"passed","testResultsByEnv":{"default":"bd1efdf7201127f8df676f1868dfac25"}}
