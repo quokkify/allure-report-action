@@ -20,7 +20,7 @@ jobs:
       node-version: "24"
       package-manager: npm
       lint-command: npm run lint
-      test-command: npm test && npm run build && bash tests/smoke.sh
+      test-command: npm test && npm run build && bash tests/smoke.sh && bash tests/history-smoke.sh
       run-build: false
       upload-test-artifacts: true
       test-artifact-path: allure-results
