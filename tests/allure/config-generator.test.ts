@@ -84,6 +84,38 @@ describe('Module Config Generator', () => {
     });
   });
 
+  it('preserves caller history settings in module-scoped configs', async () => {
+    const config = path.join(tempDir, 'allurerc.mjs');
+    fs.writeFileSync(
+      config,
+      'export default {\n' +
+        "  historyPath: './history/history.jsonl',\n" +
+        '  historyLimit: 5,\n' +
+        '  appendHistory: false,\n' +
+        '};\n'
+    );
+    writeResult('module-a', {
+      uuid: 'module-a',
+      name: 'module-a',
+      status: 'passed',
+      labels: [{ name: 'module', value: 'module-a' }],
+    });
+
+    const effective = path.join(tempDir, 'effective.mjs');
+    await generateModuleConfig({
+      resultsDir,
+      configFile: config,
+      outputFile: effective,
+      moduleLabel: 'module',
+    });
+    const { default: c } = await import(effective);
+
+    expect(c.historyPath).toBe('./history/history.jsonl');
+    expect(c.historyLimit).toBe(5);
+    expect(c.appendHistory).toBe(false);
+    expect(Object.keys(c.environments)).toEqual(['module-a']);
+  });
+
   it('uses provenance environment values for the top-level selector', async () => {
     const config = path.join(tempDir, 'allurerc.mjs');
     fs.writeFileSync(config, 'export default {};\n');
