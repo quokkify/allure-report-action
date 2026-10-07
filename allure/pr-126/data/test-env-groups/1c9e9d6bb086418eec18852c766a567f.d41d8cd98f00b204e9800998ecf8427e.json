@@ -1,1 +1,0 @@
-{"id":"1c9e9d6bb086418eec18852c766a567f.d41d8cd98f00b204e9800998ecf8427e","fullName":"quokkify/allure-report-action:tests/renderer/pyramid.test.ts#Pyramid Renderer evaluatePyramidQualityGates warns when unit share is too low","name":"warns when unit share is too low","status":"passed","testResultsByEnv":{"default":"9d22be5dd005533ded7d3693733199bd"}}
