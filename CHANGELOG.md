@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/quokkify/allure-report-action/compare/v0.5.2...v0.5.3) (2026-10-08)
+
+
+### 📦 Dependencies
+
+* **github-actions:** update actions/download-artifact action to v8.0.2 ([#135](https://github.com/quokkify/allure-report-action/issues/135)) ([a55374b](https://github.com/quokkify/allure-report-action/commit/a55374b4b633f7f3c7bff76d00107e2cba3fb26d))
+
 ## [0.5.2](https://github.com/quokkify/allure-report-action/compare/v0.5.1...v0.5.2) (2026-09-28)
 
 <!-- project-toolkit:rich-block:start -->
