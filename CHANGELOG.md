@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.4](https://github.com/quokkify/allure-report-action/compare/v0.5.3...v0.5.4) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** restore template-owned codeql workflow to ci-kit v3.1.0 ([#144](https://github.com/quokkify/allure-report-action/issues/144)) ([c436657](https://github.com/quokkify/allure-report-action/commit/c43665735d5d4ac13708ce55fbab9f28873f39c5))
+
+
+### 📦 Dependencies
+
+* **npm:** update typescript-eslint monorepo to v8.71.1 ([#141](https://github.com/quokkify/allure-report-action/issues/141)) ([00e47b8](https://github.com/quokkify/allure-report-action/commit/00e47b8036253db2d6598aa9098904c3e286c090))
+
 ## [0.5.3](https://github.com/quokkify/allure-report-action/compare/v0.5.2...v0.5.3) (2026-10-08)
 
 
