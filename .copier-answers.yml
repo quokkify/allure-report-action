@@ -16,4 +16,5 @@ renovate_presets:
   - github-actions
 toolkit_version: v3.2.3
 module: legacy
-handed_off: []
+handed_off:
+  - validate
