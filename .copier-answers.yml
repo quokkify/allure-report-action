@@ -1,4 +1,4 @@
-_commit: v3.4.0
+_commit: v3.5.0
 _src_path: https://github.com/quokkify/ci-kit.git
 allure_report: false
 codeql: true
@@ -14,7 +14,7 @@ renovate_config_repository: quokkify/renovate-presets
 renovate_presets:
   - default
   - github-actions
-toolkit_version: v3.4.0
+toolkit_version: v3.5.0
 module: legacy
 handed_off:
   - validate
