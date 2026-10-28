@@ -15,7 +15,7 @@ permissions:
 jobs:
   validate-ts:
     name: Validate TypeScript implementation
-    uses: quokkify/ci-kit/.github/workflows/node-ci.yml@d6cbcab992d9500c158773337ae25037129e639c # v4.0.1
+    uses: quokkify/ci-kit/.github/workflows/node-ci.yml@4fea91ef43792163ae6b4b1775c803009921b3dd # v4.1.0
     with:
       node-version: "24"
       package-manager: npm
