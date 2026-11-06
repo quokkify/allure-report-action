@@ -5,6 +5,8 @@ import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+const UPLOAD_ARTIFACT_PINNED_USES = /uses: actions\/upload-artifact@[0-9a-f]{40}\b/;
+
 describe('Action.yml Metadata', () => {
   const actionYmlPath = path.resolve(__dirname, '../../action.yml');
   const actionYml = fs.readFileSync(actionYmlPath, 'utf8');
@@ -30,9 +32,7 @@ describe('Action.yml Metadata', () => {
     const pagesStep = actionYml.indexOf(
       'uses: quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b'
     );
-    const uploadStep = actionYml.indexOf(
-      'uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
-    );
+    const uploadStep = actionYml.search(UPLOAD_ARTIFACT_PINNED_USES);
 
     expect(runtimeStep).toBeGreaterThanOrEqual(0);
     expect(pagesStep).toBeGreaterThan(runtimeStep);
@@ -70,9 +70,7 @@ describe('Action.yml Metadata', () => {
   });
 
   it('uploads all pyramid outputs with the configured artifact contract', () => {
-    expect(actionYml).toContain(
-      'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7'
-    );
+    expect(actionYml).toMatch(UPLOAD_ARTIFACT_PINNED_USES);
     expect(actionYml).toContain("if: ${{ inputs.pyramid-enabled == 'true' }}");
     expect(actionYml).toContain('name: ${{ inputs.pyramid-artifact-name }}');
     expect(actionYml).toContain('${{ inputs.pyramid-markdown-file }}');

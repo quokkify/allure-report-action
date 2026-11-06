@@ -1,7 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>quokkify/renovate-presets//presets/github-actions/default"
+  "extends": ["github>quokkify/renovate-presets//presets/github-actions/default"],
+  "packageRules": [
+    {
+      "description": "Stay below TypeScript 7 until typescript-eslint supports it: @typescript-eslint/parser peers typescript <6.1.0, so npm install fails with ERESOLVE.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
+    }
   ],
   "customManagers": [
     {
