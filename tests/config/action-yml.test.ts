@@ -31,7 +31,7 @@ describe('Action.yml Metadata', () => {
       'uses: quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b'
     );
     const uploadStep = actionYml.indexOf(
-      'uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+      'uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9'
     );
 
     expect(runtimeStep).toBeGreaterThanOrEqual(0);
@@ -71,7 +71,7 @@ describe('Action.yml Metadata', () => {
 
   it('uploads all pyramid outputs with the configured artifact contract', () => {
     expect(actionYml).toContain(
-      'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7'
+      'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7'
     );
     expect(actionYml).toContain("if: ${{ inputs.pyramid-enabled == 'true' }}");
     expect(actionYml).toContain('name: ${{ inputs.pyramid-artifact-name }}');
