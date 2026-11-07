@@ -2,36 +2,38 @@
 
 ## [0.5.4](https://github.com/quokkify/allure-report-action/compare/v0.5.3...v0.5.4) (2026-11-07)
 
+<!-- project-toolkit:release-notes v2 -->
+**At a glance:** 1 fixed · 41 internal
 
-### 🐛 Bug Fixes
+### 🐛 Fixed
 
-* **ci:** restore template-owned codeql workflow to ci-kit v3.1.0 ([#144](https://github.com/quokkify/allure-report-action/issues/144)) ([c436657](https://github.com/quokkify/allure-report-action/commit/c43665735d5d4ac13708ce55fbab9f28873f39c5))
+- **ci:** restore template-owned codeql workflow to ci-kit v3.1.0 ([#144](https://github.com/quokkify/allure-report-action/pull/144))
 
+<details><summary>Internal changes (41 PRs)</summary>
 
-### 📦 Dependencies
+**Dependencies**
 
-* **allure:** update allure to v3.21.0 ([#152](https://github.com/quokkify/allure-report-action/issues/152)) ([3d8cbc7](https://github.com/quokkify/allure-report-action/commit/3d8cbc7403075206bf6d44cb31811001ecc5f3ec))
-* **allure:** update allure to v3.22.0 ([#171](https://github.com/quokkify/allure-report-action/issues/171)) ([a55a9e5](https://github.com/quokkify/allure-report-action/commit/a55a9e53565cfe637e14f3bd0e8a40564f4e6c2f))
-* **allure:** update allure to v3.22.1 ([#174](https://github.com/quokkify/allure-report-action/issues/174)) ([3db78fd](https://github.com/quokkify/allure-report-action/commit/3db78fd49369bb584ba19a82ff96955aecf9e3f5))
-* **ci-kit:** update quokkify/ci-kit to v4.0.1 ([#176](https://github.com/quokkify/allure-report-action/issues/176)) ([31ef7a3](https://github.com/quokkify/allure-report-action/commit/31ef7a3fdc5df62b8b374fa4d9f7e46dd0c76623))
-* **ci-kit:** update quokkify/ci-kit to v4.1.0 ([#179](https://github.com/quokkify/allure-report-action/issues/179)) ([93537de](https://github.com/quokkify/allure-report-action/commit/93537de28cce605b0cd460d73186f6a391f0dbff))
-* **ci-kit:** update quokkify/ci-kit to v4.2.0 ([#180](https://github.com/quokkify/allure-report-action/issues/180)) ([f23e102](https://github.com/quokkify/allure-report-action/commit/f23e1023354e50753d389eac6c77d7fb2c83da98))
-* **npm:** lock file maintenance ([#173](https://github.com/quokkify/allure-report-action/issues/173)) ([e374b51](https://github.com/quokkify/allure-report-action/commit/e374b51873e756985853e9695de5f379fc755ec7))
-* **npm:** lock file maintenance ([#181](https://github.com/quokkify/allure-report-action/issues/181)) ([16ceaf7](https://github.com/quokkify/allure-report-action/commit/16ceaf71a2d6629702c55e18d40d985899a9a707))
-* **npm:** update @allurereport/ci to v3.21.0 ([#153](https://github.com/quokkify/allure-report-action/issues/153)) ([ee5bc30](https://github.com/quokkify/allure-report-action/commit/ee5bc30c9f6f7f558a72032a3be8605804f123d8))
-* **npm:** update @allurereport/ci to v3.22.0 ([#172](https://github.com/quokkify/allure-report-action/issues/172)) ([3ef2946](https://github.com/quokkify/allure-report-action/commit/3ef2946dfefbbb5c54b6e0f9d6b0d6c11a30d717))
-* **npm:** update @allurereport/ci to v3.22.1 ([#177](https://github.com/quokkify/allure-report-action/issues/177)) ([178ca2b](https://github.com/quokkify/allure-report-action/commit/178ca2bfb31a7428ad5d7407b8dabb853ffa7c51))
-* **npm:** update @types/node to v24.19.2 ([#147](https://github.com/quokkify/allure-report-action/issues/147)) ([e1d49a1](https://github.com/quokkify/allure-report-action/commit/e1d49a18e367157696306101c01e7671554b69d9))
-* **npm:** update allure-vitest to v3.14.0 ([#162](https://github.com/quokkify/allure-report-action/issues/162)) ([cc30e48](https://github.com/quokkify/allure-report-action/commit/cc30e487a89c05baba7d3efdc53750b769f38c92))
-* **npm:** update eslint to v10.13.0 ([#156](https://github.com/quokkify/allure-report-action/issues/156)) ([a773bff](https://github.com/quokkify/allure-report-action/commit/a773bff90e732584e4581954b24fb03359449e0a))
-* **npm:** update eslint to v10.14.0 ([#182](https://github.com/quokkify/allure-report-action/issues/182)) ([6367dbb](https://github.com/quokkify/allure-report-action/commit/6367dbb9d669827119a0dae60a4798667bf46d8d))
-* **npm:** update prettier to v3.9.10 ([#148](https://github.com/quokkify/allure-report-action/issues/148)) ([c34df80](https://github.com/quokkify/allure-report-action/commit/c34df8046c2387319bb50f25f88915fd916cddb8))
-* **npm:** update typescript-eslint monorepo to v8.71.1 ([#141](https://github.com/quokkify/allure-report-action/issues/141)) ([00e47b8](https://github.com/quokkify/allure-report-action/commit/00e47b8036253db2d6598aa9098904c3e286c090))
-* **npm:** update typescript-eslint monorepo to v8.71.2 ([#150](https://github.com/quokkify/allure-report-action/issues/150)) ([00985f0](https://github.com/quokkify/allure-report-action/commit/00985f09c6550ad829c4c7d065fa5ba2bbdb8745))
-* **npm:** update typescript-eslint monorepo to v8.72.0 ([#163](https://github.com/quokkify/allure-report-action/issues/163)) ([aa194fc](https://github.com/quokkify/allure-report-action/commit/aa194fc57e7c211dd506c58e3e2d9c3b008354c7))
-* **npm:** update typescript-eslint monorepo to v8.72.1 ([#178](https://github.com/quokkify/allure-report-action/issues/178)) ([68a8de0](https://github.com/quokkify/allure-report-action/commit/68a8de0dc1b0007da809673637d3999ed9a9e474))
-* **npm:** update vitest to v5.0.5 ([#151](https://github.com/quokkify/allure-report-action/issues/151)) ([5b82a54](https://github.com/quokkify/allure-report-action/commit/5b82a54574450c7168c4f2fe9b6f314bf7022990))
-* **npm:** update vitest to v5.1.0 ([#183](https://github.com/quokkify/allure-report-action/issues/183)) ([0753038](https://github.com/quokkify/allure-report-action/commit/07530387ba0584055e27d6dccddc5d3a3b39c2d9))
+- @allurereport/ci 3.20.1 → 3.22.1 ([#153](https://github.com/quokkify/allure-report-action/pull/153), [#172](https://github.com/quokkify/allure-report-action/pull/172), [#177](https://github.com/quokkify/allure-report-action/pull/177))
+- @types/node 24.19.1 → 24.19.2 ([#147](https://github.com/quokkify/allure-report-action/pull/147))
+- @typescript-eslint/eslint-plugin, @typescript-eslint/parser 8.71.0 → 8.72.1 ([#141](https://github.com/quokkify/allure-report-action/pull/141), [#150](https://github.com/quokkify/allure-report-action/pull/150), [#163](https://github.com/quokkify/allure-report-action/pull/163), [#178](https://github.com/quokkify/allure-report-action/pull/178))
+- allure 3.20.1 → 3.22.1 ([#152](https://github.com/quokkify/allure-report-action/pull/152), [#171](https://github.com/quokkify/allure-report-action/pull/171), [#174](https://github.com/quokkify/allure-report-action/pull/174))
+- allure-vitest 3.13.0 → 3.14.0 ([#162](https://github.com/quokkify/allure-report-action/pull/162))
+- eslint 10.12.0 → 10.14.0 ([#156](https://github.com/quokkify/allure-report-action/pull/156), [#182](https://github.com/quokkify/allure-report-action/pull/182))
+- prettier 3.9.9 → 3.9.10 ([#148](https://github.com/quokkify/allure-report-action/pull/148))
+- quokkify/ci-kit v4.0.1 → v4.2.0 ([#176](https://github.com/quokkify/allure-report-action/pull/176), [#179](https://github.com/quokkify/allure-report-action/pull/179), [#180](https://github.com/quokkify/allure-report-action/pull/180))
+- typescript-eslint 8.71.0 → 8.72.1 ([#141](https://github.com/quokkify/allure-report-action/pull/141), [#150](https://github.com/quokkify/allure-report-action/pull/150), [#163](https://github.com/quokkify/allure-report-action/pull/163), [#178](https://github.com/quokkify/allure-report-action/pull/178))
+- vitest 5.0.3 → 5.1.0 ([#151](https://github.com/quokkify/allure-report-action/pull/151), [#183](https://github.com/quokkify/allure-report-action/pull/183))
+
+**Maintenance**
+
+- cap TypeScript below 7 and match the upload-artifact pin by pattern ([#184](https://github.com/quokkify/allure-report-action/pull/184))
+- **ci-kit:** hand off base, security, release, allure, renovate to modules ([#168](https://github.com/quokkify/allure-report-action/pull/168))
+- **ci-kit:** hand off validate to core module ([#154](https://github.com/quokkify/allure-report-action/pull/154))
+- **ci-kit:** prepare for the legacy template exit ([#167](https://github.com/quokkify/allure-report-action/pull/167))
+- **npm:** lock file maintenance ([#173](https://github.com/quokkify/allure-report-action/pull/173), [#181](https://github.com/quokkify/allure-report-action/pull/181))
+- **template:** update shared project template (15 PRs, [#145](https://github.com/quokkify/allure-report-action/pull/145)–[#175](https://github.com/quokkify/allure-report-action/pull/175))
+
+</details>
 
 ## [0.5.3](https://github.com/quokkify/allure-report-action/compare/v0.5.2...v0.5.3) (2026-10-08)
 
