@@ -55,7 +55,7 @@
 
     
     <script>
-      window.allureReportOptions = {"id":"awesome","reportName":"allure-report-action-smoke – Pull request #189","logo":"","theme":"auto","reportLanguage":"en","createdAt":1794167720111,"reportUuid":"00d880c4-78ac-4819-a21f-73740b8c12ef","groupBy":[],"cacheKey":"1794167720111","ci":{"type":"github","detected":true,"repoName":"allure-report-action","jobUid":"quokkify/allure-report-action_Publish trusted Allure report","jobUrl":"https://github.com/quokkify/allure-report-action/actions?query=workflow%3A%22Publish%20trusted%20Allure%20report%22","jobName":"quokkify/allure-report-action - Publish trusted Allure report","pipelineRunName":"Publish trusted Allure report","pipelineRunUrl":"https://github.com/quokkify/allure-report-action/actions/runs/42517082928","jobRunUid":"42517082928","jobRunUrl":"https://github.com/quokkify/allure-report-action/actions/runs/42517082928","jobRunName":"publish #548","jobRunBranch":"renovate/allurereport-ci-3.x","pullRequestUrl":"https://github.com/quokkify/allure-report-action/pull/189","pullRequestName":"Pull request #189","commitSha":"741006e171c863b0e54299216e7eaa97df728af8","provider":"github","repository":{"slug":"quokkify/allure-report-action","url":"https://github.com/quokkify/allure-report-action"},"sourceBranch":"renovate/allurereport-ci-3.x","targetBranch":"main","pullRequest":{"id":"189","url":"https://github.com/quokkify/allure-report-action/pull/189","title":"Pull request #189"}},"git":{"commit":"14cc094a310362b2a2c5af621dc88673ee3c4890","branch":"main"},"runSummary":{"start":1794167242136,"stop":1794167243270,"duration":1134},"runSummaryByEnv":{"default":{"start":1794167242136,"stop":1794167243270,"duration":1134}},"layout":"base","allureVersion":"3.22.1","sections":["charts","timeline"],"defaultSection":""}
+      window.allureReportOptions = {"id":"awesome","reportName":"allure-report-action-smoke – Pull request #189","logo":"","theme":"auto","reportLanguage":"en","createdAt":1794167984161,"reportUuid":"da7a4c45-cca0-46a3-b7c7-e797fa79f236","groupBy":[],"cacheKey":"1794167984161","ci":{"type":"github","detected":true,"repoName":"allure-report-action","jobUid":"quokkify/allure-report-action_Publish trusted Allure report","jobUrl":"https://github.com/quokkify/allure-report-action/actions?query=workflow%3A%22Publish%20trusted%20Allure%20report%22","jobName":"quokkify/allure-report-action - Publish trusted Allure report","pipelineRunName":"Publish trusted Allure report","pipelineRunUrl":"https://github.com/quokkify/allure-report-action/actions/runs/42517696593","jobRunUid":"42517696593","jobRunUrl":"https://github.com/quokkify/allure-report-action/actions/runs/42517696593","jobRunName":"publish #549","jobRunBranch":"renovate/allurereport-ci-3.x","pullRequestUrl":"https://github.com/quokkify/allure-report-action/pull/189","pullRequestName":"Pull request #189","commitSha":"2fad8433abf341d1e0375596cc1013afd41f20c3","provider":"github","repository":{"slug":"quokkify/allure-report-action","url":"https://github.com/quokkify/allure-report-action"},"sourceBranch":"renovate/allurereport-ci-3.x","targetBranch":"main","pullRequest":{"id":"189","url":"https://github.com/quokkify/allure-report-action/pull/189","title":"Pull request #189"}},"git":{"commit":"91770913a5415378614f2362753737f01906afa5","branch":"main"},"runSummary":{"start":1794167829792,"stop":1794167830742,"duration":950},"runSummaryByEnv":{"default":{"start":1794167829792,"stop":1794167830742,"duration":950}},"layout":"base","allureVersion":"3.33.0","sections":["charts","timeline"],"defaultSection":""}
     </script>
 </head>
 <body>
@@ -68,8 +68,9 @@
     <div id="app"></div>
     
     <script>
-      const { origin, pathname } = window.location; 
-      const url = new URL(pathname, origin);
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.hash = "";
       const baseEl = document.createElement("base");
       
       baseEl.href = url.toString();
@@ -80,7 +81,7 @@
     <script>
       window.allure = window.allure || {};
     </script>
-    <script   src="app-1cf27b2f4f66161c2cd6.js"></script>
+    <script   src="app-189f0a86432a713a6a0d.js"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LNDJ3J7WT0"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -88,8 +89,8 @@
         gtag('js', new Date());
         gtag('config', 'G-LNDJ3J7WT0', {
           "report": "awesome",
-          "allureVersion": "3.22.1",
-          "reportUuid": "00d880c4-78ac-4819-a21f-73740b8c12ef",
+          "allureVersion": "3.33.0",
+          "reportUuid": "da7a4c45-cca0-46a3-b7c7-e797fa79f236",
           "single_file": ""
         });
     </script>
