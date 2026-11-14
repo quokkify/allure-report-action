@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.5.5](https://github.com/quokkify/allure-report-action/compare/v0.5.4...v0.5.5) (2026-11-14)
+
+<!-- project-toolkit:release-notes v2 -->
+**At a glance:** 8 internal
+
+<details><summary>Internal changes (8 PRs)</summary>
+
+**Dependencies**
+
+- @allurereport/ci 3.22.1 → 3.33.0 ([#189](https://github.com/quokkify/allure-report-action/pull/189))
+- @typescript-eslint/eslint-plugin, @typescript-eslint/parser 8.72.1 → 8.72.2 ([#194](https://github.com/quokkify/allure-report-action/pull/194))
+- allure 3.22.1 → 3.33.0 ([#188](https://github.com/quokkify/allure-report-action/pull/188))
+- eslint-plugin-import-x 4.17.1 → 4.18.1 ([#192](https://github.com/quokkify/allure-report-action/pull/192))
+- quokkify/gh-pages-subdir-action v0.1.1 → v0.1.2 ([#193](https://github.com/quokkify/allure-report-action/pull/193))
+- typescript-eslint 8.72.1 → 8.72.2 ([#194](https://github.com/quokkify/allure-report-action/pull/194))
+
+**Maintenance**
+
+- **npm:** lock file maintenance ([#191](https://github.com/quokkify/allure-report-action/pull/191))
+- **template:** update shared project template ([#186](https://github.com/quokkify/allure-report-action/pull/186), [#187](https://github.com/quokkify/allure-report-action/pull/187))
+
+</details>
+
 ## [0.5.4](https://github.com/quokkify/allure-report-action/compare/v0.5.3...v0.5.4) (2026-11-07)
 
 <!-- project-toolkit:release-notes v2 -->
