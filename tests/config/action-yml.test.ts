@@ -6,6 +6,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 const UPLOAD_ARTIFACT_PINNED_USES = /uses: actions\/upload-artifact@[0-9a-f]{40}\b/;
+const PAGES_ACTION_PINNED_USES =
+  /uses: quokkify\/gh-pages-subdir-action@[0-9a-f]{40} # v\d+\.\d+\.\d+\n/;
 
 describe('Action.yml Metadata', () => {
   const actionYmlPath = path.resolve(__dirname, '../../action.yml');
@@ -18,9 +20,7 @@ describe('Action.yml Metadata', () => {
   it('delegates runtime and Pages publication through composite steps', () => {
     expect(actionYml).toContain('using: composite');
     expect(actionYml).toContain('run: node "${GITHUB_ACTION_PATH}/dist/index.cjs"');
-    expect(actionYml).toContain(
-      'quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b # v0.1.1'
-    );
+    expect(actionYml).toMatch(PAGES_ACTION_PINNED_USES);
     expect(actionYml).toContain(
       "if: ${{ inputs.publish-pages == 'true' && inputs.fork-pr != 'true' }}"
     );
@@ -29,9 +29,7 @@ describe('Action.yml Metadata', () => {
 
   it('executes runtime, Pages publication, then pyramid upload in order', () => {
     const runtimeStep = actionYml.indexOf('run: node "${GITHUB_ACTION_PATH}/dist/index.cjs"');
-    const pagesStep = actionYml.indexOf(
-      'uses: quokkify/gh-pages-subdir-action@e936122cbdf5a9676b5587d5a812fadf7ddfde6b'
-    );
+    const pagesStep = actionYml.search(PAGES_ACTION_PINNED_USES);
     const uploadStep = actionYml.search(UPLOAD_ARTIFACT_PINNED_USES);
 
     expect(runtimeStep).toBeGreaterThanOrEqual(0);
