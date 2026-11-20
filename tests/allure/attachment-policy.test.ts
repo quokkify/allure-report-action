@@ -207,15 +207,24 @@ describe('Attachment policy', () => {
     expect(fs.readFileSync(path.join(resultsDir, 'shared-attachment.txt'), 'utf8')).toBe('shared');
   });
 
-  it('refuses to overwrite an existing file when renaming', () => {
+  it('picks a free name instead of overwriting an existing file', () => {
     writeJson('case-result.json', {
       uuid: 'case',
-      attachments: [{ source: 'page.html', type: 'text/html' }],
+      attachments: [
+        { source: 'page.html', type: 'text/html' },
+        { source: 'page.html.txt', type: 'text/plain' },
+      ],
     });
     fs.writeFileSync(path.join(resultsDir, 'page.html'), 'new');
     fs.writeFileSync(path.join(resultsDir, 'page.html.txt'), 'existing');
 
-    expect(() => neutralizeAttachments(resultsDir)).toThrow('already exists');
+    neutralizeAttachments(resultsDir);
+
+    expect(readJson('case-result.json').attachments).toEqual([
+      { source: 'page.html.1.txt', type: 'text/plain' },
+      { source: 'page.html.txt', type: 'text/plain' },
+    ]);
+    expect(fs.readFileSync(path.join(resultsDir, 'page.html.1.txt'), 'utf8')).toBe('new');
     expect(fs.readFileSync(path.join(resultsDir, 'page.html.txt'), 'utf8')).toBe('existing');
   });
 
