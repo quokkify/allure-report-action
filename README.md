@@ -98,6 +98,11 @@ attachment keeps a passive type and extension:
 This always runs and has no opt-out. The `sanitize-results` CLI command applies the
 same rules to an untrusted downloaded artifact.
 
+The Allure CLI is resolved by `npx` from the public registry without a lockfile, so
+it runs with action inputs (including `github-token`), `GITHUB_TOKEN`, `GH_TOKEN`,
+`ACTIONS_RUNTIME_TOKEN`, and `ACTIONS_ID_TOKEN_REQUEST_*` removed from its
+environment and with npm install scripts disabled.
+
 The action uses the caller repository from the GitHub Actions context and an explicitly supplied token, so the same action works in public and private repositories. Private organizations must allow this public action in their Actions policy. GitHub Pages publishing is disabled by default and is not required for the PR summary comment.
 
 ## Module-scoped environments and variables
@@ -241,6 +246,8 @@ tests/
 │   └── comment-publisher.test.ts # PR comment upsert logic
 ├── report/
 │   └── pr-summary.test.ts       # PR summary edge cases
+├── utils/
+│   └── env.test.ts              # Allure CLI environment
 └── commands/
     └── index.test.ts            # CLI command integration
 ```

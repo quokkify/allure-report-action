@@ -15,6 +15,7 @@ import { runPyramid } from './commands/pyramid.js';
 import { loadConfig } from './config/loader.js';
 import { publishPrComment } from './github/comment-publisher.js';
 import { setActionVersion, ACTION_VERSION } from './report/model.js';
+import { allureCliEnv } from './utils/env.js';
 import { readFile } from './utils/fs.js';
 import { readFile as readVersionFile } from './utils/fs.js';
 
@@ -100,7 +101,7 @@ async function run(): Promise<void> {
         '--config',
         effectiveConfigFile,
       ],
-      { stdio: 'inherit' }
+      { stdio: 'inherit', env: allureCliEnv(process.env) }
     );
     if (allureGenerate.status !== 0) {
       throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
