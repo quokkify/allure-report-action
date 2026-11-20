@@ -38,4 +38,26 @@ export function isGitHubActions() {
 export function getStepSummaryPath() {
     return process.env.GITHUB_STEP_SUMMARY;
 }
+/**
+ * Environment for the Allure CLI that `npx` resolves without a lockfile. Action inputs (which carry
+ * the GitHub token) and runner tokens are removed so a compromised package in that unlocked tree
+ * cannot read them, and npm install scripts are disabled for the resolution.
+ */
+export function allureCliEnv(parent) {
+    const env = {};
+    for (const [name, value] of Object.entries(parent)) {
+        const upper = name.toUpperCase();
+        if (upper.startsWith('INPUT_') ||
+            upper === 'GITHUB_TOKEN' ||
+            upper === 'GH_TOKEN' ||
+            upper === 'ACTIONS_RUNTIME_TOKEN' ||
+            upper.startsWith('ACTIONS_ID_TOKEN_REQUEST_') ||
+            upper === 'NPM_CONFIG_IGNORE_SCRIPTS') {
+            continue;
+        }
+        env[name] = value;
+    }
+    env.npm_config_ignore_scripts = 'true';
+    return env;
+}
 //# sourceMappingURL=env.js.map

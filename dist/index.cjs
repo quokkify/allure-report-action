@@ -1081,14 +1081,14 @@ var require_util = __commonJS({
         }
         const port = url.port != null ? url.port : url.protocol === "https:" ? 443 : 80;
         let origin = url.origin != null ? url.origin : `${url.protocol || ""}//${url.hostname || ""}:${port}`;
-        let path9 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
+        let path10 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path9 && path9[0] !== "/") {
-          path9 = `/${path9}`;
+        if (path10 && path10[0] !== "/") {
+          path10 = `/${path10}`;
         }
-        return new URL(`${origin}${path9}`);
+        return new URL(`${origin}${path10}`);
       }
       if (!isHttpOrHttpsPrefixed(url.origin || url.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -1539,39 +1539,39 @@ var require_diagnostics = __commonJS({
       });
       diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
         const {
-          request: { method, path: path9, origin }
+          request: { method, path: path10, origin }
         } = evt;
-        debuglog("sending request to %s %s/%s", method, origin, path9);
+        debuglog("sending request to %s %s/%s", method, origin, path10);
       });
       diagnosticsChannel.channel("undici:request:headers").subscribe((evt) => {
         const {
-          request: { method, path: path9, origin },
+          request: { method, path: path10, origin },
           response: { statusCode }
         } = evt;
         debuglog(
           "received response to %s %s/%s - HTTP %d",
           method,
           origin,
-          path9,
+          path10,
           statusCode
         );
       });
       diagnosticsChannel.channel("undici:request:trailers").subscribe((evt) => {
         const {
-          request: { method, path: path9, origin }
+          request: { method, path: path10, origin }
         } = evt;
-        debuglog("trailers received from %s %s/%s", method, origin, path9);
+        debuglog("trailers received from %s %s/%s", method, origin, path10);
       });
       diagnosticsChannel.channel("undici:request:error").subscribe((evt) => {
         const {
-          request: { method, path: path9, origin },
+          request: { method, path: path10, origin },
           error: error2
         } = evt;
         debuglog(
           "request to %s %s/%s errored - %s",
           method,
           origin,
-          path9,
+          path10,
           error2.message
         );
       });
@@ -1620,9 +1620,9 @@ var require_diagnostics = __commonJS({
         });
         diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
           const {
-            request: { method, path: path9, origin }
+            request: { method, path: path10, origin }
           } = evt;
-          debuglog("sending request to %s %s/%s", method, origin, path9);
+          debuglog("sending request to %s %s/%s", method, origin, path10);
         });
       }
       diagnosticsChannel.channel("undici:websocket:open").subscribe((evt) => {
@@ -1685,7 +1685,7 @@ var require_request = __commonJS({
     var kHandler = /* @__PURE__ */ Symbol("handler");
     var Request = class {
       constructor(origin, {
-        path: path9,
+        path: path10,
         method,
         body,
         headers,
@@ -1700,11 +1700,11 @@ var require_request = __commonJS({
         expectContinue,
         servername
       }, handler3) {
-        if (typeof path9 !== "string") {
+        if (typeof path10 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path9[0] !== "/" && !(path9.startsWith("http://") || path9.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path10[0] !== "/" && !(path10.startsWith("http://") || path10.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path9)) {
+        } else if (invalidPathRegex.test(path10)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -1770,7 +1770,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? buildURL(path9, query) : path9;
+        this.path = query ? buildURL(path10, query) : path10;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -2111,6 +2111,7 @@ var require_dispatcher = __commonJS({
 var require_dispatcher_base = __commonJS({
   "node_modules/undici/lib/dispatcher/dispatcher-base.js"(exports2, module2) {
     "use strict";
+    var buffer = require("node:buffer");
     var Dispatcher = require_dispatcher();
     var {
       ClientDestroyedError,
@@ -2122,6 +2123,7 @@ var require_dispatcher_base = __commonJS({
     var kOnClosed = /* @__PURE__ */ Symbol("onClosed");
     var kInterceptedDispatch = /* @__PURE__ */ Symbol("Intercepted Dispatch");
     var kWebSocketOptions = /* @__PURE__ */ Symbol("webSocketOptions");
+    var kEventSourceOptions = /* @__PURE__ */ Symbol("eventSourceOptions");
     var DispatcherBase = class extends Dispatcher {
       constructor(opts) {
         super();
@@ -2130,11 +2132,17 @@ var require_dispatcher_base = __commonJS({
         this[kClosed] = false;
         this[kOnClosed] = [];
         this[kWebSocketOptions] = opts?.webSocket ?? {};
+        this[kEventSourceOptions] = opts?.eventSource ?? {};
       }
       get webSocketOptions() {
         return {
           maxFragments: this[kWebSocketOptions].maxFragments ?? 131072,
           maxPayloadSize: this[kWebSocketOptions].maxPayloadSize ?? 128 * 1024 * 1024
+        };
+      }
+      get eventSourceOptions() {
+        return {
+          maxEventSize: this[kEventSourceOptions].maxEventSize ?? buffer.kStringMaxLength
         };
       }
       get destroyed() {
@@ -2159,9 +2167,9 @@ var require_dispatcher_base = __commonJS({
       }
       close(callback) {
         if (callback === void 0) {
-          return new Promise((resolve5, reject) => {
+          return new Promise((resolve6, reject) => {
             this.close((err, data) => {
-              return err ? reject(err) : resolve5(data);
+              return err ? reject(err) : resolve6(data);
             });
           });
         }
@@ -2199,12 +2207,12 @@ var require_dispatcher_base = __commonJS({
           err = null;
         }
         if (callback === void 0) {
-          return new Promise((resolve5, reject) => {
+          return new Promise((resolve6, reject) => {
             this.destroy(err, (err2, data) => {
               return err2 ? (
                 /* istanbul ignore next: should never error */
                 reject(err2)
-              ) : resolve5(data);
+              ) : resolve6(data);
             });
           });
         }
@@ -4471,8 +4479,8 @@ var require_util2 = __commonJS({
     function createDeferredPromise() {
       let res;
       let rej;
-      const promise = new Promise((resolve5, reject) => {
-        res = resolve5;
+      const promise = new Promise((resolve6, reject) => {
+        res = resolve6;
         rej = reject;
       });
       return { promise, resolve: res, reject: rej };
@@ -6284,7 +6292,6 @@ var require_client_h1 = __commonJS({
       socket[kSocketUsed] = false;
       socket[kParser] = new Parser(client, socket, llhttpInstance);
       addListener(socket, "error", function(err) {
-        assert(err.code !== "ERR_TLS_CERT_ALTNAME_INVALID");
         const parser = this[kParser];
         if (err.code === "ECONNRESET" && parser.statusCode && !parser.shouldKeepAlive) {
           const parserErr = parser.finish();
@@ -6456,7 +6463,7 @@ var require_client_h1 = __commonJS({
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
     function writeH1(client, request2) {
-      const { method, path: path9, host, upgrade, blocking, reset } = request2;
+      const { method, path: path10, host, upgrade, blocking, reset } = request2;
       let { body, headers, contentLength } = request2;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util.isFormDataLike(body)) {
@@ -6537,7 +6544,7 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path9} HTTP/1.1\r
+      let header = `${method} ${path10} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -6724,12 +6731,12 @@ upgrade: ${upgrade}\r
           cb();
         }
       }
-      const waitForDrain = () => new Promise((resolve5, reject) => {
+      const waitForDrain = () => new Promise((resolve6, reject) => {
         assert(callback === null);
         if (socket[kError]) {
           reject(socket[kError]);
         } else {
-          callback = resolve5;
+          callback = resolve6;
         }
       });
       socket.on("close", onDrain).on("drain", onDrain);
@@ -6968,7 +6975,6 @@ var require_client_h2 = __commonJS({
       client[kHTTP2Session] = session;
       socket[kHTTP2Session] = session;
       util.addListener(socket, "error", function(err) {
-        assert(err.code !== "ERR_TLS_CERT_ALTNAME_INVALID");
         this[kError] = err;
         this[kClient][kOnError](err);
       });
@@ -7027,7 +7033,6 @@ var require_client_h2 = __commonJS({
       }
     }
     function onHttp2SessionError(err) {
-      assert(err.code !== "ERR_TLS_CERT_ALTNAME_INVALID");
       this[kSocket][kError] = err;
       this[kClient][kOnError](err);
     }
@@ -7068,7 +7073,7 @@ var require_client_h2 = __commonJS({
     }
     function writeH2(client, request2) {
       const session = client[kHTTP2Session];
-      const { method, path: path9, host, upgrade, expectContinue, signal, headers: reqHeaders } = request2;
+      const { method, path: path10, host, upgrade, expectContinue, signal, headers: reqHeaders } = request2;
       let { body } = request2;
       if (upgrade) {
         util.errorRequest(client, request2, new Error("Upgrade not supported for H2"));
@@ -7165,7 +7170,7 @@ var require_client_h2 = __commonJS({
         });
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path9;
+      headers[HTTP2_HEADER_PATH] = path10;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -7401,12 +7406,12 @@ var require_client_h2 = __commonJS({
           cb();
         }
       }
-      const waitForDrain = () => new Promise((resolve5, reject) => {
+      const waitForDrain = () => new Promise((resolve6, reject) => {
         assert(callback === null);
         if (socket[kError]) {
           reject(socket[kError]);
         } else {
-          callback = resolve5;
+          callback = resolve6;
         }
       });
       h2stream.on("close", onDrain).on("drain", onDrain);
@@ -7518,9 +7523,9 @@ var require_redirect_handler = __commonJS({
           return this.handler.onHeaders(statusCode, headers, resume, statusText);
         }
         const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path9 = search ? `${pathname}${search}` : pathname;
+        const path10 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path9;
+        this.opts.path = path10;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -7721,9 +7726,10 @@ var require_client = __commonJS({
         // h2
         maxConcurrentStreams,
         allowH2,
-        webSocket
+        webSocket,
+        eventSource
       } = {}) {
-        super({ webSocket });
+        super({ webSocket, eventSource });
         if (keepAlive !== void 0) {
           throw new InvalidArgumentError("unsupported keepAlive, use pipelining=0 instead");
         }
@@ -7884,16 +7890,16 @@ var require_client = __commonJS({
         return this[kNeedDrain] < 2;
       }
       async [kClose]() {
-        return new Promise((resolve5) => {
+        return new Promise((resolve6) => {
           if (this[kSize]) {
-            this[kClosedResolve] = resolve5;
+            this[kClosedResolve] = resolve6;
           } else {
-            resolve5(null);
+            resolve6(null);
           }
         });
       }
       async [kDestroy](err) {
-        return new Promise((resolve5) => {
+        return new Promise((resolve6) => {
           const requests = this[kQueue].splice(this[kPendingIdx]);
           for (let i = 0; i < requests.length; i++) {
             const request2 = requests[i];
@@ -7904,7 +7910,7 @@ var require_client = __commonJS({
               this[kClosedResolve]();
               this[kClosedResolve] = null;
             }
-            resolve5(null);
+            resolve6(null);
           };
           if (this[kHTTPContext]) {
             this[kHTTPContext].destroy(err, callback);
@@ -7955,7 +7961,7 @@ var require_client = __commonJS({
         });
       }
       try {
-        const socket = await new Promise((resolve5, reject) => {
+        const socket = await new Promise((resolve6, reject) => {
           client[kConnector]({
             host,
             hostname,
@@ -7967,7 +7973,7 @@ var require_client = __commonJS({
             if (err) {
               reject(err);
             } else {
-              resolve5(socket2);
+              resolve6(socket2);
             }
           });
         });
@@ -8303,8 +8309,8 @@ var require_pool_base = __commonJS({
         if (this[kQueue].isEmpty()) {
           await Promise.all(this[kClients].map((c) => c.close()));
         } else {
-          await new Promise((resolve5) => {
-            this[kClosedResolve] = resolve5;
+          await new Promise((resolve6) => {
+            this[kClosedResolve] = resolve6;
           });
         }
       }
@@ -8620,7 +8626,7 @@ var require_agent = __commonJS({
       return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool(origin, opts);
     }
     var Agent = class extends DispatcherBase {
-      constructor({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
+      constructor({ factory = defaultFactory, maxRedirections = 0, connect, tls, ...options } = {}) {
         if (typeof factory !== "function") {
           throw new InvalidArgumentError("factory must be a function.");
         }
@@ -8634,8 +8640,11 @@ var require_agent = __commonJS({
         if (connect && typeof connect !== "function") {
           connect = { ...connect };
         }
+        if (tls && typeof tls !== "function") {
+          tls = { ...tls };
+        }
         this[kInterceptors] = options.interceptors?.Agent && Array.isArray(options.interceptors.Agent) ? options.interceptors.Agent : [createRedirectInterceptor({ maxRedirections })];
-        this[kOptions] = { ...util.deepClone(options), connect };
+        this[kOptions] = { ...util.deepClone(options), connect, tls };
         this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
         this[kMaxRedirections] = maxRedirections;
         this[kFactory] = factory;
@@ -8755,10 +8764,10 @@ var require_proxy_agent = __commonJS({
         };
         const {
           origin,
-          path: path9 = "/",
+          path: path10 = "/",
           headers = {}
         } = opts;
-        opts.path = origin + path9;
+        opts.path = origin + path10;
         if (!("host" in headers) && !("Host" in headers)) {
           const { host } = new URL2(origin);
           headers.host = host;
@@ -9570,7 +9579,7 @@ var require_readable = __commonJS({
         if (this._readableState.closeEmitted) {
           return null;
         }
-        return await new Promise((resolve5, reject) => {
+        return await new Promise((resolve6, reject) => {
           if (this[kContentLength] > limit) {
             this.destroy(new AbortError());
           }
@@ -9583,7 +9592,7 @@ var require_readable = __commonJS({
             if (signal?.aborted) {
               reject(signal.reason ?? new AbortError());
             } else {
-              resolve5(null);
+              resolve6(null);
             }
           }).on("error", noop3).on("data", function(chunk) {
             limit -= chunk.length;
@@ -9602,7 +9611,7 @@ var require_readable = __commonJS({
     }
     async function consume(stream, type) {
       assert(!stream[kConsume]);
-      return new Promise((resolve5, reject) => {
+      return new Promise((resolve6, reject) => {
         if (isUnusable(stream)) {
           const rState = stream._readableState;
           if (rState.destroyed && rState.closeEmitted === false) {
@@ -9619,7 +9628,7 @@ var require_readable = __commonJS({
             stream[kConsume] = {
               type,
               stream,
-              resolve: resolve5,
+              resolve: resolve6,
               reject,
               length: 0,
               body: []
@@ -9689,18 +9698,18 @@ var require_readable = __commonJS({
       return buffer;
     }
     function consumeEnd(consume2) {
-      const { type, body, resolve: resolve5, stream, length } = consume2;
+      const { type, body, resolve: resolve6, stream, length } = consume2;
       try {
         if (type === "text") {
-          resolve5(chunksDecode(body, length));
+          resolve6(chunksDecode(body, length));
         } else if (type === "json") {
-          resolve5(JSON.parse(chunksDecode(body, length)));
+          resolve6(JSON.parse(chunksDecode(body, length)));
         } else if (type === "arrayBuffer") {
-          resolve5(chunksConcat(body, length).buffer);
+          resolve6(chunksConcat(body, length).buffer);
         } else if (type === "blob") {
-          resolve5(new Blob(body, { type: stream[kContentType] }));
+          resolve6(new Blob(body, { type: stream[kContentType] }));
         } else if (type === "bytes") {
-          resolve5(chunksConcat(body, length));
+          resolve6(chunksConcat(body, length));
         }
         consumeFinish(consume2);
       } catch (err) {
@@ -9957,9 +9966,9 @@ var require_api_request = __commonJS({
     };
     function request2(opts, callback) {
       if (callback === void 0) {
-        return new Promise((resolve5, reject) => {
+        return new Promise((resolve6, reject) => {
           request2.call(this, opts, (err, data) => {
-            return err ? reject(err) : resolve5(data);
+            return err ? reject(err) : resolve6(data);
           });
         });
       }
@@ -10182,9 +10191,9 @@ var require_api_stream = __commonJS({
     };
     function stream(opts, factory, callback) {
       if (callback === void 0) {
-        return new Promise((resolve5, reject) => {
+        return new Promise((resolve6, reject) => {
           stream.call(this, opts, factory, (err, data) => {
-            return err ? reject(err) : resolve5(data);
+            return err ? reject(err) : resolve6(data);
           });
         });
       }
@@ -10469,9 +10478,9 @@ var require_api_upgrade = __commonJS({
     };
     function upgrade(opts, callback) {
       if (callback === void 0) {
-        return new Promise((resolve5, reject) => {
+        return new Promise((resolve6, reject) => {
           upgrade.call(this, opts, (err, data) => {
-            return err ? reject(err) : resolve5(data);
+            return err ? reject(err) : resolve6(data);
           });
         });
       }
@@ -10563,9 +10572,9 @@ var require_api_connect = __commonJS({
     };
     function connect(opts, callback) {
       if (callback === void 0) {
-        return new Promise((resolve5, reject) => {
+        return new Promise((resolve6, reject) => {
           connect.call(this, opts, (err, data) => {
-            return err ? reject(err) : resolve5(data);
+            return err ? reject(err) : resolve6(data);
           });
         });
       }
@@ -10730,20 +10739,20 @@ var require_mock_utils = __commonJS({
       }
       return true;
     }
-    function safeUrl(path9) {
-      if (typeof path9 !== "string") {
-        return path9;
+    function safeUrl(path10) {
+      if (typeof path10 !== "string") {
+        return path10;
       }
-      const pathSegments = path9.split("?");
+      const pathSegments = path10.split("?");
       if (pathSegments.length !== 2) {
-        return path9;
+        return path10;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path9, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path9);
+    function matchKey(mockDispatch2, { path: path10, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path10);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -10765,7 +10774,7 @@ var require_mock_utils = __commonJS({
     function getMockDispatch(mockDispatches, key) {
       const basePath = key.query ? buildURL(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path9 }) => matchValue(safeUrl(path9), resolvedPath));
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path10 }) => matchValue(safeUrl(path10), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
@@ -10803,9 +10812,9 @@ var require_mock_utils = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path9, method, body, headers, query } = opts;
+      const { path: path10, method, body, headers, query } = opts;
       return {
-        path: path9,
+        path: path10,
         method,
         body,
         headers,
@@ -11268,10 +11277,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path9, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path10, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path9,
+            Path: path10,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -14363,8 +14372,9 @@ var require_fetch = __commonJS({
         }
       );
       response.body = { stream, source: null, length: null };
-      fetchParams.controller.onAborted = onAborted;
-      fetchParams.controller.on("terminated", onAborted);
+      if (!fetchParams.controller.resume) {
+        fetchParams.controller.on("terminated", onAborted);
+      }
       fetchParams.controller.resume = async () => {
         while (true) {
           let bytes;
@@ -14427,7 +14437,7 @@ var require_fetch = __commonJS({
       function dispatch({ body }) {
         const url = requestCurrentURL(request2);
         const agent = fetchParams.controller.dispatcher;
-        return new Promise((resolve5, reject) => agent.dispatch(
+        return new Promise((resolve6, reject) => agent.dispatch(
           {
             path: url.pathname + url.search,
             origin: url.origin,
@@ -14464,7 +14474,6 @@ var require_fetch = __commonJS({
                 headersList.append(bufferToLowerCasedHeaderName(rawHeaders[i]), rawHeaders[i + 1].toString("latin1"), true);
               }
               location = headersList.get("location", true);
-              this.body = new Readable({ read: resume });
               const decoders = [];
               const willFollow = location && request2.redirect === "follow" && redirectStatusSet.has(status);
               if (request2.method !== "HEAD" && request2.method !== "CONNECT" && !nullBodyStatus.includes(status) && !willFollow) {
@@ -14472,7 +14481,7 @@ var require_fetch = __commonJS({
                 const codings = contentEncoding ? contentEncoding.toLowerCase().split(",") : [];
                 const maxContentEncodings = 5;
                 if (codings.length > maxContentEncodings) {
-                  reject(new Error(`too many content-encodings in response: ${codings.length}, maximum allowed is ${maxContentEncodings}`));
+                  this.abort(new Error(`too many content-encodings in response: ${codings.length}, maximum allowed is ${maxContentEncodings}`));
                   return true;
                 }
                 for (let i = codings.length - 1; i >= 0; --i) {
@@ -14502,8 +14511,9 @@ var require_fetch = __commonJS({
                   }
                 }
               }
+              this.body = new Readable({ read: resume });
               const onError = this.onError.bind(this);
-              resolve5({
+              resolve6({
                 status,
                 statusText,
                 headersList,
@@ -14527,9 +14537,6 @@ var require_fetch = __commonJS({
               if (this.abort) {
                 fetchParams.controller.off("terminated", this.abort);
               }
-              if (fetchParams.controller.onAborted) {
-                fetchParams.controller.off("terminated", fetchParams.controller.onAborted);
-              }
               fetchParams.controller.ended = true;
               this.body.push(null);
             },
@@ -14549,7 +14556,7 @@ var require_fetch = __commonJS({
               for (let i = 0; i < rawHeaders.length; i += 2) {
                 headersList.append(bufferToLowerCasedHeaderName(rawHeaders[i]), rawHeaders[i + 1].toString("latin1"), true);
               }
-              resolve5({
+              resolve6({
                 status,
                 statusText: STATUS_CODES[status],
                 headersList,
@@ -16152,9 +16159,9 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path9) {
-      for (let i = 0; i < path9.length; ++i) {
-        const code = path9.charCodeAt(i);
+    function validateCookiePath(path10) {
+      for (let i = 0; i < path10.length; ++i) {
+        const code = path10.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code > 126 || // exclude DEL and non-ascii
         code === 59) {
@@ -17603,6 +17610,16 @@ var require_receiver = __commonJS({
             if (isControlFrame(this.#info.opcode)) {
               this.#loop = this.parseControlFrame(body);
               this.#state = parserStates.INFO;
+              const socket = this.ws[kResponse].socket;
+              if (this.#loop && socket.writableNeedDrain) {
+                this.#loop = false;
+                socket.once("drain", () => {
+                  if (this.destroyed) return;
+                  this.#loop = true;
+                  this.run(callback);
+                });
+                return;
+              }
             } else {
               if (!this.#info.compressed) {
                 if (!this.writeFragments(body)) {
@@ -18280,8 +18297,8 @@ var require_util8 = __commonJS({
       return true;
     }
     function delay(ms2) {
-      return new Promise((resolve5) => {
-        setTimeout(resolve5, ms2).unref();
+      return new Promise((resolve6) => {
+        setTimeout(resolve6, ms2).unref();
       });
     }
     module2.exports = {
@@ -18296,6 +18313,7 @@ var require_util8 = __commonJS({
 var require_eventsource_stream = __commonJS({
   "node_modules/undici/lib/web/eventsource/eventsource-stream.js"(exports2, module2) {
     "use strict";
+    var buffer = require("node:buffer");
     var { Transform } = require("node:stream");
     var { isASCIINumber, isValidLastEventId } = require_util8();
     var BOM = [239, 187, 191];
@@ -18303,24 +18321,28 @@ var require_eventsource_stream = __commonJS({
     var CR = 13;
     var COLON = 58;
     var SPACE = 32;
+    var defaultMaxEventSize = buffer.kStringMaxLength;
     var DATA = Buffer.from("data");
     var EVENT = Buffer.from("event");
     var ID = Buffer.from("id");
     var RETRY = Buffer.from("retry");
-    function isASCIINumberBytes(buffer, start) {
-      if (start >= buffer.length) {
+    var minParserItems = 1024;
+    var maxParserItems = 131072;
+    var bytesPerParserItem = 128;
+    function isASCIINumberBytes(buffer2, start) {
+      if (start >= buffer2.length) {
         return false;
       }
-      for (let i = start; i < buffer.length; i++) {
-        if (buffer[i] < 48 || buffer[i] > 57) {
+      for (let i = start; i < buffer2.length; i++) {
+        if (buffer2[i] < 48 || buffer2[i] > 57) {
           return false;
         }
       }
       return true;
     }
-    function isValidLastEventIdBytes(buffer, start) {
-      for (let i = start; i < buffer.length; i++) {
-        if (buffer[i] === 0) {
+    function isValidLastEventIdBytes(buffer2, start) {
+      for (let i = start; i < buffer2.length; i++) {
+        if (buffer2[i] === 0) {
           return false;
         }
       }
@@ -18336,6 +18358,11 @@ var require_eventsource_stream = __commonJS({
         }
       }
       return true;
+    }
+    function createMaxEventSizeExceededError() {
+      const error2 = new Error("EventSource message size exceeded");
+      error2.aborted = false;
+      return error2;
     }
     var EventSourceStream = class extends Transform {
       /**
@@ -18363,6 +18390,13 @@ var require_eventsource_stream = __commonJS({
       pos = 0;
       lineChunkIndex = 0;
       linePos = 0;
+      lineLength = 0;
+      eventSize = 0;
+      eventFieldSizes = { data: 0, event: 0, id: 0, retry: 0 };
+      dataLineCount = 0;
+      maxEventSize;
+      maxDataLines;
+      maxBufferedChunks;
       event = {
         data: void 0,
         event: void 0,
@@ -18371,6 +18405,7 @@ var require_eventsource_stream = __commonJS({
       };
       /**
        * @param {object} options
+       * @param {number} [options.maxEventSize]
        * @param {eventSourceSettings} options.eventSourceSettings
        * @param {Function} [options.push]
        */
@@ -18378,6 +18413,10 @@ var require_eventsource_stream = __commonJS({
         options.readableObjectMode = true;
         super(options);
         this.state = options.eventSourceSettings || {};
+        this.maxEventSize = options.maxEventSize ?? defaultMaxEventSize;
+        const parserItemLimit = this.maxEventSize > 0 ? Math.min(maxParserItems, Math.max(minParserItems, Math.floor(this.maxEventSize / bytesPerParserItem))) : 0;
+        this.maxDataLines = parserItemLimit;
+        this.maxBufferedChunks = parserItemLimit;
         if (options.push) {
           this.push = options.push;
         }
@@ -18391,6 +18430,10 @@ var require_eventsource_stream = __commonJS({
       _transform(chunk, _encoding, callback) {
         if (chunk.length === 0) {
           callback();
+          return;
+        }
+        if (this.maxEventSize > 0 && this.chunks.length >= this.maxBufferedChunks && chunk[0] !== LF && chunk[0] !== CR) {
+          callback(createMaxEventSizeExceededError());
           return;
         }
         this.chunks.push(chunk);
@@ -18429,18 +18472,32 @@ var require_eventsource_stream = __commonJS({
             if (byte === CR) {
               this.crlfCheck = true;
             }
-            this.parseLine(this.readLine(), this.event);
+            try {
+              this.parseLine(this.readLine(), this.event);
+            } catch (error2) {
+              callback(error2);
+              return;
+            }
             this.consumeCurrentByte();
             this.eventEndCheck = true;
             continue;
+          }
+          if (this.maxEventSize > 0 && ++this.lineLength > this.maxEventSize + 7) {
+            callback(createMaxEventSizeExceededError());
+            return;
           }
           this.advanceCursor();
         }
         callback();
       }
+      _destroy(error2, callback) {
+        this.chunks.length = 0;
+        this.clearEvent();
+        super._destroy(error2, callback);
+      }
       /**
        * @param {Buffer} line
-       * @param {EventStreamEvent} event
+       * @param {EventSourceStreamEvent} event
        */
       parseLine(line, event) {
         if (line.length === 0) {
@@ -18460,6 +18517,12 @@ var require_eventsource_stream = __commonJS({
           }
         }
         if (isFieldName(line, fieldLength, DATA)) {
+          if (this.maxEventSize > 0 && this.dataLineCount >= this.maxDataLines) {
+            throw createMaxEventSizeExceededError();
+          }
+          const valueBytes = line.length - valueStart;
+          const dataSize = this.eventFieldSizes.data + (event.data === void 0 ? 0 : 1) + valueBytes;
+          this.setEventFieldSize("data", dataSize);
           const value = line.toString("utf8", valueStart);
           if (event.data === void 0) {
             event.data = value;
@@ -18467,26 +18530,37 @@ var require_eventsource_stream = __commonJS({
             event.data += `
 ${value}`;
           }
+          this.dataLineCount++;
           return;
         }
         if (isFieldName(line, fieldLength, RETRY)) {
           if (isASCIINumberBytes(line, valueStart)) {
+            this.setEventFieldSize("retry", line.length - valueStart);
             event.retry = line.toString("utf8", valueStart);
           }
           return;
         }
         if (isFieldName(line, fieldLength, ID)) {
           if (isValidLastEventIdBytes(line, valueStart)) {
+            this.setEventFieldSize("id", line.length - valueStart);
             event.id = line.toString("utf8", valueStart);
           }
           return;
         }
         if (isFieldName(line, fieldLength, EVENT)) {
-          const value = line.toString("utf8", valueStart);
-          if (value.length > 0) {
-            event.event = value;
+          if (valueStart < line.length) {
+            this.setEventFieldSize("event", line.length - valueStart);
+            event.event = line.toString("utf8", valueStart);
           }
         }
+      }
+      setEventFieldSize(field, size) {
+        const eventSize = this.eventSize - this.eventFieldSizes[field] + size;
+        if (this.maxEventSize > 0 && eventSize > this.maxEventSize) {
+          throw createMaxEventSizeExceededError();
+        }
+        this.eventSize = eventSize;
+        this.eventFieldSizes[field] = size;
       }
       /**
        * @param {EventSourceStreamEvent} event
@@ -18514,6 +18588,12 @@ ${value}`;
         this.event.event = void 0;
         this.event.id = void 0;
         this.event.retry = void 0;
+        this.eventSize = 0;
+        this.dataLineCount = 0;
+        this.eventFieldSizes.data = 0;
+        this.eventFieldSizes.event = 0;
+        this.eventFieldSizes.id = 0;
+        this.eventFieldSizes.retry = 0;
       }
       hasPendingEvent() {
         return this.event.data !== void 0 || this.event.event !== void 0 || this.event.id !== void 0 || this.event.retry !== void 0;
@@ -18538,13 +18618,15 @@ ${value}`;
       syncLineStartToCursor() {
         this.lineChunkIndex = this.chunkIndex;
         this.linePos = this.pos;
+        this.lineLength = 0;
         this.dropConsumedChunks();
       }
       dropConsumedChunks() {
-        while (this.lineChunkIndex > 0) {
-          this.chunks.shift();
-          this.lineChunkIndex--;
-          this.chunkIndex--;
+        if (this.lineChunkIndex > 0) {
+          const consumed = this.lineChunkIndex;
+          this.chunks.splice(0, consumed);
+          this.lineChunkIndex = 0;
+          this.chunkIndex -= consumed;
         }
         if (this.chunkIndex === this.chunks.length) {
           this.chunks.length = 0;
@@ -18647,6 +18729,7 @@ var require_eventsource = __commonJS({
     var { delay } = require_util8();
     var { kEnumerableProperty } = require_util();
     var { environmentSettingsObject } = require_util2();
+    var { getGlobalDispatcher } = require_global2();
     var experimentalWarned = false;
     var defaultReconnectionTime = 3e3;
     var CONNECTING = 0;
@@ -18787,6 +18870,7 @@ var require_eventsource = __commonJS({
           this.#state.origin = response.urlList[response.urlList.length - 1].origin;
           const eventSourceStream = new EventSourceStream({
             eventSourceSettings: this.#state,
+            maxEventSize: this.#dispatcher.eventSourceOptions?.maxEventSize,
             push: (event) => {
               this.dispatchEvent(createFastMessageEvent(
                 event.type,
@@ -18919,7 +19003,8 @@ var require_eventsource = __commonJS({
       {
         key: "dispatcher",
         // undici only
-        converter: webidl.converters.any
+        converter: webidl.converters.any,
+        defaultValue: () => getGlobalDispatcher()
       }
     ]);
     module2.exports = {
@@ -18996,11 +19081,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path9 = opts.path;
+          let path10 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path9 = `/${path9}`;
+            path10 = `/${path10}`;
           }
-          url = new URL(util.parseOrigin(url).origin + path9);
+          url = new URL(util.parseOrigin(url).origin + path10);
         } else {
           if (!opts) {
             opts = typeof url === "object" ? url : {};
@@ -20633,8 +20718,8 @@ var init_context = __esm({
           if ((0, import_fs3.existsSync)(process.env.GITHUB_EVENT_PATH)) {
             this.payload = JSON.parse((0, import_fs3.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: "utf8" }));
           } else {
-            const path9 = process.env.GITHUB_EVENT_PATH;
-            process.stdout.write(`GITHUB_EVENT_PATH ${path9} does not exist${import_os3.EOL}`);
+            const path10 = process.env.GITHUB_EVENT_PATH;
+            process.stdout.write(`GITHUB_EVENT_PATH ${path10} does not exist${import_os3.EOL}`);
           }
         }
         this.eventName = process.env.GITHUB_EVENT_NAME;
@@ -20796,11 +20881,11 @@ var require_lib = __commonJS({
     })();
     var __awaiter3 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P2, generator) {
       function adopt(value) {
-        return value instanceof P2 ? value : new P2(function(resolve5) {
-          resolve5(value);
+        return value instanceof P2 ? value : new P2(function(resolve6) {
+          resolve6(value);
         });
       }
-      return new (P2 || (P2 = Promise))(function(resolve5, reject) {
+      return new (P2 || (P2 = Promise))(function(resolve6, reject) {
         function fulfilled(value) {
           try {
             step(generator.next(value));
@@ -20816,7 +20901,7 @@ var require_lib = __commonJS({
           }
         }
         function step(result) {
-          result.done ? resolve5(result.value) : adopt(result.value).then(fulfilled, rejected);
+          result.done ? resolve6(result.value) : adopt(result.value).then(fulfilled, rejected);
         }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
       });
@@ -20903,26 +20988,26 @@ var require_lib = __commonJS({
       }
       readBody() {
         return __awaiter3(this, void 0, void 0, function* () {
-          return new Promise((resolve5) => __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve6) => __awaiter3(this, void 0, void 0, function* () {
             let output = Buffer.alloc(0);
             this.message.on("data", (chunk) => {
               output = Buffer.concat([output, chunk]);
             });
             this.message.on("end", () => {
-              resolve5(output.toString());
+              resolve6(output.toString());
             });
           }));
         });
       }
       readBodyBuffer() {
         return __awaiter3(this, void 0, void 0, function* () {
-          return new Promise((resolve5) => __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve6) => __awaiter3(this, void 0, void 0, function* () {
             const chunks = [];
             this.message.on("data", (chunk) => {
               chunks.push(chunk);
             });
             this.message.on("end", () => {
-              resolve5(Buffer.concat(chunks));
+              resolve6(Buffer.concat(chunks));
             });
           }));
         });
@@ -21060,12 +21145,12 @@ var require_lib = __commonJS({
             throw new Error("Client has already been disposed.");
           }
           const parsedUrl = new URL(requestUrl);
-          let info = this._prepareRequest(verb, parsedUrl, headers);
+          let info2 = this._prepareRequest(verb, parsedUrl, headers);
           const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb) ? this._maxRetries + 1 : 1;
           let numTries = 0;
           let response;
           do {
-            response = yield this.requestRaw(info, data);
+            response = yield this.requestRaw(info2, data);
             if (response && response.message && response.message.statusCode === HttpCodes2.Unauthorized) {
               let authenticationHandler;
               for (const handler3 of this.handlers) {
@@ -21075,7 +21160,7 @@ var require_lib = __commonJS({
                 }
               }
               if (authenticationHandler) {
-                return authenticationHandler.handleAuthentication(this, info, data);
+                return authenticationHandler.handleAuthentication(this, info2, data);
               } else {
                 return response;
               }
@@ -21098,8 +21183,8 @@ var require_lib = __commonJS({
                   }
                 }
               }
-              info = this._prepareRequest(verb, parsedRedirectUrl, headers);
-              response = yield this.requestRaw(info, data);
+              info2 = this._prepareRequest(verb, parsedRedirectUrl, headers);
+              response = yield this.requestRaw(info2, data);
               redirectsRemaining--;
             }
             if (!response.message.statusCode || !HttpResponseRetryCodes2.includes(response.message.statusCode)) {
@@ -21128,19 +21213,19 @@ var require_lib = __commonJS({
        * @param info
        * @param data
        */
-      requestRaw(info, data) {
+      requestRaw(info2, data) {
         return __awaiter3(this, void 0, void 0, function* () {
-          return new Promise((resolve5, reject) => {
+          return new Promise((resolve6, reject) => {
             function callbackForResult(err, res) {
               if (err) {
                 reject(err);
               } else if (!res) {
                 reject(new Error("Unknown error"));
               } else {
-                resolve5(res);
+                resolve6(res);
               }
             }
-            this.requestRawWithCallback(info, data, callbackForResult);
+            this.requestRawWithCallback(info2, data, callbackForResult);
           });
         });
       }
@@ -21150,12 +21235,12 @@ var require_lib = __commonJS({
        * @param data
        * @param onResult
        */
-      requestRawWithCallback(info, data, onResult) {
+      requestRawWithCallback(info2, data, onResult) {
         if (typeof data === "string") {
-          if (!info.options.headers) {
-            info.options.headers = {};
+          if (!info2.options.headers) {
+            info2.options.headers = {};
           }
-          info.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
+          info2.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
         }
         let callbackCalled = false;
         function handleResult(err, res) {
@@ -21164,7 +21249,7 @@ var require_lib = __commonJS({
             onResult(err, res);
           }
         }
-        const req = info.httpModule.request(info.options, (msg) => {
+        const req = info2.httpModule.request(info2.options, (msg) => {
           const res = new HttpClientResponse(msg);
           handleResult(void 0, res);
         });
@@ -21176,7 +21261,7 @@ var require_lib = __commonJS({
           if (socket) {
             socket.end();
           }
-          handleResult(new Error(`Request timeout: ${info.options.path}`));
+          handleResult(new Error(`Request timeout: ${info2.options.path}`));
         });
         req.on("error", function(err) {
           handleResult(err);
@@ -21212,27 +21297,27 @@ var require_lib = __commonJS({
         return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
       }
       _prepareRequest(method, requestUrl, headers) {
-        const info = {};
-        info.parsedUrl = requestUrl;
-        const usingSsl = info.parsedUrl.protocol === "https:";
-        info.httpModule = usingSsl ? https : http;
+        const info2 = {};
+        info2.parsedUrl = requestUrl;
+        const usingSsl = info2.parsedUrl.protocol === "https:";
+        info2.httpModule = usingSsl ? https : http;
         const defaultPort = usingSsl ? 443 : 80;
-        info.options = {};
-        info.options.host = info.parsedUrl.hostname;
-        info.options.port = info.parsedUrl.port ? parseInt(info.parsedUrl.port) : defaultPort;
-        info.options.path = (info.parsedUrl.pathname || "") + (info.parsedUrl.search || "");
-        info.options.method = method;
-        info.options.headers = this._mergeHeaders(headers);
+        info2.options = {};
+        info2.options.host = info2.parsedUrl.hostname;
+        info2.options.port = info2.parsedUrl.port ? parseInt(info2.parsedUrl.port) : defaultPort;
+        info2.options.path = (info2.parsedUrl.pathname || "") + (info2.parsedUrl.search || "");
+        info2.options.method = method;
+        info2.options.headers = this._mergeHeaders(headers);
         if (this.userAgent != null) {
-          info.options.headers["user-agent"] = this.userAgent;
+          info2.options.headers["user-agent"] = this.userAgent;
         }
-        info.options.agent = this._getAgent(info.parsedUrl);
+        info2.options.agent = this._getAgent(info2.parsedUrl);
         if (this.handlers) {
           for (const handler3 of this.handlers) {
-            handler3.prepareRequest(info.options);
+            handler3.prepareRequest(info2.options);
           }
         }
-        return info;
+        return info2;
       }
       _mergeHeaders(headers) {
         if (this.requestOptions && this.requestOptions.headers) {
@@ -21381,12 +21466,12 @@ var require_lib = __commonJS({
         return __awaiter3(this, void 0, void 0, function* () {
           retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
           const ms2 = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
-          return new Promise((resolve5) => setTimeout(() => resolve5(), ms2));
+          return new Promise((resolve6) => setTimeout(() => resolve6(), ms2));
         });
       }
       _processResponse(res, options) {
         return __awaiter3(this, void 0, void 0, function* () {
-          return new Promise((resolve5, reject) => __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve6, reject) => __awaiter3(this, void 0, void 0, function* () {
             const statusCode = res.message.statusCode || 0;
             const response = {
               statusCode,
@@ -21394,7 +21479,7 @@ var require_lib = __commonJS({
               headers: {}
             };
             if (statusCode === HttpCodes2.NotFound) {
-              resolve5(response);
+              resolve6(response);
             }
             function dateTimeDeserializer(key, value) {
               if (typeof value === "string") {
@@ -21433,7 +21518,7 @@ var require_lib = __commonJS({
               err.result = response.result;
               reject(err);
             } else {
-              resolve5(response);
+              resolve6(response);
             }
           }));
         });
@@ -21491,11 +21576,11 @@ var init_utils = __esm({
     import_undici2 = __toESM(require_undici(), 1);
     __awaiter2 = function(thisArg, _arguments, P2, generator) {
       function adopt(value) {
-        return value instanceof P2 ? value : new P2(function(resolve5) {
-          resolve5(value);
+        return value instanceof P2 ? value : new P2(function(resolve6) {
+          resolve6(value);
         });
       }
-      return new (P2 || (P2 = Promise))(function(resolve5, reject) {
+      return new (P2 || (P2 = Promise))(function(resolve6, reject) {
         function fulfilled(value) {
           try {
             step(generator.next(value));
@@ -21511,7 +21596,7 @@ var init_utils = __esm({
           }
         }
         function step(result) {
-          result.done ? resolve5(result.value) : adopt(result.value).then(fulfilled, rejected);
+          result.done ? resolve6(result.value) : adopt(result.value).then(fulfilled, rejected);
         }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
       });
@@ -24316,11 +24401,11 @@ var import_os = require("os");
 var import_fs = require("fs");
 var __awaiter = function(thisArg, _arguments, P2, generator) {
   function adopt(value) {
-    return value instanceof P2 ? value : new P2(function(resolve5) {
-      resolve5(value);
+    return value instanceof P2 ? value : new P2(function(resolve6) {
+      resolve6(value);
     });
   }
-  return new (P2 || (P2 = Promise))(function(resolve5, reject) {
+  return new (P2 || (P2 = Promise))(function(resolve6, reject) {
     function fulfilled(value) {
       try {
         step(generator.next(value));
@@ -24336,7 +24421,7 @@ var __awaiter = function(thisArg, _arguments, P2, generator) {
       }
     }
     function step(result) {
-      result.done ? resolve5(result.value) : adopt(result.value).then(fulfilled, rejected);
+      result.done ? resolve6(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
@@ -24656,10 +24741,204 @@ function error(message, properties = {}) {
 function warning(message, properties = {}) {
   issueCommand("warning", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
+function info(message) {
+  process.stdout.write(message + os4.EOL);
+}
 
-// dist/allure/badges.js
+// dist/allure/attachment-policy.js
 var fs3 = __toESM(require("node:fs"), 1);
 var path = __toESM(require("node:path"), 1);
+var PLAIN_TEXT_TYPE = "text/plain";
+var PLAIN_TEXT_EXTENSION = ".txt";
+var PASSIVE_EXTENSIONS = /* @__PURE__ */ new Set([
+  ".txt",
+  ".log",
+  ".csv",
+  ".tsv",
+  ".json",
+  ".yaml",
+  ".yml",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".bmp",
+  ".webp",
+  ".tif",
+  ".tiff",
+  ".mp4",
+  ".webm",
+  ".ogv",
+  ".ogg",
+  ".zip",
+  ".gz",
+  ".tgz",
+  ".tar",
+  ".bz2",
+  ".imagediff"
+]);
+var PASSIVE_TYPES = new Map([
+  [PLAIN_TEXT_TYPE, PLAIN_TEXT_EXTENSION],
+  ["text/csv", ".csv"],
+  ["text/tab-separated-values", ".tsv"],
+  ["application/json", ".json"],
+  ["text/json", ".json"],
+  ["application/vnd.allure.image.diff", ".imagediff"],
+  ["application/vnd.allure.http+json", ".json"],
+  ["image/png", ".png"],
+  ["image/jpeg", ".jpg"],
+  ["image/jpg", ".jpg"],
+  ["image/gif", ".gif"],
+  ["image/bmp", ".bmp"],
+  ["image/webp", ".webp"],
+  ["image/tiff", ".tiff"],
+  ["video/mp4", ".mp4"],
+  ["video/webm", ".webm"],
+  ["video/ogg", ".ogv"],
+  ["application/zip", ".zip"],
+  ["application/gzip", ".gz"],
+  ["application/x-tar", ".tar"],
+  ["application/x-gtar", ".tar"],
+  ["application/x-bzip2", ".bz2"],
+  ["application/vnd.allure.playwright-trace", ".zip"],
+  ...[
+    "text/xml",
+    "application/xml",
+    "text/yaml",
+    "text/x-yaml",
+    "application/yaml",
+    "application/x-yaml",
+    "text/css",
+    "text/javascript",
+    "text/typescript",
+    "text/sql",
+    "text/java",
+    "text/kotlin",
+    "text/python"
+  ].map((type) => [type, PLAIN_TEXT_EXTENSION])
+]);
+var RESULT_DOCUMENT_SUFFIXES = ["-result.json", "-container.json", "-globals.json"];
+var WITHHELD_ATTACHMENT_TEXT = "This attachment was withheld by quokkify/allure-report-action because its file type could run script in a browser.\n";
+function normalizeType(type) {
+  if (typeof type !== "string")
+    return void 0;
+  return type.split(";")[0].trim().toLowerCase();
+}
+function isSafeName(name) {
+  return name !== "" && name === path.basename(name) && name !== "." && name !== ".." && !name.includes("\\") && !name.includes("\0");
+}
+function collectReferences(document) {
+  const references = [];
+  const stack = [document];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!node || typeof node !== "object")
+      continue;
+    if (Array.isArray(node)) {
+      stack.push(...node);
+      continue;
+    }
+    const attachments = node.attachments;
+    if (Array.isArray(attachments)) {
+      for (const attachment of attachments) {
+        if (attachment && typeof attachment === "object" && !Array.isArray(attachment) && typeof attachment.source === "string") {
+          references.push(attachment);
+        }
+      }
+    }
+    stack.push(...Object.values(node));
+  }
+  return references;
+}
+function passiveName(source, type) {
+  const extension = path.extname(source).toLowerCase();
+  if (extension === "")
+    return `${source}${(type && PASSIVE_TYPES.get(type)) ?? PLAIN_TEXT_EXTENSION}`;
+  return PASSIVE_EXTENSIONS.has(extension) ? source : `${source}${PLAIN_TEXT_EXTENSION}`;
+}
+function neutralizeAttachments(resultsDir) {
+  const documents = [];
+  for (const entry of fs3.readdirSync(resultsDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !RESULT_DOCUMENT_SUFFIXES.some((suffix) => entry.name.endsWith(suffix))) {
+      continue;
+    }
+    const file = path.join(resultsDir, entry.name);
+    let document;
+    try {
+      document = JSON.parse(fs3.readFileSync(file, "utf8"));
+    } catch {
+      continue;
+    }
+    documents.push({ file, document, references: collectReferences(document) });
+  }
+  let retyped = 0;
+  const dirty = /* @__PURE__ */ new Set();
+  const targets = /* @__PURE__ */ new Map();
+  for (const { file, references } of documents) {
+    for (const reference of references) {
+      const declared = normalizeType(reference.type);
+      const untypedExtensionless = reference.type === void 0 && path.extname(reference.source) === "";
+      if (untypedExtensionless || reference.type !== void 0 && !PASSIVE_TYPES.has(declared ?? "")) {
+        reference.type = PLAIN_TEXT_TYPE;
+        retyped += 1;
+        dirty.add(file);
+      }
+      const target = passiveName(reference.source, normalizeType(reference.type));
+      targets.set(reference.source, (targets.get(reference.source) ?? /* @__PURE__ */ new Set()).add(target));
+    }
+  }
+  const renames = /* @__PURE__ */ new Map();
+  for (const [source, candidates] of targets) {
+    const target = candidates.size === 1 ? [...candidates][0] : `${source}${PLAIN_TEXT_EXTENSION}`;
+    if (target === source || !isSafeName(source))
+      continue;
+    const from = path.join(resultsDir, source);
+    if (!fs3.existsSync(from) || !fs3.lstatSync(from).isFile())
+      continue;
+    const to = path.join(resultsDir, target);
+    if (fs3.existsSync(to)) {
+      throw new Error(`Cannot neutralise attachment ${source}: ${target} already exists`);
+    }
+    fs3.renameSync(from, to);
+    renames.set(source, target);
+  }
+  for (const { file, document, references } of documents) {
+    for (const reference of references) {
+      const target = renames.get(reference.source);
+      if (target === void 0)
+        continue;
+      reference.source = target;
+      dirty.add(file);
+    }
+    if (dirty.has(file))
+      fs3.writeFileSync(file, `${JSON.stringify(document)}
+`);
+  }
+  return { renamed: renames.size, retyped };
+}
+function neutralizeReportAttachments(reportDir) {
+  let withheld = 0;
+  const stack = [path.resolve(reportDir)];
+  while (stack.length > 0) {
+    const directory = stack.pop();
+    const isAttachmentDirectory = path.basename(directory) === "attachments" && path.basename(path.dirname(directory)) === "data";
+    for (const entry of fs3.readdirSync(directory, { withFileTypes: true })) {
+      const child = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(child);
+      } else if (isAttachmentDirectory && !PASSIVE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+        fs3.rmSync(child, { force: true });
+        fs3.writeFileSync(child, WITHHELD_ATTACHMENT_TEXT);
+        withheld += 1;
+      }
+    }
+  }
+  return withheld;
+}
+
+// dist/allure/badges.js
+var fs4 = __toESM(require("node:fs"), 1);
+var path2 = __toESM(require("node:path"), 1);
 function getColorForStats(stats) {
   if (stats.failed > 0 || stats.broken > 0)
     return "red";
@@ -24694,10 +24973,10 @@ function createShieldJson(label, stats) {
   };
 }
 function generateBadges(results, reportDir) {
-  const badgeDir = path.join(reportDir, "badges");
-  fs3.mkdirSync(badgeDir, { recursive: true });
+  const badgeDir = path2.join(reportDir, "badges");
+  fs4.mkdirSync(badgeDir, { recursive: true });
   const totalBadge = createShieldJson("all tests", results.total);
-  fs3.writeFileSync(path.join(badgeDir, "total.json"), JSON.stringify(totalBadge, null, 0));
+  fs4.writeFileSync(path2.join(badgeDir, "total.json"), JSON.stringify(totalBadge, null, 0));
   const epics = ["unit", "api", "ui", "end-to-end", "other"];
   for (const epic of epics) {
     const stats = results.byEpic[epic] || {
@@ -24709,7 +24988,7 @@ function generateBadges(results, reportDir) {
       unknown: 0
     };
     const badge = createShieldJson(`${epic} tests`, stats);
-    fs3.writeFileSync(path.join(badgeDir, `${epic}.json`), JSON.stringify(badge, null, 0));
+    fs4.writeFileSync(path2.join(badgeDir, `${epic}.json`), JSON.stringify(badge, null, 0));
   }
 }
 
@@ -24795,14 +25074,14 @@ var hs = new RegExp(pe, "g");
 var as = /\\\\/g;
 var ls = /\\{/g;
 var cs = /\\}/g;
-var fs4 = /\\,/g;
+var fs5 = /\\,/g;
 var us = /\\./g;
 var ds = 1e5;
 function Ht(n7) {
   return isNaN(n7) ? n7.charCodeAt(0) : parseInt(n7, 10);
 }
 function ps(n7) {
-  return n7.replace(as, fe).replace(ls, ue).replace(cs, qt).replace(fs4, de).replace(us, pe);
+  return n7.replace(as, fe).replace(ls, ue).replace(cs, qt).replace(fs5, de).replace(us, pe);
 }
 function ms(n7) {
   return n7.replace(is, "\\").replace(rs, "{").replace(ns, "}").replace(os5, ",").replace(hs, ".");
@@ -27463,7 +27742,7 @@ var zt = class {
     for (; !this.paused && (t = this.#t.shift()); ) t();
   }
   onResume(t) {
-    this.signal?.aborted || (this.paused ? this.#t.push(t) : t());
+    this.paused ? this.#t.push(t) : t();
   }
   async matchCheck(t, e) {
     if (e && this.opts.nodir) return;
@@ -27523,11 +27802,12 @@ var zt = class {
     i && this.matchFinish(i, e);
   }
   walkCB(t, e, s) {
-    this.signal?.aborted && s(), this.walkCB2(t, e, new Et(this.opts), s);
+    if (this.signal?.aborted) return s();
+    this.walkCB2(t, e, new Et(this.opts), s);
   }
   walkCB2(t, e, s, i) {
-    if (this.#o(t)) return i();
-    if (this.signal?.aborted && i(), this.paused) {
+    if (this.#o(t) || this.signal?.aborted) return i();
+    if (this.paused) {
       this.onResume(() => this.walkCB2(t, e, s, i));
       return;
     }
@@ -27554,11 +27834,12 @@ var zt = class {
     o();
   }
   walkCBSync(t, e, s) {
-    this.signal?.aborted && s(), this.walkCB2Sync(t, e, new Et(this.opts), s);
+    if (this.signal?.aborted) return s();
+    this.walkCB2Sync(t, e, new Et(this.opts), s);
   }
   walkCB2Sync(t, e, s, i) {
-    if (this.#o(t)) return i();
-    if (this.signal?.aborted && i(), this.paused) {
+    if (this.#o(t) || this.signal?.aborted) return i();
+    if (this.paused) {
       this.onResume(() => this.walkCB2Sync(t, e, s, i));
       return;
     }
@@ -27758,6 +28039,7 @@ var emptyResolutionStats = () => ({
 });
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 var isTestStatus = (value) => typeof value === "string" && TEST_STATUSES.includes(value);
+var getFiniteNumber = (value, fallback = 0) => typeof value === "number" && Number.isFinite(value) ? value : fallback;
 var normalizePath = (filePath) => filePath.split(import_node_path2.sep).join("/");
 var readOptionalJson = async (filePath, onError) => {
   if (!(0, import_node_fs.existsSync)(filePath)) {
@@ -27770,12 +28052,39 @@ var readOptionalJson = async (filePath, onError) => {
     return void 0;
   }
 };
+var getReportName = (summary2) => {
+  if (typeof summary2.name === "string" && summary2.name.trim()) {
+    return summary2.name;
+  }
+  return "Allure Report";
+};
+var hasPluginSummarySignal = (value) => typeof value.name === "string" || typeof value.plugin === "string" || typeof value.href === "string" || typeof value.remoteHref === "string" || isRecord(value.stats);
 var isPluginSummary = (value) => {
-  if (!isRecord(value) || typeof value.name !== "string" || !isRecord(value.stats)) {
+  if (!isRecord(value) || !hasPluginSummarySignal(value)) {
     return false;
   }
-  return typeof value.duration === "number" && isTestStatus(value.status);
+  return true;
 };
+var normalizePluginSummaryStats = (summary2) => {
+  const rawStats = isRecord(summary2.stats) ? summary2.stats : {};
+  const stats = {
+    ...rawStats,
+    failed: getFiniteNumber(rawStats.failed),
+    broken: getFiniteNumber(rawStats.broken),
+    passed: getFiniteNumber(rawStats.passed),
+    skipped: getFiniteNumber(rawStats.skipped),
+    unknown: getFiniteNumber(rawStats.unknown)
+  };
+  stats.total = getFiniteNumber(rawStats.total, TEST_STATUSES.reduce((acc, status) => acc + getFiniteNumber(stats[status]), 0));
+  return stats;
+};
+var normalizePluginSummary = (summary2) => ({
+  ...summary2,
+  name: getReportName(summary2),
+  stats: normalizePluginSummaryStats(summary2),
+  status: isTestStatus(summary2.status) ? summary2.status : "passed",
+  duration: getFiniteNumber(summary2.duration)
+});
 var getReportPath = (reportDir, summaryFile) => normalizePath((0, import_node_path2.relative)((0, import_node_path2.resolve)(reportDir), (0, import_node_path2.dirname)((0, import_node_path2.resolve)(summaryFile))));
 var readPluginSummary = async (reportDir, filePath, onError) => {
   const value = await readOptionalJson(filePath, onError);
@@ -27787,7 +28096,7 @@ var readPluginSummary = async (reportDir, filePath, onError) => {
     return void 0;
   }
   return {
-    ...value,
+    ...normalizePluginSummary(value),
     summaryFile: filePath,
     reportPath: getReportPath(reportDir, filePath)
   };
@@ -27934,8 +28243,8 @@ var createEnvironmentContext = (registry, summaries) => {
   });
   return [...environmentsByName.values()].toSorted((left, right) => left.name.localeCompare(right.name));
 };
-var createReport = (summary2) => ({ ...summary2 });
-var sortReports = (reports) => reports.toSorted((left, right) => left.name.localeCompare(right.name));
+var createReport = (summary2) => normalizePluginSummary(summary2);
+var sortReports = (reports) => reports.map((report) => normalizePluginSummary(report)).toSorted((left, right) => left.name.localeCompare(right.name));
 var getResolutionStats = (summaries) => {
   const stats = emptyResolutionStats();
   summaries.forEach((summary2) => {
@@ -28095,8 +28404,8 @@ function aggregateResults(files, readJsonFile, getEpicForResult2) {
 }
 
 // dist/report/quality-gates.js
-var fs5 = __toESM(require("node:fs"), 1);
-var path3 = __toESM(require("node:path"), 1);
+var fs6 = __toESM(require("node:fs"), 1);
+var path4 = __toESM(require("node:path"), 1);
 function evaluatePyramidQualityGates(metrics) {
   const warnings = [];
   const blockingFailures = [];
@@ -28187,8 +28496,8 @@ function writeQualityGatesJson(gates, metrics, outputPath) {
       otherEpicTotal: metrics.otherEpicTotal
     }
   };
-  fs5.mkdirSync(path3.dirname(outputPath), { recursive: true });
-  fs5.writeFileSync(outputPath, JSON.stringify(payload, null, 2), "utf8");
+  fs6.mkdirSync(path4.dirname(outputPath), { recursive: true });
+  fs6.writeFileSync(outputPath, JSON.stringify(payload, null, 2), "utf8");
   console.log(`Wrote ${outputPath}`);
 }
 function githubWorkflowEscape(s) {
@@ -28201,20 +28510,20 @@ function appendJobSummary(markdown) {
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (!summaryPath)
     return;
-  fs5.appendFileSync(summaryPath, markdown, "utf8");
+  fs6.appendFileSync(summaryPath, markdown, "utf8");
 }
 
 // dist/allure/parser.js
-var fs6 = __toESM(require("node:fs"), 1);
-var path4 = __toESM(require("node:path"), 1);
+var fs7 = __toESM(require("node:fs"), 1);
+var path5 = __toESM(require("node:path"), 1);
 function listResultFiles(resultsDir) {
-  if (!fs6.existsSync(resultsDir))
+  if (!fs7.existsSync(resultsDir))
     return [];
-  return fs6.readdirSync(resultsDir, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith("-result.json")).map((entry) => path4.join(resultsDir, entry.name));
+  return fs7.readdirSync(resultsDir, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith("-result.json")).map((entry) => path5.join(resultsDir, entry.name));
 }
 function readJsonSafe(file) {
   try {
-    return JSON.parse(fs6.readFileSync(file, "utf8"));
+    return JSON.parse(fs7.readFileSync(file, "utf8"));
   } catch {
     return null;
   }
@@ -28247,8 +28556,8 @@ function runBadges(options) {
 }
 
 // dist/allure/config-generator.js
-var fs7 = __toESM(require("node:fs"), 1);
-var path5 = __toESM(require("node:path"), 1);
+var fs8 = __toESM(require("node:fs"), 1);
+var path6 = __toESM(require("node:path"), 1);
 var import_node_url3 = require("node:url");
 var MODULE_VARIABLES_METADATA = ".allure-module-variables.json";
 var MAX_FRAGMENT_VARIABLES = 1e4;
@@ -28291,16 +28600,16 @@ function generateEnvironmentId(value, used) {
   return candidate;
 }
 function readModuleVariables(resultsDir) {
-  const metadata = path5.join(resultsDir, MODULE_VARIABLES_METADATA);
-  if (!fs7.existsSync(metadata))
+  const metadata = path6.join(resultsDir, MODULE_VARIABLES_METADATA);
+  if (!fs8.existsSync(metadata))
     return {};
-  const stat2 = fs7.lstatSync(metadata);
+  const stat2 = fs8.lstatSync(metadata);
   if (!stat2.isFile() || stat2.isSymbolicLink() || stat2.size > MAX_FRAGMENT_VARIABLE_BYTES) {
     throw new Error(`Invalid module environment metadata: ${metadata}`);
   }
   let document;
   try {
-    document = JSON.parse(fs7.readFileSync(metadata, "utf8"));
+    document = JSON.parse(fs8.readFileSync(metadata, "utf8"));
   } catch {
     throw new Error(`Malformed module environment metadata: ${metadata}`);
   }
@@ -28318,8 +28627,8 @@ async function generateModuleConfig(options) {
   if (!moduleLabel.trim()) {
     throw new Error("--module-label must not be empty");
   }
-  const configPath = path5.resolve(configFile);
-  if (!fs7.existsSync(configPath)) {
+  const configPath = path6.resolve(configFile);
+  if (!fs8.existsSync(configPath)) {
     throw new Error(`Allure config not found: ${configFile}`);
   }
   const moduleNames = /* @__PURE__ */ new Set();
@@ -28362,8 +28671,8 @@ async function generateModuleConfig(options) {
     const source2 = `import baseConfig from ${JSON.stringify(configUrl)};
 export default baseConfig;
 `;
-    fs7.mkdirSync(path5.dirname(outputFile), { recursive: true });
-    fs7.writeFileSync(outputFile, source2, "utf8");
+    fs8.mkdirSync(path6.dirname(outputFile), { recursive: true });
+    fs8.writeFileSync(outputFile, source2, "utf8");
     console.log(`No ${moduleLabel} labels found; preserved caller environments in ${outputFile}`);
     return;
   }
@@ -28460,8 +28769,8 @@ export default {
   environments: Object.keys(environments).length > 0 ? environments : moduleEnvironments,
 };
 `;
-  fs7.mkdirSync(path5.dirname(outputFile), { recursive: true });
-  fs7.writeFileSync(outputFile, source, "utf8");
+  fs8.mkdirSync(path6.dirname(outputFile), { recursive: true });
+  fs8.writeFileSync(outputFile, source, "utf8");
   console.log(`Prepared ${modules.length} module environment(s) from ${moduleLabel}; ${unmatchedResults} result(s) use default environment.`);
 }
 
@@ -28471,7 +28780,97 @@ async function runModuleConfig(options) {
 }
 
 // dist/commands/pr-body.js
-var fs8 = __toESM(require("node:fs"), 1);
+var fs9 = __toESM(require("node:fs"), 1);
+
+// node_modules/@allurereport/core-api/dist/constants.js
+var unsuccessfulStatuses = /* @__PURE__ */ new Set(["failed", "broken"]);
+var successfulStatuses = /* @__PURE__ */ new Set(["passed"]);
+var includedInSuccessRate = /* @__PURE__ */ new Set([...unsuccessfulStatuses, ...successfulStatuses]);
+var filterByStatus = (statuses) => {
+  const set = new Set(statuses);
+  return (t) => set.has(t.status);
+};
+var filterSuccessful = filterByStatus(successfulStatuses);
+var filterUnsuccessful = filterByStatus(unsuccessfulStatuses);
+var filterIncludedInSuccessRate = filterByStatus(includedInSuccessRate);
+
+// node_modules/@allurereport/core-api/dist/ci.js
+var CiType;
+(function(CiType2) {
+  CiType2["Amazon"] = "amazon";
+  CiType2["Azure"] = "azure";
+  CiType2["Bitbucket"] = "bitbucket";
+  CiType2["Circle"] = "circle";
+  CiType2["Drone"] = "drone";
+  CiType2["Github"] = "github";
+  CiType2["Gitlab"] = "gitlab";
+  CiType2["Jenkins"] = "jenkins";
+  CiType2["Local"] = "local";
+})(CiType || (CiType = {}));
+
+// node_modules/@allurereport/core-api/dist/gitFlow.js
+var GitProvider;
+(function(GitProvider2) {
+  GitProvider2["Github"] = "github";
+  GitProvider2["Gitlab"] = "gitlab";
+  GitProvider2["Bitbucket"] = "bitbucket";
+  GitProvider2["Other"] = "other";
+})(GitProvider || (GitProvider = {}));
+
+// node_modules/@allurereport/core-api/dist/categories.js
+var DEFAULT_ERROR_CATEGORY_IDS = {
+  productErrors: "_product_errors_default_category",
+  testErrors: "_test_errors_default_category"
+};
+var DEFAULT_ERROR_CATEGORIES = [
+  {
+    id: DEFAULT_ERROR_CATEGORY_IDS.productErrors,
+    name: "Product errors",
+    matchers: { statuses: ["failed"] }
+  },
+  {
+    id: DEFAULT_ERROR_CATEGORY_IDS.testErrors,
+    name: "Test errors",
+    matchers: { statuses: ["broken"] }
+  }
+];
+
+// node_modules/@allurereport/core-api/dist/utils/identity.js
+var utf8Encoder = new TextEncoder();
+
+// node_modules/@allurereport/ci/dist/helpers/reportCiContext.js
+var browserUrl = (value) => {
+  if (!value) {
+    return void 0;
+  }
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      return void 0;
+    }
+    if (url.username || url.password) {
+      url.username = "";
+      url.password = "";
+      return url.toString();
+    }
+    return value;
+  } catch {
+    return void 0;
+  }
+};
+var reportCiContextLinks = (report) => {
+  const links = [];
+  const sha = report.commitSha;
+  const shaUrl = browserUrl(report.commitHref);
+  const runUrl = browserUrl(report.ciRunHref);
+  if (sha && shaUrl) {
+    links.push({ label: sha.slice(0, 8), href: shaUrl });
+  }
+  if (runUrl) {
+    links.push({ label: report.ciRunName || "CI run", href: runUrl });
+  }
+  return links;
+};
 
 // node_modules/@allurereport/ci/dist/reportMarkdown.js
 var STATUS_ORDER = ["passed", "failed", "broken", "skipped", "unknown"];
@@ -28486,6 +28885,7 @@ var STATUS_ICON_BASE_URL = "https://allurecharts.qameta.workers.dev/dot";
 var STATUS_PIE_BASE_URL = "https://allurecharts.qameta.workers.dev/pie";
 var escapeHtml = (value) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 var tableCell = (value) => escapeHtml(String(value)).replaceAll("|", "&#124;").replaceAll("\n", "<br>");
+var inlineCode = (value) => `<code>${escapeHtml(value)}</code>`;
 var isSafeHref = (href) => {
   try {
     const url = new URL(href);
@@ -28557,11 +28957,19 @@ var formatResolutions = (resolutions) => {
   return lines.join("<br>");
 };
 var hasResolutions = (resolutions) => resolutions.issues > 0 || resolutions.muted > 0 || resolutions.accepted > 0;
-var formatFlag = (value) => value > 0 ? String(value) : "0";
-var renderTable = (rows, includeResolutions) => {
+var formatFlag = (flag, row, options) => {
+  const value = row.flags[flag];
+  if (value <= 0) {
+    return "0";
+  }
+  const label = String(value);
+  const href = options.getReportFilterHref?.(flag, row);
+  return href ? link(label, href) : label;
+};
+var renderTable = (rows, includeResolutions, options) => {
   const headers = [
     "&nbsp;&nbsp;&nbsp;&nbsp;",
-    "Scope",
+    "Environment",
     "Duration",
     "Stats",
     ...includeResolutions ? ["Resolutions"] : [],
@@ -28576,21 +28984,40 @@ var renderTable = (rows, includeResolutions) => {
     tableCell(formatDuration(row.duration)),
     formatStats(row.stats),
     ...includeResolutions ? [formatResolutions(row.resolutions)] : [],
-    tableCell(formatFlag(row.flags.new)),
-    tableCell(formatFlag(row.flags.flaky)),
-    tableCell(formatFlag(row.flags.retry))
+    formatFlag("new", row, options),
+    formatFlag("flaky", row, options),
+    formatFlag("retry", row, options)
   ].join(" | "));
   return [`| ${headers.join(" | ")} |`, `| ${divider.join(" | ")} |`, ...body.map((row) => `| ${row} |`)].join("\n");
 };
 var reportHref = (report) => report.remoteHref ?? report.href;
-var reportLabel = (report) => report.plugin ?? report.name;
-var reportLinkKind = (report) => report.plugin?.toLowerCase() === "testops" ? "testops" : "report";
+var isAwesomeReport = (report) => report?.pluginId?.toLowerCase() === "awesome" || report?.plugin?.toLowerCase() === "awesome";
+var isAllureTestOpsReport = (report) => report?.pluginId?.toLowerCase() === "testops";
+var reportLabel = (report) => isAllureTestOpsReport(report) ? report.name : report.plugin ?? report.name;
+var appendReportFilter = (href, filter) => {
+  const hashIndex = href.indexOf("#");
+  const base = hashIndex === -1 ? href : href.slice(0, hashIndex);
+  const hash = hashIndex === -1 ? "" : href.slice(hashIndex);
+  const separator = base.includes("?") ? "&" : "?";
+  const query = filter === "new" ? "transition=new" : `${filter}=true`;
+  return `${base}${separator}${query}${hash}`;
+};
+var createDefaultReportFilterHref = (reports) => {
+  const defaultReport = reports.find(isAwesomeReport);
+  return (filter, row) => {
+    const report = isAwesomeReport(row.report) ? row.report : defaultReport;
+    const href = report ? reportHref(report) : void 0;
+    return href ? appendReportFilter(href, filter) : void 0;
+  };
+};
+var reportLinkKind = (report) => isAllureTestOpsReport(report) ? "testops" : "report";
 var toReportLink = (report) => {
   const href = reportHref(report);
   return href ? {
     label: reportLabel(report),
     href,
-    kind: reportLinkKind(report)
+    kind: reportLinkKind(report),
+    context: reportCiContextLinks(report)
   } : void 0;
 };
 var sortLinks = (links) => links.toSorted((left, right) => left.kind.localeCompare(right.kind) || left.label.localeCompare(right.label));
@@ -28604,7 +29031,20 @@ var renderReportLinks = (reports) => {
   const links = sortLinks(reports.map(toReportLink).filter((item) => item !== void 0));
   const reportLinks = links.filter(({ kind }) => kind === "report");
   const testOpsLinks = links.filter(({ kind }) => kind === "testops");
-  return [renderLinks("Reports", reportLinks), renderLinks("TestOps", testOpsLinks)].filter((line) => line !== void 0);
+  const context3 = reportLinks[0]?.context ?? [];
+  const hasSharedContext = reportLinks.every(({ context: current }) => current.length === context3.length && current.every((item, index) => item.label === context3[index].label && item.href === context3[index].href));
+  if (hasSharedContext) {
+    return [
+      renderLinks("Reports", reportLinks),
+      renderLinks("Context", context3),
+      renderLinks("Allure TestOps", testOpsLinks)
+    ].filter((line) => line !== void 0);
+  }
+  const reportItems = reportLinks.map(({ label, href, context: context4 }) => {
+    const links2 = [{ label: "Report", href }, ...context4];
+    return `* ${escapeHtml(label)} - ${links2.map((item) => link(item.label, item.href)).join(", ")}`;
+  });
+  return [["**Reports:**", ...reportItems].join("\n"), renderLinks("Allure TestOps", testOpsLinks)].filter((line) => line !== void 0);
 };
 var pluginSummaryToStatusStats = (report) => ({
   failed: report.stats.failed ?? 0,
@@ -28624,43 +29064,50 @@ var pluginSummaryToResolutions = (report) => ({
   muted: report.stats.resolutions?.muted ?? 0,
   accepted: report.stats.resolutions?.accepted ?? 0
 });
-var renderFilteredReports = (reports) => {
+var renderFilteredReports = (reports, options) => {
   const rows = reports.map((report) => ({
+    kind: "report",
     name: report.name,
     duration: report.duration,
     stats: pluginSummaryToStatusStats(report),
     flags: pluginSummaryToFlags(report),
-    resolutions: pluginSummaryToResolutions(report)
+    resolutions: pluginSummaryToResolutions(report),
+    report
   }));
   if (!rows.length) {
     return void 0;
   }
   const includeResolutions = rows.some(({ resolutions }) => resolutions && hasResolutions(resolutions));
   const links = renderReportLinks(reports);
-  return ["**Filtered Reports**", renderTable(rows, includeResolutions), ...links].join("\n\n");
+  return ["**Filtered Reports**", renderTable(rows, includeResolutions, options), ...links].join("\n\n");
 };
 var renderArtifacts = (artifacts) => {
   if (!artifacts.length) {
     return void 0;
   }
-  const rows = artifacts.map(({ name, path: path9 }) => `| ${tableCell(name)} | ${tableCell(path9)} |`);
-  return [
-    `<details>`,
-    `<summary>Artifacts used (${artifacts.length})</summary>`,
-    "",
-    "| Name | Path |",
-    "| --- | --- |",
-    ...rows,
-    "",
-    "</details>"
-  ].join("\n");
+  const rows = artifacts.map(({ name, path: path10 }) => {
+    const normalizedPath = path10.replaceAll("\\", "/");
+    const isDuplicateName = name === path10 || normalizedPath.endsWith(`/${name}`);
+    const label = isDuplicateName ? inlineCode(path10) : `${inlineCode(name)} &mdash; ${inlineCode(path10)}`;
+    return `- ${label}`;
+  });
+  return [`<details>`, `<summary>Artifacts used (${artifacts.length})</summary>`, "", ...rows, "", "</details>"].join("\n");
+};
+var renderPublicationWarnings = (reports) => {
+  const missing = reports.filter((report) => report.published === false);
+  return missing.length ? ["**\u26A0 Expected reports were not published**", ...missing.map(({ name }) => `- ${inlineCode(name)}`)].join("\n\n") : void 0;
 };
 var renderReportSummaryMarkdown = (context3, options = {}) => {
   const { title = "Allure Report Summary", includeArtifacts = true } = options;
   const regularReports = context3.reports.filter((report) => report.filtered !== true);
   const filteredReports = context3.reports.filter((report) => report.filtered === true);
+  const renderOptions = {
+    ...options,
+    getReportFilterHref: options.getReportFilterHref ?? createDefaultReportFilterHref(regularReports)
+  };
   const aggregateRows = [
     {
+      kind: "total",
       name: "All tests",
       duration: context3.totals.duration,
       stats: context3.totals.stats,
@@ -28668,6 +29115,7 @@ var renderReportSummaryMarkdown = (context3, options = {}) => {
       resolutions: context3.totals.resolutions
     },
     ...context3.environments.map((environment) => ({
+      kind: "environment",
       name: environment.name,
       duration: environment.duration,
       stats: environment.stats,
@@ -28677,9 +29125,10 @@ var renderReportSummaryMarkdown = (context3, options = {}) => {
   const includeResolutions = hasResolutions(context3.totals.resolutions);
   const sections = [
     `# ${escapeHtml(title)}`,
-    renderTable(aggregateRows, includeResolutions),
+    renderTable(aggregateRows, includeResolutions, renderOptions),
+    renderPublicationWarnings(context3.reports),
     ...renderReportLinks(regularReports),
-    renderFilteredReports(filteredReports),
+    renderFilteredReports(filteredReports, renderOptions),
     includeArtifacts ? renderArtifacts(context3.artifacts) : void 0
   ].filter((section) => Boolean(section));
   return `${sections.join("\n\n")}
@@ -28710,14 +29159,14 @@ async function runPrBody(options) {
     actionVersion: options.actionVersion,
     commentMarker: options.commentMarker
   });
-  fs8.writeFileSync(options.outputFile, markdown, "utf8");
+  fs9.writeFileSync(options.outputFile, markdown, "utf8");
   console.log(`Wrote PR body to ${options.outputFile}`);
 }
 
 // dist/allure/prepare-results.js
 var import_node_crypto = require("node:crypto");
-var fs9 = __toESM(require("node:fs"), 1);
-var path6 = __toESM(require("node:path"), 1);
+var fs10 = __toESM(require("node:fs"), 1);
+var path7 = __toESM(require("node:path"), 1);
 var SOURCE_SCAN_SKIP_DIRECTORIES = /* @__PURE__ */ new Set([
   ".git",
   ".gradle",
@@ -28746,7 +29195,7 @@ function normalizeResultTimestamps(document) {
   document.stop = Math.max(normalizedStart + 1, Math.ceil(stop));
 }
 function parseModuleFragment(fragmentPath) {
-  const stat2 = fs9.lstatSync(fragmentPath);
+  const stat2 = fs10.lstatSync(fragmentPath);
   if (!stat2.isFile() || stat2.isSymbolicLink()) {
     throw new Error(`Module provenance must be a regular file: ${fragmentPath}`);
   }
@@ -28756,7 +29205,7 @@ function parseModuleFragment(fragmentPath) {
   const modules = /* @__PURE__ */ new Set();
   const environments = /* @__PURE__ */ new Set();
   const variables = /* @__PURE__ */ new Map();
-  for (const rawLine of fs9.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
+  for (const rawLine of fs10.readFileSync(fragmentPath, "utf8").split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith("#") || !line.includes("="))
       continue;
@@ -28789,11 +29238,11 @@ function parseModuleFragment(fragmentPath) {
   };
 }
 function findSourceResultDirectories(sourceRoot, resultsDir) {
-  const root = path6.resolve(sourceRoot);
-  const destination = path6.resolve(resultsDir);
-  if (!fs9.existsSync(root))
+  const root = path7.resolve(sourceRoot);
+  const destination = path7.resolve(resultsDir);
+  if (!fs10.existsSync(root))
     throw new Error(`Source artifacts directory not found: ${sourceRoot}`);
-  const rootStat = fs9.lstatSync(root);
+  const rootStat = fs10.lstatSync(root);
   if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) {
     throw new Error(`Source artifacts path must be a regular directory: ${sourceRoot}`);
   }
@@ -28803,12 +29252,12 @@ function findSourceResultDirectories(sourceRoot, resultsDir) {
     const directory = stack.pop();
     if (directory === destination)
       continue;
-    if (path6.basename(directory) === "allure-results") {
+    if (path7.basename(directory) === "allure-results") {
       sources.push(directory);
       continue;
     }
-    for (const entry of fs9.readdirSync(directory, { withFileTypes: true })) {
-      const child = path6.join(directory, entry.name);
+    for (const entry of fs10.readdirSync(directory, { withFileTypes: true })) {
+      const child = path7.join(directory, entry.name);
       if (entry.isSymbolicLink())
         throw new Error(`Symbolic links are not allowed: ${child}`);
       if (!entry.isDirectory())
@@ -28826,7 +29275,7 @@ function sha256(buffer) {
 function attributedResultBuffer(file, moduleName, environmentName, hasEnvironment, moduleLabel, environmentLabel) {
   let document;
   try {
-    document = JSON.parse(fs9.readFileSync(file, "utf8"));
+    document = JSON.parse(fs10.readFileSync(file, "utf8"));
   } catch (error2) {
     throw new Error(`Malformed Allure result JSON ${file}: ${error2.message}`);
   }
@@ -28853,11 +29302,11 @@ function prepareAttributedResults(options) {
     throw new Error("--module-label must not be empty in attributed mode");
   if (!environmentLabel.trim())
     throw new Error("--environment-label must not be empty in attributed mode");
-  const destination = path6.resolve(resultsDir);
-  const parent = path6.dirname(destination);
-  fs9.mkdirSync(parent, { recursive: true });
-  const temporary = fs9.mkdtempSync(path6.join(parent, `.${path6.basename(destination)}-prepare-`));
-  const backup = path6.join(parent, `.${path6.basename(destination)}-backup-${process.pid}-${Date.now()}`);
+  const destination = path7.resolve(resultsDir);
+  const parent = path7.dirname(destination);
+  fs10.mkdirSync(parent, { recursive: true });
+  const temporary = fs10.mkdtempSync(path7.join(parent, `.${path7.basename(destination)}-prepare-`));
+  const backup = path7.join(parent, `.${path7.basename(destination)}-backup-${process.pid}-${Date.now()}`);
   let destinationMoved = false;
   let sourceDirectories = 0;
   let sourceFiles = 0;
@@ -28874,14 +29323,14 @@ function prepareAttributedResults(options) {
         return;
       throw new Error(`Conflicting source files named ${name}: ${previous.source} and ${source}`);
     }
-    fs9.writeFileSync(path6.join(temporary, name), data, { flag: "wx", mode });
+    fs10.writeFileSync(path7.join(temporary, name), data, { flag: "wx", mode });
     staged.set(name, { digest, source });
   };
   try {
     const sourceDirectoriesFound = findSourceResultDirectories(sourceRoot, resultsDir);
-    const withProvenance = sourceDirectoriesFound.filter((directory) => fs9.existsSync(path6.join(directory, "ci-env-fragment.properties")));
+    const withProvenance = sourceDirectoriesFound.filter((directory) => fs10.existsSync(path7.join(directory, "ci-env-fragment.properties")));
     if (autoMode && withProvenance.length === 0) {
-      fs9.rmSync(temporary, { recursive: true, force: true });
+      fs10.rmSync(temporary, { recursive: true, force: true });
       console.log("No attributed source results detected; preserved legacy merged results");
       return;
     }
@@ -28891,29 +29340,29 @@ function prepareAttributedResults(options) {
     if (withProvenance.length !== sourceDirectoriesFound.length) {
       throw new Error(`Partial module provenance: ${withProvenance.length} of ${sourceDirectoriesFound.length} source directories contain ci-env-fragment.properties`);
     }
-    if (fs9.existsSync(destination)) {
-      const destinationStat = fs9.lstatSync(destination);
+    if (fs10.existsSync(destination)) {
+      const destinationStat = fs10.lstatSync(destination);
       if (!destinationStat.isDirectory() || destinationStat.isSymbolicLink()) {
         throw new Error(`Results destination must be a regular directory: ${resultsDir}`);
       }
       for (const name of PRESERVED_DESTINATION_METADATA) {
-        const file = path6.join(destination, name);
-        if (!fs9.existsSync(file))
+        const file = path7.join(destination, name);
+        if (!fs10.existsSync(file))
           continue;
-        const stat2 = fs9.lstatSync(file);
+        const stat2 = fs10.lstatSync(file);
         if (!stat2.isFile() || stat2.isSymbolicLink()) {
           throw new Error(`Preserved metadata must be a regular file: ${file}`);
         }
         if (stat2.size > MAX_PRESERVED_METADATA_BYTES) {
           throw new Error(`Preserved metadata exceeds ${MAX_PRESERVED_METADATA_BYTES} bytes: ${file}`);
         }
-        stage(name, fs9.readFileSync(file), stat2.mode & 511, file);
+        stage(name, fs10.readFileSync(file), stat2.mode & 511, file);
       }
     }
     for (const directory of sourceDirectoriesFound) {
       sourceDirectories += 1;
-      const fragment = path6.join(directory, "ci-env-fragment.properties");
-      if (!fs9.existsSync(fragment)) {
+      const fragment = path7.join(directory, "ci-env-fragment.properties");
+      if (!fs10.existsSync(fragment)) {
         throw new Error(`Missing module provenance: ${fragment}`);
       }
       const { moduleName, environmentName, hasEnvironment, variables } = parseModuleFragment(fragment);
@@ -28931,8 +29380,8 @@ function prepareAttributedResults(options) {
           fragmentVariables.set(scopedKey, value);
         }
       }
-      for (const entry of fs9.readdirSync(directory, { withFileTypes: true })) {
-        const file = path6.join(directory, entry.name);
+      for (const entry of fs10.readdirSync(directory, { withFileTypes: true })) {
+        const file = path7.join(directory, entry.name);
         if (entry.isSymbolicLink() || !entry.isFile()) {
           throw new Error(`Only regular files are allowed in source results: ${file}`);
         }
@@ -28941,7 +29390,7 @@ function prepareAttributedResults(options) {
         if (entry.name === MODULE_VARIABLES_METADATA2) {
           throw new Error(`Reserved source result filename is not allowed: ${file}`);
         }
-        const stat2 = fs9.lstatSync(file);
+        const stat2 = fs10.lstatSync(file);
         if (stat2.size > MAX_SOURCE_FILE_BYTES) {
           throw new Error(`Source file exceeds ${MAX_SOURCE_FILE_BYTES} bytes: ${file}`);
         }
@@ -28950,7 +29399,7 @@ function prepareAttributedResults(options) {
         if (sourceFiles > MAX_SOURCE_FILES || sourceBytes > MAX_SOURCE_BYTES) {
           throw new Error(`Source results exceed limits (${MAX_SOURCE_FILES} files / ${MAX_SOURCE_BYTES} bytes)`);
         }
-        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, environmentName, hasEnvironment, moduleLabel, environmentLabel) : fs9.readFileSync(file);
+        const data = entry.name.endsWith("-result.json") ? attributedResultBuffer(file, moduleName, environmentName, hasEnvironment, moduleLabel, environmentLabel) : fs10.readFileSync(file);
         if (entry.name.endsWith("-result.json"))
           attributedResults += 1;
         stage(entry.name, data, stat2.mode & 511, file);
@@ -28963,17 +29412,17 @@ function prepareAttributedResults(options) {
       throw new Error("Module environment metadata exceeds byte limit");
     }
     stage(MODULE_VARIABLES_METADATA2, environmentMetadata, 384, "source fragments");
-    if (fs9.existsSync(destination)) {
-      fs9.renameSync(destination, backup);
+    if (fs10.existsSync(destination)) {
+      fs10.renameSync(destination, backup);
       destinationMoved = true;
     }
-    fs9.renameSync(temporary, destination);
+    fs10.renameSync(temporary, destination);
     if (destinationMoved)
-      fs9.rmSync(backup, { recursive: true, force: true });
+      fs10.rmSync(backup, { recursive: true, force: true });
   } catch (error2) {
-    fs9.rmSync(temporary, { recursive: true, force: true });
-    if (destinationMoved && !fs9.existsSync(destination) && fs9.existsSync(backup)) {
-      fs9.renameSync(backup, destination);
+    fs10.rmSync(temporary, { recursive: true, force: true });
+    if (destinationMoved && !fs10.existsSync(destination) && fs10.existsSync(backup)) {
+      fs10.renameSync(backup, destination);
     }
     throw error2;
   }
@@ -29013,8 +29462,8 @@ function runPyramidCheck(options) {
 }
 
 // dist/renderer/pyramid.js
-var fs10 = __toESM(require("node:fs"), 1);
-var path7 = __toESM(require("node:path"), 1);
+var fs11 = __toESM(require("node:fs"), 1);
+var path8 = __toESM(require("node:path"), 1);
 function pyramidMarkdownEpicColumn(layer) {
   if (layer.id === "api")
     return "`api` / `integration`";
@@ -29106,7 +29555,7 @@ function renderPyramidMarkdown(data) {
     otherEpicTotal
   }));
   if (policyPath && outputMd) {
-    const policyHref = path7.relative(path7.resolve(path7.dirname(outputMd)), path7.resolve(policyPath)).split(path7.sep).join("/");
+    const policyHref = path8.relative(path8.resolve(path8.dirname(outputMd)), path8.resolve(policyPath)).split(path8.sep).join("/");
     md.push(`Canonical policy: [\`${policyPath}\`](${policyHref}).`);
   }
   return md.join("\n");
@@ -29142,12 +29591,12 @@ function generatePyramidJson(data) {
   };
 }
 function writePyramidFiles(markdown, json, markdownPath, jsonPath) {
-  fs10.mkdirSync(path7.dirname(markdownPath), { recursive: true });
-  fs10.writeFileSync(markdownPath, markdown, "utf8");
+  fs11.mkdirSync(path8.dirname(markdownPath), { recursive: true });
+  fs11.writeFileSync(markdownPath, markdown, "utf8");
   console.log(`Wrote ${markdownPath}`);
   if (jsonPath) {
-    fs10.mkdirSync(path7.dirname(jsonPath), { recursive: true });
-    fs10.writeFileSync(jsonPath, JSON.stringify(json, null, 2), "utf8");
+    fs11.mkdirSync(path8.dirname(jsonPath), { recursive: true });
+    fs11.writeFileSync(jsonPath, JSON.stringify(json, null, 2), "utf8");
     console.log(`Wrote ${jsonPath}`);
   }
 }
@@ -29231,17 +29680,17 @@ function requestLog(octokit) {
     octokit.log.debug("request", options);
     const start = Date.now();
     const requestOptions = octokit.request.endpoint.parse(options);
-    const path9 = requestOptions.url.replace(options.baseUrl, "");
+    const path10 = requestOptions.url.replace(options.baseUrl, "");
     return request2(options).then((response) => {
       const requestId = response.headers["x-github-request-id"];
       octokit.log.info(
-        `${requestOptions.method} ${path9} - ${response.status} with id ${requestId} in ${Date.now() - start}ms`
+        `${requestOptions.method} ${path10} - ${response.status} with id ${requestId} in ${Date.now() - start}ms`
       );
       return response;
     }).catch((error2) => {
       const requestId = error2.response?.headers["x-github-request-id"] || "UNKNOWN";
       octokit.log.error(
-        `${requestOptions.method} ${path9} - ${error2.status} with id ${requestId} in ${Date.now() - start}ms`
+        `${requestOptions.method} ${path10} - ${error2.status} with id ${requestId} in ${Date.now() - start}ms`
       );
       throw error2;
     });
@@ -31870,10 +32319,24 @@ async function publishPrComment(options) {
   }
 }
 
+// dist/utils/env.js
+function allureCliEnv(parent) {
+  const env = {};
+  for (const [name, value] of Object.entries(parent)) {
+    const upper = name.toUpperCase();
+    if (upper.startsWith("INPUT_") || upper === "GITHUB_TOKEN" || upper === "GH_TOKEN" || upper === "ACTIONS_RUNTIME_TOKEN" || upper.startsWith("ACTIONS_ID_TOKEN_REQUEST_") || upper === "NPM_CONFIG_IGNORE_SCRIPTS") {
+      continue;
+    }
+    env[name] = value;
+  }
+  env.npm_config_ignore_scripts = "true";
+  return env;
+}
+
 // dist/utils/fs.js
-var fs11 = __toESM(require("node:fs"), 1);
+var fs12 = __toESM(require("node:fs"), 1);
 function readFile2(file) {
-  return fs11.readFileSync(file, "utf8");
+  return fs12.readFileSync(file, "utf8");
 }
 
 // dist/main.js
@@ -31890,8 +32353,8 @@ async function run() {
       let sourceRoot = config.sourceArtifactsDirectory;
       let autoMode = false;
       if (sourceRoot === "auto") {
-        const path9 = await import("node:path");
-        sourceRoot = path9.dirname(config.resultsDirectory);
+        const path10 = await import("node:path");
+        sourceRoot = path10.dirname(config.resultsDirectory);
         autoMode = true;
       }
       runPrepareResults({
@@ -31903,17 +32366,17 @@ async function run() {
       });
     }
     if (config.categoriesFile) {
-      const fs13 = await import("node:fs");
-      const path9 = await import("node:path");
-      fs13.cpSync(config.categoriesFile, path9.join(config.resultsDirectory, "categories.json"), {
+      const fs14 = await import("node:fs");
+      const path10 = await import("node:path");
+      fs14.cpSync(config.categoriesFile, path10.join(config.resultsDirectory, "categories.json"), {
         force: true
       });
     }
     let effectiveConfigFile = config.configFile;
     if (config.moduleEnvironmentLabel) {
       const tmp = await import("node:os");
-      const path9 = await import("node:path");
-      effectiveConfigFile = path9.join(tmp.tmpdir(), `allure-report-action-config-${Date.now()}.mjs`);
+      const path10 = await import("node:path");
+      effectiveConfigFile = path10.join(tmp.tmpdir(), `allure-report-action-config-${Date.now()}.mjs`);
       await runModuleConfig({
         resultsDir: config.resultsDirectory,
         configFile: config.configFile,
@@ -31921,6 +32384,10 @@ async function run() {
         moduleLabel: config.moduleEnvironmentLabel,
         environmentLabel: config.environmentLabel
       });
+    }
+    const neutralized = neutralizeAttachments(config.resultsDirectory);
+    if (neutralized.renamed > 0 || neutralized.retyped > 0) {
+      info(`Kept attachments passive: ${neutralized.retyped} retyped as text/plain, ${neutralized.renamed} renamed`);
     }
     const { spawnSync } = await import("node:child_process");
     const isWin = process.platform === "win32";
@@ -31934,13 +32401,17 @@ async function run() {
       config.reportDirectory,
       "--config",
       effectiveConfigFile
-    ], { stdio: "inherit" });
+    ], { stdio: "inherit", env: allureCliEnv(process.env) });
     if (allureGenerate.status !== 0) {
       throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
     }
-    const fs12 = await import("node:fs");
-    if (!fs12.existsSync(import_node_path4.default.join(config.reportDirectory, "index.html"))) {
+    const fs13 = await import("node:fs");
+    if (!fs13.existsSync(import_node_path4.default.join(config.reportDirectory, "index.html"))) {
       throw new Error(`Allure generate did not produce ${import_node_path4.default.join(config.reportDirectory, "index.html")}`);
+    }
+    const withheld = neutralizeReportAttachments(config.reportDirectory);
+    if (withheld > 0) {
+      warning(`Withheld ${withheld} generated report attachment(s) whose file type could run script`);
     }
     runBadges({
       resultsDir: config.resultsDirectory,
