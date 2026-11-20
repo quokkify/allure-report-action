@@ -403,19 +403,32 @@ describe('Prepare Results', () => {
     expect(fs.readFileSync(path.join(resultsDir, 'sentinel.txt'), 'utf8')).toBe('unchanged\n');
   });
 
-  it('sanitizes passive inputs and rejects active attachment payloads', () => {
+  it('regression guard: sanitizer neutralises active attachments instead of publishing them', () => {
     const input = path.join(tempDir, 'downloaded');
     const output = path.join(tempDir, 'sanitized');
     fs.mkdirSync(input);
     writeResult(input, 'case', {
       uuid: 'case',
-      attachments: [{ name: 'evidence', source: 'evil.html', type: 'text/html' }],
+      attachments: [
+        { name: 'evidence', source: 'evidence.html', type: 'text/html' },
+        { name: 'extensionless', source: 'page-attachment', type: 'text/html' },
+      ],
     });
-    fs.writeFileSync(path.join(input, 'evil.html'), '<script>alert(1)</script>');
-    expect(() => sanitizeResults({ inputDir: input, outputDir: output })).toThrow(
-      'Active Allure attachment'
-    );
-    expect(fs.existsSync(output)).toBe(false);
+    fs.writeFileSync(path.join(input, 'evidence.html'), '<p>evidence</p>');
+    fs.writeFileSync(path.join(input, 'page-attachment'), '<p>page</p>');
+
+    sanitizeResults({ inputDir: input, outputDir: output });
+
+    const result = JSON.parse(fs.readFileSync(path.join(output, 'case-result.json'), 'utf8'));
+    expect(result.attachments).toEqual([
+      { name: 'evidence', source: 'evidence.html.txt', type: 'text/plain' },
+      { name: 'extensionless', source: 'page-attachment.txt', type: 'text/plain' },
+    ]);
+    expect(fs.readdirSync(output).sort()).toEqual([
+      'case-result.json',
+      'evidence.html.txt',
+      'page-attachment.txt',
+    ]);
   });
 
   it('rejects traversal references and symlinked downloaded files', () => {
@@ -508,7 +521,7 @@ describe('Prepare Results', () => {
     expect(fs.readdirSync(output).sort()).toEqual(fs.readdirSync(input).sort());
   });
 
-  it('rejects missing, malformed, and active nested attachment references', () => {
+  it('rejects missing and malformed nested attachment references', () => {
     const cases: Array<[string, object, Record<string, string>, string]> = [
       [
         'missing',
@@ -521,12 +534,6 @@ describe('Prepare Results', () => {
         { uuid: 'case', steps: [{ attachments: [{}] }] },
         {},
         'Malformed attachment reference',
-      ],
-      [
-        'active',
-        { uuid: 'case', steps: [{ attachments: [{ source: 'nested.txt' }] }] },
-        { 'nested.txt': '<svg onload="alert(1)"></svg>' },
-        'Active content in Allure attachment',
       ],
     ];
 

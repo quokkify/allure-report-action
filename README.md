@@ -77,6 +77,27 @@ and is the only workflow granted `contents: write` and `pull-requests: write`.
 The publisher downloads the result artifact by run ID; PR-produced HTML, scripts,
 and workflow files are never used as trusted publisher payload.
 
+### Attachment handling
+
+Generated reports are often published to a GitHub Pages origin shared by every
+project site of an organization, where an attachment's file extension decides how
+the browser treats it. Before `allure generate`, the action therefore rewrites the
+Allure result, container, and globals files in `results-directory` so every
+attachment keeps a passive type and extension:
+
+- Declared types that Allure renders as text, code, raster images, video, tables,
+  JSON-backed widgets, or archives are kept. Any other declared type, including
+  HTML, SVG, Markdown, Mermaid, and URI lists, becomes `text/plain`.
+- A file whose extension is not on the passive list (for example `.html`, `.svg`,
+  `.xml`, `.js`) gets `.txt` appended; an extensionless file gets the extension of
+  its declared type, or `.txt`. The content is preserved as downloadable text.
+- After generation, any file under the report's `data/attachments` directories that
+  still has a non-passive extension (for example from Cucumber JSON embeddings) is
+  replaced by a short notice and reported as a warning.
+
+This always runs and has no opt-out. The `sanitize-results` CLI command applies the
+same rules to an untrusted downloaded artifact.
+
 The action uses the caller repository from the GitHub Actions context and an explicitly supplied token, so the same action works in public and private repositories. Private organizations must allow this public action in their Actions policy. GitHub Pages publishing is disabled by default and is not required for the PR summary comment.
 
 ## Module-scoped environments and variables
@@ -208,6 +229,7 @@ tests/
 ├── allure/
 │   ├── parser.test.ts           # Result parsing & aggregation
 │   ├── config-generator.test.ts # Module config generation
+│   ├── attachment-policy.test.ts # Passive attachment rewriting
 │   └── prepare-results.test.ts  # Provenance-aware merging
 ├── renderer/
 │   ├── markdown.test.ts         # PR comment rendering
