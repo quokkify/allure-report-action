@@ -24895,12 +24895,13 @@ function neutralizeAttachments(resultsDir) {
     const from = path.join(resultsDir, source);
     if (!fs3.existsSync(from) || !fs3.lstatSync(from).isFile())
       continue;
-    const to = path.join(resultsDir, target);
-    if (fs3.existsSync(to)) {
-      throw new Error(`Cannot neutralise attachment ${source}: ${target} already exists`);
+    const extension = path.extname(target);
+    let free = target;
+    for (let n7 = 1; fs3.existsSync(path.join(resultsDir, free)); n7 += 1) {
+      free = `${target.slice(0, -extension.length)}.${n7}${extension}`;
     }
-    fs3.renameSync(from, to);
-    renames.set(source, target);
+    fs3.renameSync(from, path.join(resultsDir, free));
+    renames.set(source, free);
   }
   for (const { file, document, references } of documents) {
     for (const reference of references) {
@@ -32320,11 +32321,18 @@ async function publishPrComment(options) {
 }
 
 // dist/utils/env.js
+var RUNNER_COMMAND_FILES = /* @__PURE__ */ new Set([
+  "GITHUB_ENV",
+  "GITHUB_PATH",
+  "GITHUB_OUTPUT",
+  "GITHUB_STATE",
+  "GITHUB_STEP_SUMMARY"
+]);
 function allureCliEnv(parent) {
   const env = {};
   for (const [name, value] of Object.entries(parent)) {
     const upper = name.toUpperCase();
-    if (upper.startsWith("INPUT_") || upper === "GITHUB_TOKEN" || upper === "GH_TOKEN" || upper === "ACTIONS_RUNTIME_TOKEN" || upper.startsWith("ACTIONS_ID_TOKEN_REQUEST_") || upper === "NPM_CONFIG_IGNORE_SCRIPTS") {
+    if (upper.startsWith("INPUT_") || upper === "GITHUB_TOKEN" || upper === "GH_TOKEN" || upper === "ACTIONS_RUNTIME_TOKEN" || upper.startsWith("ACTIONS_ID_TOKEN_REQUEST_") || RUNNER_COMMAND_FILES.has(upper) || upper === "NPM_CONFIG_IGNORE_SCRIPTS") {
       continue;
     }
     env[name] = value;

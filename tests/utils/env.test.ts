@@ -22,6 +22,11 @@ describe('allureCliEnv', () => {
     ACTIONS_ID_TOKEN_REQUEST_URL: 'https://token.invalid',
     npm_config_ignore_scripts: 'false',
     NPM_CONFIG_IGNORE_SCRIPTS: 'false',
+    GITHUB_ENV: '/runner/env',
+    GITHUB_PATH: '/runner/path',
+    GITHUB_OUTPUT: '/runner/output',
+    GITHUB_STATE: '/runner/state',
+    GITHUB_STEP_SUMMARY: '/runner/summary',
   };
 
   it('regression guard: removes every token-bearing variable and all action inputs', () => {
@@ -34,6 +39,20 @@ describe('allureCliEnv', () => {
       expect(name.toUpperCase()).not.toMatch(/^INPUT_|TOKEN/);
     }
     expect(env).not.toHaveProperty('ACTIONS_ID_TOKEN_REQUEST_URL');
+  });
+
+  it('regression guard: removes runner command files that could inject into later steps', () => {
+    const env = allureCliEnv(parent);
+
+    for (const name of [
+      'GITHUB_ENV',
+      'GITHUB_PATH',
+      'GITHUB_OUTPUT',
+      'GITHUB_STATE',
+      'GITHUB_STEP_SUMMARY',
+    ]) {
+      expect(env).not.toHaveProperty(name);
+    }
   });
 
   it('regression guard: disables npm install scripts for the npx resolution', () => {

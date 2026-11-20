@@ -100,8 +100,10 @@ same rules to an untrusted downloaded artifact.
 
 The Allure CLI is resolved by `npx` from the public registry without a lockfile, so
 it runs with action inputs (including `github-token`), `GITHUB_TOKEN`, `GH_TOKEN`,
-`ACTIONS_RUNTIME_TOKEN`, and `ACTIONS_ID_TOKEN_REQUEST_*` removed from its
-environment and with npm install scripts disabled.
+`ACTIONS_RUNTIME_TOKEN`, `ACTIONS_ID_TOKEN_REQUEST_*`, and the runner command files
+(`GITHUB_ENV`, `GITHUB_PATH`, `GITHUB_OUTPUT`, `GITHUB_STATE`, `GITHUB_STEP_SUMMARY`)
+removed from its environment and with npm install scripts disabled. This is defence
+in depth, not isolation: the CLI still runs as the same user as the action.
 
 The action uses the caller repository from the GitHub Actions context and an explicitly supplied token, so the same action works in public and private repositories. Private organizations must allow this public action in their Actions policy. GitHub Pages publishing is disabled by default and is not required for the PR summary comment.
 

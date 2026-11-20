@@ -177,12 +177,13 @@ function neutralizeAttachments(resultsDir) {
     const from = path.join(resultsDir, source);
     if (!fs.existsSync(from) || !fs.lstatSync(from).isFile())
       continue;
-    const to = path.join(resultsDir, target);
-    if (fs.existsSync(to)) {
-      throw new Error(`Cannot neutralise attachment ${source}: ${target} already exists`);
+    const extension = path.extname(target);
+    let free = target;
+    for (let n7 = 1; fs.existsSync(path.join(resultsDir, free)); n7 += 1) {
+      free = `${target.slice(0, -extension.length)}.${n7}${extension}`;
     }
-    fs.renameSync(from, to);
-    renames.set(source, target);
+    fs.renameSync(from, path.join(resultsDir, free));
+    renames.set(source, free);
   }
   for (const { file, document, references } of documents) {
     for (const reference of references) {

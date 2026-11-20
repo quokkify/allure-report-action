@@ -40,9 +40,17 @@ export function getStepSummaryPath() {
 }
 /**
  * Environment for the Allure CLI that `npx` resolves without a lockfile. Action inputs (which carry
- * the GitHub token) and runner tokens are removed so a compromised package in that unlocked tree
- * cannot read them, and npm install scripts are disabled for the resolution.
+ * the GitHub token), runner tokens, and runner command files (which would let it inject environment
+ * into later steps that hold the token) are removed, and npm install scripts are disabled. This is
+ * defence in depth, not isolation: the child still runs as the same user as the action process.
  */
+const RUNNER_COMMAND_FILES = new Set([
+    'GITHUB_ENV',
+    'GITHUB_PATH',
+    'GITHUB_OUTPUT',
+    'GITHUB_STATE',
+    'GITHUB_STEP_SUMMARY',
+]);
 export function allureCliEnv(parent) {
     const env = {};
     for (const [name, value] of Object.entries(parent)) {
@@ -52,6 +60,7 @@ export function allureCliEnv(parent) {
             upper === 'GH_TOKEN' ||
             upper === 'ACTIONS_RUNTIME_TOKEN' ||
             upper.startsWith('ACTIONS_ID_TOKEN_REQUEST_') ||
+            RUNNER_COMMAND_FILES.has(upper) ||
             upper === 'NPM_CONFIG_IGNORE_SCRIPTS') {
             continue;
         }
