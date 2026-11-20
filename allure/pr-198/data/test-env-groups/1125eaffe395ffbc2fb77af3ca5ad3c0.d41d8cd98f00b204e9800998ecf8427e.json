@@ -1,1 +1,0 @@
-{"id":"1125eaffe395ffbc2fb77af3ca5ad3c0.d41d8cd98f00b204e9800998ecf8427e","fullName":"quokkify/allure-report-action:tests/allure/attachment-policy.test.ts#Attachment policy refuses to overwrite an existing file when renaming","name":"refuses to overwrite an existing file when renaming","status":"passed","testResultsByEnv":{"default":"a2ae0ca1263c24faa2bed14833cd58e2"}}
