@@ -21,4 +21,5 @@ export declare function isGitHubActions(): boolean;
  * Gets GitHub Actions step summary path
  */
 export declare function getStepSummaryPath(): string | undefined;
+export declare function allureCliEnv(parent: NodeJS.ProcessEnv): NodeJS.ProcessEnv;
 //# sourceMappingURL=env.d.ts.map

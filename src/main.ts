@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import * as core from '@actions/core';
 
+import { neutralizeAttachments, neutralizeReportAttachments } from './allure/attachment-policy.js';
 import { runBadges } from './commands/badges.js';
 import { runModuleConfig } from './commands/module-config.js';
 import { runPrBody } from './commands/pr-body.js';
@@ -14,6 +15,7 @@ import { runPyramid } from './commands/pyramid.js';
 import { loadConfig } from './config/loader.js';
 import { publishPrComment } from './github/comment-publisher.js';
 import { setActionVersion, ACTION_VERSION } from './report/model.js';
+import { allureCliEnv } from './utils/env.js';
 import { readFile } from './utils/fs.js';
 import { readFile as readVersionFile } from './utils/fs.js';
 
@@ -75,7 +77,15 @@ async function run(): Promise<void> {
       });
     }
 
-    // Step 4: Run Allure generate using the effective config file
+    // Step 4: Keep every attachment passive on the shared Pages origin, then run Allure generate
+    const neutralized = neutralizeAttachments(config.resultsDirectory);
+    if (neutralized.renamed > 0 || neutralized.retyped > 0) {
+      core.info(
+        `Kept attachments passive: ${neutralized.retyped} retyped as text/plain, ${neutralized.renamed} renamed`
+      );
+    }
+
+    // Run Allure generate using the effective config file
     const { spawnSync } = await import('node:child_process');
     const isWin = process.platform === 'win32';
     const npxCmd = isWin ? 'npx.cmd' : 'npx';
@@ -91,7 +101,7 @@ async function run(): Promise<void> {
         '--config',
         effectiveConfigFile,
       ],
-      { stdio: 'inherit' }
+      { stdio: 'inherit', env: allureCliEnv(process.env) }
     );
     if (allureGenerate.status !== 0) {
       throw new Error(`Allure generate failed with exit code ${allureGenerate.status}`);
@@ -100,6 +110,13 @@ async function run(): Promise<void> {
     if (!fs.existsSync(path.join(config.reportDirectory, 'index.html'))) {
       throw new Error(
         `Allure generate did not produce ${path.join(config.reportDirectory, 'index.html')}`
+      );
+    }
+
+    const withheld = neutralizeReportAttachments(config.reportDirectory);
+    if (withheld > 0) {
+      core.warning(
+        `Withheld ${withheld} generated report attachment(s) whose file type could run script`
       );
     }
 

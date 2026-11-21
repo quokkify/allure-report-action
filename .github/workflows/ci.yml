@@ -20,7 +20,18 @@ jobs:
       node-version: "24"
       package-manager: npm
       lint-command: npm run lint
-      test-command: npm test && npm run build && bash tests/smoke.sh && bash tests/history-smoke.sh
+      # The action runs the committed dist/ bundle, so a build must reproduce it exactly.
+      test-command: |
+        npm test
+        npm run build
+        if [[ -n "$(git status --porcelain --untracked-files=all -- dist/)" ]]; then
+          git status --short -- dist/
+          echo "::error::dist/ is stale. Run 'npm ci && npm run build' and commit dist/." >&2
+          exit 1
+        fi
+        bash tests/smoke.sh
+        bash tests/history-smoke.sh
+        bash tests/action-smoke.sh
       run-build: false
       upload-test-artifacts: true
       test-artifact-path: allure-results

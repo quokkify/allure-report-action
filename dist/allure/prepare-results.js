@@ -4,6 +4,7 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { neutralizeAttachments } from './attachment-policy.js';
 const SOURCE_SCAN_SKIP_DIRECTORIES = new Set([
     '.git',
     '.gradle',
@@ -32,15 +33,6 @@ function normalizeResultTimestamps(document) {
     document.start = normalizedStart;
     document.stop = Math.max(normalizedStart + 1, Math.ceil(stop));
 }
-const ACTIVE_ATTACHMENT_EXTENSIONS = new Set([
-    '.cjs',
-    '.htm',
-    '.html',
-    '.js',
-    '.mjs',
-    '.svg',
-    '.xhtml',
-]);
 /**
  * Parses a ci-env-fragment.properties file
  */
@@ -161,15 +153,6 @@ function attributedResultBuffer(file, moduleName, environmentName, hasEnvironmen
 function safeResultName(name) {
     return name === path.basename(name) && !name.includes('\\') && !name.includes('\0');
 }
-function rejectActiveAttachment(name, data) {
-    if (ACTIVE_ATTACHMENT_EXTENSIONS.has(path.extname(name).toLowerCase())) {
-        throw new Error(`Active Allure attachment is not allowed: ${name}`);
-    }
-    const text = data.toString('utf8', 0, Math.min(data.length, 64 * 1024)).toLowerCase();
-    if (/<\s*script\b|<\s*(iframe|object|embed|svg)\b|javascript\s*:/.test(text)) {
-        throw new Error(`Active content in Allure attachment is not allowed: ${name}`);
-    }
-}
 function pathContains(parent, child) {
     const relative = path.relative(parent, child);
     return (relative === '' ||
@@ -274,9 +257,7 @@ export function sanitizeResults(options) {
         if (!regular.has(reference))
             throw new Error(`Missing Allure attachment referenced by result: ${reference}`);
     }
-    for (const [name, data] of regular) {
-        if (referenced.has(name))
-            rejectActiveAttachment(name, data);
+    for (const name of regular.keys()) {
         if (!name.endsWith('-result.json') &&
             !name.endsWith('-container.json') &&
             !name.endsWith('.json') &&
@@ -290,6 +271,7 @@ export function sanitizeResults(options) {
     try {
         for (const [name, data] of regular)
             fs.writeFileSync(path.join(temporary, name), data, { flag: 'wx', mode: 0o600 });
+        neutralizeAttachments(temporary);
         fs.rmSync(output, { recursive: true, force: true });
         fs.renameSync(temporary, output);
     }
