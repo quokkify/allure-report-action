@@ -1,0 +1,1 @@
+{"id":"de66f2644f407cbfc66bc59c207ede0c.d41d8cd98f00b204e9800998ecf8427e","fullName":"quokkify/allure-report-action:tests/utils/env.test.ts#allureCliEnv does not mutate the parent environment","name":"does not mutate the parent environment","status":"passed","testResultsByEnv":{"default":"63fa9a2d645c5fc596efe47c4493cf4d"}}
