@@ -2,10 +2,21 @@
 
 ## [0.5.6](https://github.com/quokkify/allure-report-action/compare/v0.5.5...v0.5.6) (2026-11-21)
 
+<!-- project-toolkit:release-notes v2 -->
+**At a glance:** 3 internal
 
-### 📦 Dependencies
+<details><summary>Internal changes (3 PRs)</summary>
 
-* **npm:** update vitest to v5.1.1 ([#202](https://github.com/quokkify/allure-report-action/issues/202)) ([bbd284a](https://github.com/quokkify/allure-report-action/commit/bbd284a98e6565c64e887e4252a9631fafe514a4))
+**Dependencies**
+
+- vitest 5.1.0 → 5.1.1 ([#202](https://github.com/quokkify/allure-report-action/pull/202))
+
+**Maintenance**
+
+- **renovate:** adopt the supply-chain hardening and stack grouping presets ([#201](https://github.com/quokkify/allure-report-action/pull/201))
+- **template:** update shared project template ([#203](https://github.com/quokkify/allure-report-action/pull/203))
+
+</details>
 
 ## [0.5.5](https://github.com/quokkify/allure-report-action/compare/v0.5.4...v0.5.5) (2026-11-21)
 
