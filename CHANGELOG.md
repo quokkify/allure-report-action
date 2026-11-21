@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.5](https://github.com/quokkify/allure-report-action/compare/v0.5.4...v0.5.5) (2026-11-21)
+
+
+### 🐛 Bug Fixes
+
+* keep report attachments passive and tokens away from Allure CLI ([#198](https://github.com/quokkify/allure-report-action/issues/198)) ([42948f1](https://github.com/quokkify/allure-report-action/commit/42948f1fb5060da83287b09782be349a6b2bc558))
+
+
+### 📦 Dependencies
+
+* **allure:** update allure to v3.33.0 ([#188](https://github.com/quokkify/allure-report-action/issues/188)) ([9177091](https://github.com/quokkify/allure-report-action/commit/91770913a5415378614f2362753737f01906afa5))
+* **github-actions:** update quokkify/gh-pages-subdir-action action to v0.1.2 ([#193](https://github.com/quokkify/allure-report-action/issues/193)) ([bef239d](https://github.com/quokkify/allure-report-action/commit/bef239d9bf9273f8188edaf68ea34c90db2f6e70))
+* **npm:** lock file maintenance ([#191](https://github.com/quokkify/allure-report-action/issues/191)) ([3074686](https://github.com/quokkify/allure-report-action/commit/307468676dcbef05a5b9c61041bc756ed0ed96a5))
+* **npm:** update @allurereport/ci to v3.33.0 ([#189](https://github.com/quokkify/allure-report-action/issues/189)) ([eff506d](https://github.com/quokkify/allure-report-action/commit/eff506dab411fe6c9ee6844228963da8cffadcc2))
+* **npm:** update allure-vitest to v3.15.0 ([#199](https://github.com/quokkify/allure-report-action/issues/199)) ([5c413d2](https://github.com/quokkify/allure-report-action/commit/5c413d23446a088fb7c9b3704f5ba3441c688b69))
+* **npm:** update eslint to v10.15.0 ([#196](https://github.com/quokkify/allure-report-action/issues/196)) ([fe9d6e8](https://github.com/quokkify/allure-report-action/commit/fe9d6e8e23ae4f0815925cdb20c54f427aec0f76))
+* **npm:** update eslint-plugin-import-x to v4.18.1 ([#192](https://github.com/quokkify/allure-report-action/issues/192)) ([27cc3c8](https://github.com/quokkify/allure-report-action/commit/27cc3c838ab9fbbbde77565a253ce74507459a60))
+* **npm:** update prettier to v3.10.1 ([#195](https://github.com/quokkify/allure-report-action/issues/195)) ([88ccf00](https://github.com/quokkify/allure-report-action/commit/88ccf009b666f789bd7d0df474192967e35ee6f7))
+* **npm:** update typescript-eslint monorepo to v8.72.2 ([#194](https://github.com/quokkify/allure-report-action/issues/194)) ([d6df572](https://github.com/quokkify/allure-report-action/commit/d6df572990c320b6cf5b77a38e68062c5112c122))
+* **npm:** update typescript-eslint monorepo to v8.73.0 ([#200](https://github.com/quokkify/allure-report-action/issues/200)) ([f009b25](https://github.com/quokkify/allure-report-action/commit/f009b25fab8484e8432270e88e67b713e8351950))
+
 ## [0.5.4](https://github.com/quokkify/allure-report-action/compare/v0.5.3...v0.5.4) (2026-11-07)
 
 <!-- project-toolkit:release-notes v2 -->
