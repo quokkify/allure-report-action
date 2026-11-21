@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.6](https://github.com/quokkify/allure-report-action/compare/v0.5.5...v0.5.6) (2026-11-21)
+
+
+### 📦 Dependencies
+
+* **npm:** update vitest to v5.1.1 ([#202](https://github.com/quokkify/allure-report-action/issues/202)) ([bbd284a](https://github.com/quokkify/allure-report-action/commit/bbd284a98e6565c64e887e4252a9631fafe514a4))
+
 ## [0.5.5](https://github.com/quokkify/allure-report-action/compare/v0.5.4...v0.5.5) (2026-11-21)
 
 <!-- project-toolkit:release-notes v2 -->
