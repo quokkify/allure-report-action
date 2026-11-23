@@ -1,1 +1,0 @@
-{"id":"5cb931ae24d92866cac7079ce124006c.d41d8cd98f00b204e9800998ecf8427e","fullName":"quokkify/allure-report-action:tests/utils/env.test.ts#allureCliEnv keeps the variables the Allure CLI needs to run and detect CI","name":"keeps the variables the Allure CLI needs to run and detect CI","status":"passed","testResultsByEnv":{"default":"985cbd094cdde239eea1ac71582d2c02"}}
